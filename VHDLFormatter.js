@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 let isTesting = false;
 const ILCommentPrefix = "@@comments";
+const ILQuotesPrefix = "@@quotes";
 class NewLineSettings {
     constructor() {
         this.newLineAfter = [];
@@ -226,7 +227,7 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
 class BeautifierSettings {
     constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, indentation, newLineSettings) {
         this.RemoveComments = removeComments;
-        this.RemoveReport = removeReport;
+        this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
         this.SignAlign = signAlign;
         this.SignAlignAll = signAlignAll;
@@ -251,57 +252,38 @@ function beautify(input, settings) {
     if (settings.RemoveComments) {
         input = input.replace(/@@comments[0-9]+/g, '');
     }
-    var quotes = [], quotesIndex = 0;
+    input = ReplaceKeyWords(input, KeyWords);
+    input = ReplaceKeyWords(input, TypeNames);
+    input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
+    input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
+    input = beautify2(input, settings);
+    for (var k = 0; k < commentsIndex; k++) {
+        input = input.replace(ILCommentPrefix + k, comments[k]);
+    }
+    input = input.replace(/@@semicolon/g, ";");
+    input = input.replace(/@@[a-z]+/g, "");
+    return input;
+}
+exports.beautify = beautify;
+function beautify2(input, settings) {
+    let arr = input.split("\r\n");
+    let quotes = EscapeQuotes(arr);
+    if (settings.RemoveAsserts) {
+        RemoveAsserts(arr); //RemoveAsserts must be after EscapeQuotes
+    }
     var singleline = [], singlelineIndex = 0;
     var align = [], align_max = [], align_i1 = 0, align_i = 0;
     var str = "", str1 = "";
     var p = 0;
     var n = 0, j = 0;
     var tab_n = 0, str_len = 0, port_s = "";
-    var back_tab = false, forward_tab = false, need_semi = false, semi_pos = 0, begin_b = true, port_b = false;
-    input = ReplaceKeyWords(input, KeyWords);
-    input = ReplaceKeyWords(input, TypeNames);
-    input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
-    input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
-    arr = input.split("\r\n");
-    var l = arr.length;
+    var back_tab = false, forward_tab = false, semi_pos = 0, begin_b = true, port_b = false;
     var before_begin = true;
+    var l = arr.length;
+    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
     for (i = 0; i < l; i++) {
-        let k4 = arr[i].match(/"([^"]+)"/g);
-        if (k4 != null) {
-            var u = k4.length;
-            for (var j = 0; j < u; j++) {
-                arr[i] = arr[i].replace(k4[j], "@@quotes" + quotesIndex);
-                quotes[quotesIndex++] = k4[j];
-            }
-        }
         if (arr[i].indexOf("BEGIN") >= 0) {
             before_begin = false;
-        }
-        if (settings.RemoveReport) {
-            n = arr[i].indexOf("REPORT ");
-            p = arr[i].indexOf(";");
-            if (need_semi) {
-                arr[i] = '';
-                if (p >= 0) {
-                    need_semi = false;
-                }
-            }
-            if (n >= 0) {
-                arr[i] = '';
-                if (p < 0) {
-                    need_semi = true;
-                }
-            }
-            else if (n < 0) {
-                n = arr[i].indexOf("ASSERT ");
-                if (n >= 0) {
-                    arr[i] = '';
-                    if (p < 0) {
-                        need_semi = true;
-                    }
-                }
-            }
         }
         if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
             arr[i] = arr[i].replace(/;/g, '@@semicolon');
@@ -332,12 +314,6 @@ function beautify(input, settings) {
                 arr[i] = arr[i].replace(/(PORT|GENERIC|PROCEDURE)([a-z0-9A-Z_ ]+)\(([a-zA-Z0-9_\(\) ]+)/, '$1$2(\r\n$3');
             }
         }
-        /*if (!new_line) {
-            if (arr[i].regexIndexOf(/(;|THEN)[ a-z0-9]+[a-z0-9]+/) >= 0) {
-                singleline[singlelineIndex] = arr[i];
-                arr[i] = "@@singleline" + singlelineIndex++;
-            }
-        }*/
     }
     input = arr.join("\r\n");
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
@@ -354,9 +330,6 @@ function beautify(input, settings) {
     input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
-    //if (remove_lines) {
-    //    input = input.replace(/(\r\n)*[ \t]*\r\n/g, '\r\n');
-    //}
     var matches = input.match(/'([a-zA-Z]+)\s/g);
     if (matches != null) {
         for (var k2 = 0; k2 < matches.length; k2++) {
@@ -488,17 +461,19 @@ function beautify(input, settings) {
                 back_tab = true;
                 begin_b = true;
             }
-            if (port_b && str.indexOf("@@") < 0 && arr[i + 1].indexOf("@@") < 0) {
-                if (signAlignPos == ":") {
-                    if (str.indexOf(';') < 0) {
-                        arr[i] += arr[i + 1];
-                        arr[i + 1] = '@@removeline';
+            if (port_b && str.indexOf("@@") < 0) {
+                if (i + 1 <= arr.length - 1 && arr[i + 1].indexOf("@@") < 0) {
+                    if (signAlignPos == ":") {
+                        if (str.indexOf(';') < 0) {
+                            arr[i] += arr[i + 1];
+                            arr[i + 1] = '@@removeline';
+                        }
                     }
-                }
-                else if (signAlignPos == "=>") {
-                    if (str.indexOf(',') < 0) {
-                        arr[i] += arr[i + 1];
-                        arr[i + 1] = '@@removeline';
+                    else if (signAlignPos == "=>") {
+                        if (str.indexOf(',') < 0) {
+                            arr[i] += arr[i + 1];
+                            arr[i + 1] = '@@removeline';
+                        }
                     }
                 }
             }
@@ -512,9 +487,11 @@ function beautify(input, settings) {
                         signAlignPos = "=>";
                     }
                     else {
-                        t = arr[i + 1].indexOf("=>");
-                        if (t >= 0) {
-                            signAlignPos = "=>";
+                        if (i + 1 < arr.length) {
+                            t = arr[i + 1].indexOf("=>");
+                            if (t >= 0) {
+                                signAlignPos = "=>";
+                            }
                         }
                     }
                 }
@@ -644,11 +621,16 @@ function beautify(input, settings) {
                     console.log(tab_n, arr[i], indent_start);
                 }
                 arr[i] = (Array(tab_n).join(settings.Indentation)) + arr[i]; //indent
-                /*if (new_line_after_port) {
+                if (settings.NewLineSettings.newLineAfter.indexOf("port")) {
                     if (str.indexOf('@@singleend') < 0) {
-                        arr[i] = arr[i].replace(/(PORT|GENERIC)([ \w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(indentation)) + "(");
+                        arr[i] = arr[i].replace(/(PORT)([ \r\n\w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(settings.Indentation)) + "(");
                     }
-                }*/
+                }
+                if (settings.NewLineSettings.newLineAfter.indexOf("generic")) {
+                    if (str.indexOf('@@singleend') < 0) {
+                        arr[i] = arr[i].replace(/(GENERIC)([ \r\n\w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(settings.Indentation)) + "(");
+                    }
+                }
             }
             if (back_tab) {
                 tab_n++;
@@ -678,7 +660,7 @@ function beautify(input, settings) {
                     else if (first_word == "WHEN" && i + 1 < arr.length && arr[i + 1].indexOf("WHEN") < 0) {
                         tab_n = indent_start_last + 1;
                     }
-                    else if (str.indexOf("=>") < 0 && ((str.indexOf("@@quotes") >= 0 && str.indexOf("= @@quotes") < 0 && str.indexOf("IF") < 0) || (str.indexOf("<=") > 0 && str.indexOf("IF") < 0 && str.indexOf("THEN") < 0))) {
+                    else if (str.indexOf("=>") < 0 && ((str.indexOf(ILQuotesPrefix) >= 0 && str.indexOf("= " + ILQuotesPrefix) < 0 && str.indexOf("IF") < 0) || (str.indexOf("<=") > 0 && str.indexOf("IF") < 0 && str.indexOf("THEN") < 0))) {
                         tab_n++;
                         indent_start.push(tab_n);
                         semi_b = true;
@@ -765,20 +747,65 @@ function beautify(input, settings) {
             input = input.replace("@@align" + k, Array((align_max[k] - align[k] + 2)).join(" "));
         }
     }
-    for (var k = 0; k < quotesIndex; k++) {
-        input = input.replace("@@quotes" + k, quotes[k]);
+    for (var k = 0; k < quotes.length; k++) {
+        input = input.replace(ILQuotesPrefix + k, quotes[k]);
     }
-    for (var k = 0; k < singlelineIndex; k++) {
-        input = input.replace("@@singleline" + k, singleline[k]);
-    }
-    for (var k = 0; k < commentsIndex; k++) {
-        input = input.replace(ILCommentPrefix + k, comments[k]);
-    }
-    input = input.replace(/@@semicolon/g, ";");
-    input = input.replace(/@@[a-z]+/g, "");
+    input = input.replace(/@@singleline[ \r\n]*/, " ");
     return input;
 }
-exports.beautify = beautify;
+function ApplyNoNewLineAfter(arr, noNewLineAfter) {
+    if (noNewLineAfter == null) {
+        return;
+    }
+    for (let i = 0; i < arr.length; i++) {
+        noNewLineAfter.forEach(n => {
+            let regex = new RegExp("(" + n.toUpperCase + ")[ a-z0-9]+[a-z0-9]+");
+            if (arr[i].regexIndexOf(regex) >= 0) {
+                arr[i] += "@@singleline";
+            }
+        });
+    }
+}
+exports.ApplyNoNewLineAfter = ApplyNoNewLineAfter;
+function RemoveAsserts(arr) {
+    let need_semi = false;
+    let inAssert = false;
+    let n = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let has_semi = arr[i].indexOf(";") >= 0;
+        if (need_semi) {
+            arr[i] = '';
+        }
+        n = arr[i].indexOf("ASSERT ");
+        if (n >= 0) {
+            inAssert = true;
+            arr[i] = '';
+        }
+        if (!has_semi) {
+            if (inAssert) {
+                need_semi = true;
+            }
+        }
+        else {
+            need_semi = false;
+        }
+    }
+}
+exports.RemoveAsserts = RemoveAsserts;
+function EscapeQuotes(arr) {
+    let quotes = [];
+    let quotesIndex = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let quote = arr[i].match(/"([^"]+)"/g);
+        if (quote != null) {
+            for (var j = 0; j < quote.length; j++) {
+                arr[i] = arr[i].replace(quote[j], ILQuotesPrefix + quotesIndex);
+                quotes[quotesIndex++] = quote[j];
+            }
+        }
+    }
+    return quotes;
+}
 function RemoveExtraNewLines(input) {
     input = input.replace(/(?:\r\n|\r|\n)/g, '\r\n');
     input = input.replace(/ \r\n/g, '\r\n');

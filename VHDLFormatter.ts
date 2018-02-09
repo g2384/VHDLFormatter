@@ -1,5 +1,6 @@
 let isTesting = false;
 const ILCommentPrefix = "@@comments";
+const ILQuotesPrefix = "@@quotes";
 
 export class NewLineSettings {
     newLineAfter: Array<string>;
@@ -246,7 +247,7 @@ function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSettings)
 
 export class BeautifierSettings {
     RemoveComments: boolean;
-    RemoveReport: boolean;
+    RemoveAsserts: boolean;
     CheckAlias: boolean;
     SignAlign: boolean;
     SignAlignAll: boolean;
@@ -257,7 +258,7 @@ export class BeautifierSettings {
         signAlign: boolean, signAlignAll: boolean, keywordCase: string, indentation: string,
         newLineSettings: NewLineSettings) {
         this.RemoveComments = removeComments;
-        this.RemoveReport = removeReport;
+        this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
         this.SignAlign = signAlign;
         this.SignAlignAll = signAlignAll;
@@ -304,8 +305,12 @@ export function beautify(input: string, settings: BeautifierSettings) {
 }
 
 function beautify2(input, settings: BeautifierSettings): string {
-    var quotes = [],
-        quotesIndex = 0;
+    let arr = input.split("\r\n");
+    let quotes = EscapeQuotes(arr);
+    if (settings.RemoveAsserts) {
+        RemoveAsserts(arr);//RemoveAsserts must be after EscapeQuotes
+    }
+
     var singleline = [],
         singlelineIndex = 0;
     var align = [],
@@ -322,51 +327,15 @@ function beautify2(input, settings: BeautifierSettings): string {
         port_s = "";
     var back_tab = false,
         forward_tab = false,
-        need_semi = false,
         semi_pos = 0,
         begin_b = true,
         port_b = false;
-
-    let arr = input.split("\r\n");
-    var l = arr.length;
     var before_begin = true;
+    var l = arr.length;
+    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
     for (i = 0; i < l; i++) {
-        let k4 = arr[i].match(/"([^"]+)"/g);
-        if (k4 != null) {
-            var u = k4.length;
-            for (var j = 0; j < u; j++) {
-                arr[i] = arr[i].replace(k4[j], "@@quotes" + quotesIndex);
-                quotes[quotesIndex++] = k4[j];
-            }
-        }
-
         if (arr[i].indexOf("BEGIN") >= 0) {
             before_begin = false;
-        }
-
-        if (settings.RemoveReport) {
-            n = arr[i].indexOf("REPORT ");
-            p = arr[i].indexOf(";");
-            if (need_semi) {
-                arr[i] = '';
-                if (p >= 0) {
-                    need_semi = false;
-                }
-            }
-            if (n >= 0) {
-                arr[i] = '';
-                if (p < 0) {
-                    need_semi = true;
-                }
-            } else if (n < 0) {
-                n = arr[i].indexOf("ASSERT ");
-                if (n >= 0) {
-                    arr[i] = '';
-                    if (p < 0) {
-                        need_semi = true;
-                    }
-                }
-            }
         }
 
         if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
@@ -396,12 +365,7 @@ function beautify2(input, settings: BeautifierSettings): string {
                 arr[i] = arr[i].replace(/(PORT|GENERIC|PROCEDURE)([a-z0-9A-Z_ ]+)\(([a-zA-Z0-9_\(\) ]+)/, '$1$2(\r\n$3');
             }
         }
-        /*if (!new_line) {
-            if (arr[i].regexIndexOf(/(;|THEN)[ a-z0-9]+[a-z0-9]+/) >= 0) {
-                singleline[singlelineIndex] = arr[i];
-                arr[i] = "@@singleline" + singlelineIndex++;
-            }
-        }*/
+
     }
     input = arr.join("\r\n");
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
@@ -418,9 +382,7 @@ function beautify2(input, settings: BeautifierSettings): string {
     input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
-    //if (remove_lines) {
-    //    input = input.replace(/(\r\n)*[ \t]*\r\n/g, '\r\n');
-    //}
+
     var matches = input.match(/'([a-zA-Z]+)\s/g);
     if (matches != null) {
         for (var k2 = 0; k2 < matches.length; k2++) {
@@ -563,16 +525,18 @@ function beautify2(input, settings: BeautifierSettings): string {
                 back_tab = true;
                 begin_b = true;
             }
-            if (port_b && str.indexOf("@@") < 0 && arr[i + 1].indexOf("@@") < 0) {
-                if (signAlignPos == ":") {
-                    if (str.indexOf(';') < 0) {
-                        arr[i] += arr[i + 1];
-                        arr[i + 1] = '@@removeline';
-                    }
-                } else if (signAlignPos == "=>") {
-                    if (str.indexOf(',') < 0) {
-                        arr[i] += arr[i + 1];
-                        arr[i + 1] = '@@removeline';
+            if (port_b && str.indexOf("@@") < 0) {
+                if (i + 1 <= arr.length - 1 && arr[i + 1].indexOf("@@") < 0) {
+                    if (signAlignPos == ":") {
+                        if (str.indexOf(';') < 0) {
+                            arr[i] += arr[i + 1];
+                            arr[i + 1] = '@@removeline';
+                        }
+                    } else if (signAlignPos == "=>") {
+                        if (str.indexOf(',') < 0) {
+                            arr[i] += arr[i + 1];
+                            arr[i + 1] = '@@removeline';
+                        }
                     }
                 }
             }
@@ -585,9 +549,11 @@ function beautify2(input, settings: BeautifierSettings): string {
                     if (t >= 0) {
                         signAlignPos = "=>";
                     } else {
-                        t = arr[i + 1].indexOf("=>");
-                        if (t >= 0) {
-                            signAlignPos = "=>";
+                        if (i + 1 < arr.length) {
+                            t = arr[i + 1].indexOf("=>");
+                            if (t >= 0) {
+                                signAlignPos = "=>";
+                            }
                         }
                     }
                 } else {
@@ -706,11 +672,16 @@ function beautify2(input, settings: BeautifierSettings): string {
                     console.log(tab_n, arr[i], indent_start);
                 }
                 arr[i] = (Array(tab_n).join(settings.Indentation)) + arr[i]; //indent
-                /*if (new_line_after_port) {
+                if (settings.NewLineSettings.newLineAfter.indexOf("port")) {
                     if (str.indexOf('@@singleend') < 0) {
-                        arr[i] = arr[i].replace(/(PORT|GENERIC)([ \w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(indentation)) + "(");
+                        arr[i] = arr[i].replace(/(PORT)([ \r\n\w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(settings.Indentation)) + "(");
                     }
-                }*/
+                }
+                if (settings.NewLineSettings.newLineAfter.indexOf("generic")) {
+                    if (str.indexOf('@@singleend') < 0) {
+                        arr[i] = arr[i].replace(/(GENERIC)([ \r\n\w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(settings.Indentation)) + "(");
+                    }
+                }
             }
             if (back_tab) {
                 tab_n++;
@@ -737,7 +708,7 @@ function beautify2(input, settings: BeautifierSettings): string {
                         white_space = (Array(str.indexOf("= ") + 3).join(" "));
                     } else if (first_word == "WHEN" && i + 1 < arr.length && arr[i + 1].indexOf("WHEN") < 0) {
                         tab_n = indent_start_last + 1;
-                    } else if (str.indexOf("=>") < 0 && ((str.indexOf("@@quotes") >= 0 && str.indexOf("= @@quotes") < 0 && str.indexOf("IF") < 0) || (str.indexOf("<=") > 0 && str.indexOf("IF") < 0 && str.indexOf("THEN") < 0))) {
+                    } else if (str.indexOf("=>") < 0 && ((str.indexOf(ILQuotesPrefix) >= 0 && str.indexOf("= " + ILQuotesPrefix) < 0 && str.indexOf("IF") < 0) || (str.indexOf("<=") > 0 && str.indexOf("IF") < 0 && str.indexOf("THEN") < 0))) {
                         tab_n++;
                         indent_start.push(tab_n);
                         semi_b = true;
@@ -824,16 +795,67 @@ function beautify2(input, settings: BeautifierSettings): string {
         }
     }
 
-    for (var k = 0; k < quotesIndex; k++) {
-        input = input.replace("@@quotes" + k, quotes[k]);
+    for (var k = 0; k < quotes.length; k++) {
+        input = input.replace(ILQuotesPrefix + k, quotes[k]);
     }
 
-    for (var k = 0; k < singlelineIndex; k++) {
-        input = input.replace("@@singleline" + k, singleline[k]);
-    }
-
-
+    input = input.replace(/@@singleline[ \r\n]*/, " ");
     return input;
+}
+
+
+export function ApplyNoNewLineAfter(arr: Array<string>, noNewLineAfter: Array<string>) {
+    if (noNewLineAfter == null) {
+        return;
+    }
+    for (let i = 0; i < arr.length; i++) {
+        noNewLineAfter.forEach(n => {
+            let regex = new RegExp("(" + n.toUpperCase + ")[ a-z0-9]+[a-z0-9]+");
+            if (arr[i].regexIndexOf(regex) >= 0) {
+                arr[i] += "@@singleline";
+            }
+        });
+    }
+}
+
+export function RemoveAsserts(arr: Array<string>) {
+    let need_semi: boolean = false;
+    let inAssert: boolean = false;
+    let n: number = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let has_semi: boolean = arr[i].indexOf(";") >= 0;
+        if (need_semi) {
+            arr[i] = '';
+        }
+        n = arr[i].indexOf("ASSERT ");
+        if (n >= 0) {
+            inAssert = true;
+            arr[i] = '';
+        }
+        if (!has_semi) {
+            if (inAssert) {
+                need_semi = true;
+            }
+        }
+        else {
+            need_semi = false;
+        }
+    }
+}
+
+function EscapeQuotes(arr: Array<string>): Array<string> {
+    let quotes: Array<string> = [];
+    let quotesIndex = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let quote = arr[i].match(/"([^"]+)"/g);
+        if (quote != null) {
+            for (var j = 0; j < quote.length; j++) {
+                arr[i] = arr[i].replace(quote[j], ILQuotesPrefix + quotesIndex);
+                quotes[quotesIndex++] = quote[j];
+            }
+        }
+    }
+    return quotes;
 }
 
 function RemoveExtraNewLines(input: any) {
