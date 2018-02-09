@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es6","dom"],
+    "sourceMap": true
+  },
+  "files": [
+    "VHDLFormatter.ts",
+    "VHDLFormatterUnitTests.ts"
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}

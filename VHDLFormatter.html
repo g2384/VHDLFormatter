@@ -1,0 +1,298 @@
+<html>
+
+<head>
+    <title>VHDL Beautifier, Formatter Online</title>
+    <style>
+        body {
+            margin: 0 auto;
+            max-width: 960px;
+            tab-size: 4;
+            font-family: Helvetica, arial;
+        }
+
+        textarea {
+            width: 100%;
+            font-family: Consolas, Courier;
+        }
+
+        .btn {
+            margin: 10px 10px;
+            padding: 5px 8px;
+            font-size: 16px;
+            line-height: 1.33;
+            border-radius: 3px;
+            color: #333;
+            border-color: #ccc;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+            border: 1px solid rgb(194, 194, 194);
+        }
+
+        .btn:hover {
+            background-color: #afd9ee;
+        }
+
+        .show {
+            display: none;
+        }
+
+        input[type="checkbox"]+label {
+            display: inline-block;
+            width: 19px;
+            height: 19px;
+            margin: -1px 4px 0 0;
+        }
+
+        .wordwrap {
+            white-space: pre-wrap;
+            white-space: -moz-pre-wrap;
+            white-space: -pre-wrap;
+            white-space: -o-pre-wrap;
+            word-wrap: break-word;
+        }
+
+        label {
+            cursor: pointer;
+            line-height: 1.5em;
+        }
+
+        label:hover {
+            color: #555;
+            text-decoration: underline;
+        }
+
+        form {
+            margin-bottom: 0px;
+        }
+
+        a {
+            color: #4b9aff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <link href="highlight.css" />
+    <script src="highlight.js"></script>
+    <script>
+        function selectText(element) {
+            var doc = document,
+                text = element,
+                range, selection;
+            if (doc.body.createTextRange) { //ms
+                range = doc.body.createTextRange();
+                range.moveToElementText(text);
+                range.select();
+            } else if (window.getSelection) { //all others
+                selection = window.getSelection();
+                range = doc.createRange();
+                range.selectNodeContents(text);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <h2>VHDL Beautifier, Formatter</h2>
+    <h4>Beautify and format your VHDL code online</h4>
+    <p>
+        Proper formatting makes code easier to read and understand.
+        <br> Please make a backup before you replace your code!
+        <br>
+        <a href="https://github.com/g2384/g2384.github.io/issues" target="_blank">Report bugs if your code is not properly formatted, please provide sample code which causes the failure</a>
+    </p>
+    <div id="lastModified"></div>
+    <textarea id="in" rows="10" wrap="off"></textarea>
+    <br>
+    <form id="keyword">Keyword Case:
+        <label>
+            <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label>
+        |
+        <label>
+            <input type="radio" name="keywordcase" value="LowerCase">lowercase</label>
+        |
+        <label>
+            <input type="radio" name="keywordcase" value="DefaultCase">Default</label>
+    </form>
+    <label>
+        <input type="checkbox" id="no_format" onclick="noFormat()">Only highlight, don't format</label>
+    <br> New line after
+    <label>
+        <input type="checkbox" checked="checked" id="new_line_after_then">THEN</label>,
+    <label>
+        <input type="checkbox" checked="checked" id="new_line_after_semicolon">semicolon ";"</label>,
+    <label>
+        <input type="checkbox" id="new_line_after_else">ELSE</label>,
+    <label>
+        <input type="checkbox" id="new_line_after_port">PORT</label>,
+    <label>
+        <input type="checkbox" id="new_line_after_generic">GENERIC</label>
+    <br>
+    <label>
+        <input type="checkbox" id="remove_comments">Remove commments</label>
+    |
+    <label>
+        <input type="checkbox" id="remove_lines">Remove blank lines</label>
+    |
+    <label>
+        <input type="checkbox" id="remove_report">Remove REPORT</label>
+    <br>
+    <label>
+        <input type="checkbox" id="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
+    <br>
+    <label>
+        <input type="checkbox" id="sign_align">Align signs in PORT()</label>
+    <br>
+    <label>
+        <input type="checkbox" id="sign_align_all">Align signs in all places</label>
+    <br>
+    <label>
+        <input type="checkbox" id="use_space">Customise Indentation (tab is \t): </label>
+    <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
+    <span id="indent_s">four blankspace</span>)
+    <br>
+    <label>
+        <input type="checkbox" id="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
+    <br>
+    <label>
+        <input type="checkbox" id="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
+    <br>
+    <input type="button" class="btn" onclick="f()" value="start" />
+    <span class="show">
+        <input type="button" class="btn " id="selectAll" value="Select All" onclick="selectText(document.getElementById('vhdl'))"
+        />
+        <label>
+            <input type="checkbox" onclick="wordWrap()" id="">Word wrap</label>
+    </span>
+    <br>
+    <pre id="result"><code class="vhdl" id="vhdl">
+<font style="background-color:#9D9D9D; color:#fff"> output sample </font>
+
+<span class="hljs-keyword">LIBRARY</span> IEEE; <span class="hljs-comment">-- declare the library</span>
+<span class="hljs-keyword">USE</span> IEEE.std_logic_1164.<span class="hljs-keyword">ALL</span>;
+<span class="hljs-keyword">USE</span> IEEE.std_logic_arith.<span class="hljs-keyword">ALL</span>;
+<font style="background-color:#9D9D9D; color:#fff"> (All reserved words are in capital) </font>
+<font style="background-color:#9D9D9D; color:#fff"> (All indents are in the right place) </font>
+<span class="hljs-comment">---------------------------------------------------------------</span>
+
+<span class="hljs-keyword">ENTITY</span> example <span class="hljs-keyword">IS</span>
+	<span class="hljs-keyword">PORT</span> (
+		rst                   : <span class="hljs-keyword">IN</span> <span class="hljs-typename">std_logic</span>;
+		clk                   : <span class="hljs-keyword">IN</span> <span class="hljs-typename">std_logic</span>;
+		example_of_long_words : <span class="hljs-keyword">OUT</span> <span class="hljs-typename">std_logic_vector</span>(<span class="hljs-number">3</span> <span class="hljs-keyword">DOWNTO</span> <span class="hljs-number">0</span>)
+		<font style="background-color:#9D9D9D; color:#fff"> (<strong>Align signs in PORT()</strong> aligns these colons) </font>
+	);
+<span class="hljs-keyword">END</span> example;
+
+<span class="hljs-keyword">ARCHITECTURE</span> EXA <span class="hljs-keyword">OF</span> example <span class="hljs-keyword">IS</span>
+	<span class="hljs-keyword">ALIAS</span> slv <span class="hljs-keyword">IS</span> <span class="hljs-typename">std_logic_vector</span>;
+	<span class="hljs-keyword">SUBTYPE</span> bit4 <span class="hljs-keyword">IS</span> slv(<span class="hljs-number">3</span> <span class="hljs-keyword">DOWNTO</span> <span class="hljs-number">0</span>); <font style="background-color:#9D9D9D; color:#fff"> (<strong>Check ALIAS</strong> replaces all "<strong>std_logic_vector</strong>" with "<strong>slv</strong>") </font>
+	 
+<span class="hljs-keyword">BEGIN</span>
+	<del><span class="hljs-keyword">REPORT</span> <span class="hljs-string">"Hello World"</span></del>; <font style="background-color:#9D9D9D; color:#fff"> (Remove REPORT) </font>
+	 
+	stages : <span class="hljs-keyword">PROCESS</span> (rst, clk)
+	<span class="hljs-keyword">BEGIN</span>
+		 
+		<span class="hljs-keyword">IF</span> (rst = <span class="hljs-literal">'0'</span>) <span class="hljs-keyword">THEN</span>
+			<span class="hljs-keyword">CASE</span> bit4 <span class="hljs-keyword">IS</span>
+				<span class="hljs-keyword">WHEN</span> <span class="hljs-string">"0000"</span> =&gt; bit4 &lt;= <span class="hljs-string">"0001"</span>;
+				<span class="hljs-keyword">WHEN</span> <span class="hljs-string">"0001"</span> =&gt; bit4 &lt;= <span class="hljs-string">"0100"</span>;
+				<span class="hljs-keyword">WHEN</span> <span class="hljs-string">"0010"</span> =&gt; bit4 &lt;= <span class="hljs-string">"0010"</span>;
+				<span class="hljs-keyword">WHEN</span> <span class="hljs-string">"0100"</span> =&gt; bit4 &lt;= <span class="hljs-string">"0000"</span>;
+				<span class="hljs-keyword">WHEN</span> <span class="hljs-keyword">OTHERS</span> =&gt; 
+					<del><span class="hljs-keyword">REPORT</span> <span class="hljs-string">"Are there any more cases?"</span></del>; <font style="background-color:#9D9D9D; color:#fff"> (Remove REPORT) </font>
+			<span class="hljs-keyword">END</span> <span class="hljs-keyword">CASE</span>;
+		<span class="hljs-keyword">ELSIF</span> (clk<span class="hljs-attribute">'event</span> <span class="hljs-keyword">AND</span> clk = <span class="hljs-literal">'1'</span>) <span class="hljs-keyword">THEN</span>
+			<span class="hljs-keyword">IF</span> (bit4 = '<span class="hljs-number">0111</span>') <span class="hljs-keyword">THEN</span>
+				bit4 &lt;= <span class="hljs-string">"0000"</span>;
+			<span class="hljs-keyword">ELSE</span>
+				bit4 &lt;= <span class="hljs-string">"1111"</span>;
+			<span class="hljs-keyword">END</span> <span class="hljs-keyword">IF</span>;
+			<del><span class="hljs-comment">-- Sample comments 1;</span> </del> 
+			<del> <span class="hljs-comment">-- Sample comments 2;</span></del>  <font style="background-color:#9D9D9D; color:#fff"> (Remove comments) </font>
+		<span class="hljs-keyword">END</span> <span class="hljs-keyword">IF</span>;
+		 
+	<span class="hljs-keyword">END</span> <span class="hljs-keyword">PROCESS</span>;
+<span class="hljs-keyword">END</span> EXA;</code></pre>
+<script> var exports = {}; </script>
+    <script src="VHDLFormatter.js"></script>
+    <script src="VHDLFormatterUnitTests.js"></script>
+    <script>
+        let lastModifiedDate = fetchHeader(location.href, 'Last-Modified');
+        if (lastModifiedDate != "") {
+            document.getElementById("lastModified").innerHTML = "<p>Last modified: " + lastModifiedDate + "</p>";
+        }
+
+        function f() {
+            var input = document.getElementById("in").value;
+            var no_format = document.getElementById("no_format").checked;
+            if (no_format) {
+                document.getElementById("vhdl").innerHTML = input;
+                document.querySelector(".show").style.display = "inline-block";
+                hljs.highlightBlock(document.getElementById("vhdl"));
+                return;
+            }
+            var remove_comments = document.getElementById("remove_comments").checked;
+            var remove_lines = document.getElementById("remove_lines").checked;
+            var remove_report = document.getElementById("remove_report").checked;
+            var check_alias = document.getElementById("check_alias").checked;
+            var sign_align = document.getElementById("sign_align").checked;
+            var sign_align_all = document.getElementById("sign_align_all").checked;
+            var new_line_after_port = document.getElementById("new_line_after_port").checked;
+            var new_line_after_then = document.getElementById("new_line_after_then").checked;
+            var new_line_after_semicolon = document.getElementById("new_line_after_semicolon").checked;
+            var new_line_after_generic = document.getElementById("new_line_after_generic").checked;
+            var use_space = document.getElementById("use_space").checked;
+            var compress = document.getElementById("compress").checked;
+            var cust_indent = document.getElementById("cust_indent").value;
+            var keywordcase = document.getElementById("keyword").elements.namedItem("keywordcase").value;
+            var mix_letter = document.getElementById("mix_letter").checked;
+            if (compress) {
+                remove_comments = true;
+            }
+
+            indentation = "\t";
+            if (use_space) {
+                cust_indent = cust_indent.replace(/\\t/, "	");
+                indentation = cust_indent;
+            }
+
+            var newLineSettingsDict = {};
+            newLineSettingsDict["generic"] = new_line_after_generic;
+            newLineSettingsDict["port"] = new_line_after_port;
+            newLineSettingsDict[";"] = new_line_after_semicolon;
+            newLineSettingsDict["then"] = new_line_after_then;
+            newLineSettingsDict["else"] = new_line_after_else;
+            newLineSettings = ConstructNewLineSettings(newLineSettingsDict);
+
+            beautifierSettings = BeautifierSettings(remove_comments, remove_report, check_alias, sign_align, sign_align_all,
+                keywordcase, indentation, newLineSettings);
+
+            input = beautify(input, beautifierSettings);
+
+            if (remove_lines) {
+                input = input.replace(/(\r\n)*[ \t]*\r\n/g, '\r\n');
+            }
+
+            if (compress) {
+                input = Compress(input);
+            }
+
+            if (mix_letter) {
+                input = MixLetters(input);
+            }
+
+            document.getElementById("vhdl").innerHTML = input;
+            document.querySelector(".show").style.display = "inline-block";
+            hljs.highlightBlock(document.getElementById("vhdl"));
+        }
+    </script>
+</body>
+
+</html>
