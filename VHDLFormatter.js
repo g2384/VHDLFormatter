@@ -212,18 +212,19 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
     }
     if (newLineSettings.newLineAfter != null) {
         newLineSettings.newLineAfter.forEach(symbol => {
-            let regex = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n])", "g");
+            let regex = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n@])", "g");
             text = text.replace(regex, '$1\r\n$2');
         });
     }
     if (newLineSettings.noNewLineAfter != null) {
         newLineSettings.noNewLineAfter.forEach(symbol => {
-            let regex = new RegExp("(" + symbol.toUpperCase() + ")[ \r\n]+", "g");
-            text = text.replace(regex, '$1 ');
+            let regex = new RegExp("(" + symbol.toUpperCase() + ")[ \r\n]+([^@])", "g");
+            text = text.replace(regex, '$1 $2');
         });
     }
     return text;
 }
+exports.SetNewLinesAfterSymbols = SetNewLinesAfterSymbols;
 class BeautifierSettings {
     constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, indentation, newLineSettings) {
         this.RemoveComments = removeComments;
@@ -240,20 +241,24 @@ exports.BeautifierSettings = BeautifierSettings;
 let KeyWords = ["ABS", "ACCESS", "AFTER", "ALIAS", "ALL", "AND", "ARCHITECTURE", "ARRAY", "ASSERT", "ATTRIBUTE", "BEGIN", "BLOCK", "BODY", "BUFFER", "BUS", "CASE", "COMPONENT", "CONFIGURATION", "CONSTANT", "CONTEXT", "COVER", "DISCONNECT", "DOWNTO", "DEFAULT", "ELSE", "ELSIF", "END", "ENTITY", "EXIT", "FAIRNESS", "FILE", "FOR", "FORCE", "FUNCTION", "GENERATE", "GENERIC", "GROUP", "GUARDED", "IF", "IMPURE", "IN", "INERTIAL", "INOUT", "IS", "LABEL", "LIBRARY", "LINKAGE", "LITERAL", "LOOP", "MAP", "MOD", "NAND", "NEW", "NEXT", "NOR", "NOT", "NULL", "OF", "ON", "OPEN", "OR", "OTHERS", "OUT", "PACKAGE", "PORT", "POSTPONED", "PROCEDURE", "PROCESS", "PROPERTY", "PROTECTED", "PURE", "RANGE", "RECORD", "REGISTER", "REJECT", "RELEASE", "REM", "REPORT", "RESTRICT", "RESTRICT_GUARANTEE", "RETURN", "ROL", "ROR", "SELECT", "SEQUENCE", "SEVERITY", "SHARED", "SIGNAL", "SLA", "SLL", "SRA", "SRL", "STRONG", "SUBTYPE", "THEN", "TO", "TRANSPORT", "TYPE", "UNAFFECTED", "UNITS", "UNTIL", "USE", "VARIABLE", "VMODE", "VPROP", "VUNIT", "WAIT", "WHEN", "WHILE", "WITH", "XNOR", "XOR"];
 let TypeNames = ["BOOLEAN", "BIT", "CHARACTER", "INTEGER", "TIME", "NATURAL", "POSITIVE", "STRING"];
 function beautify(input, settings) {
+    var arr = input.split("\r\n");
+    var comments = [], commentsIndex = 0;
+    commentsIndex = EscapeComments(arr, comments, commentsIndex);
+    if (settings.RemoveComments) {
+        input = input.replace(/@@comments[0-9]+/g, '');
+        commentsIndex = 0;
+    }
+    input = arr.join("\r\n");
     input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
     input = input.replace(/[ ]+;/g, ';');
     input = input.replace(/:[ ]*(PROCESS|ENTITY)/gi, ':$1');
-    var arr = input.split("\r\n");
-    var comments = [], commentsIndex = 0;
-    commentsIndex = EscapeComments(arr, comments, commentsIndex);
-    input = arr.join("\r\n");
-    if (settings.RemoveComments) {
-        input = input.replace(/@@comments[0-9]+/g, '');
-    }
     input = ReplaceKeyWords(input, KeyWords);
     input = ReplaceKeyWords(input, TypeNames);
+    arr = input.split("\r\n");
+    ReserveSemicolonInKeywords(arr);
+    input = arr.join("\r\n");
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
     input = beautify2(input, settings);
@@ -271,7 +276,7 @@ function beautify2(input, settings) {
     if (settings.RemoveAsserts) {
         RemoveAsserts(arr); //RemoveAsserts must be after EscapeQuotes
     }
-    var singleline = [], singlelineIndex = 0;
+    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
     var align = [], align_max = [], align_i1 = 0, align_i = 0;
     var str = "", str1 = "";
     var p = 0;
@@ -280,13 +285,9 @@ function beautify2(input, settings) {
     var back_tab = false, forward_tab = false, semi_pos = 0, begin_b = true, port_b = false;
     var before_begin = true;
     var l = arr.length;
-    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
     for (i = 0; i < l; i++) {
         if (arr[i].indexOf("BEGIN") >= 0) {
             before_begin = false;
-        }
-        if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
-            arr[i] = arr[i].replace(/;/g, '@@semicolon');
         }
         if (port_s) {
             port_s += arr[i];
@@ -297,7 +298,8 @@ function beautify2(input, settings) {
                 port_b = false;
             }
         }
-        if ((!port_b && arr[i].regexIndexOf(/(\s|\(|^)(PORT|GENERIC|PROCESS|PROCEDURE)(\s|\(|$)/) >= 0) || (arr[i].regexIndexOf(/:[ ]?=[ ]?\(/) >= 0 && before_begin)) {
+        if ((!port_b && arr[i].regexIndexOf(/(\s|\(|^)(PORT|GENERIC|PROCESS|PROCEDURE)(\s|\(|$)/) >= 0)
+            || (arr[i].regexIndexOf(/:[ ]?=[ ]?\(/) >= 0 && before_begin)) {
             port_b = true;
             port_s = arr[i];
             var k_port = port_s.split("(").length;
@@ -337,7 +339,7 @@ function beautify2(input, settings) {
         }
     }
     input = input.replace(/(MAP)[ \r\n]+\(/g, '$1(');
-    input = input.replace(/(;|THEN)[ ]?(@@comments[0-9]+)([a-zA-Z])/g, '$1 $2\r\n$3');
+    //input = input.replace(/(;|THEN)[ ]?(@@comments[0-9]+)([a-zA-Z])/g, '$1 $2\r\n$3');
     input = input.replace(/[\r\n ]+RETURN/g, ' RETURN');
     input = input.replace(/BEGIN[\r\n ]+/g, 'BEGIN\r\n');
     input = input.replace(/ (PORT|GENERIC) /g, '\r\n$1 ');
@@ -752,6 +754,13 @@ function beautify2(input, settings) {
     }
     input = input.replace(/@@singleline[ \r\n]*/, " ");
     return input;
+}
+function ReserveSemicolonInKeywords(arr) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
+            arr[i] = arr[i].replace(/;/g, '@@semicolon');
+        }
+    }
 }
 function ApplyNoNewLineAfter(arr, noNewLineAfter) {
     if (noNewLineAfter == null) {

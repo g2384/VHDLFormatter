@@ -226,20 +226,20 @@ function SetKeywordCase(input: string, keywordcase: string, keywords, typenames)
     return input;
 }
 
-function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSettings): string {
+export function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSettings): string {
     if (newLineSettings == null) {
         return text;
     }
     if (newLineSettings.newLineAfter != null) {
         newLineSettings.newLineAfter.forEach(symbol => {
-            let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n])", "g");
+            let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n@])", "g");
             text = text.replace(regex, '$1\r\n$2');
         });
     }
     if (newLineSettings.noNewLineAfter != null) {
         newLineSettings.noNewLineAfter.forEach(symbol => {
-            let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ \r\n]+", "g");
-            text = text.replace(regex, '$1 ');
+            let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ \r\n]+([^@])", "g");
+            text = text.replace(regex, '$1 $2');
         });
     }
     return text;
@@ -272,24 +272,28 @@ let KeyWords: Array<string> = ["ABS", "ACCESS", "AFTER", "ALIAS", "ALL", "AND", 
 let TypeNames: Array<string> = ["BOOLEAN", "BIT", "CHARACTER", "INTEGER", "TIME", "NATURAL", "POSITIVE", "STRING"];
 
 export function beautify(input: string, settings: BeautifierSettings) {
+    var arr = input.split("\r\n");
+    var comments = [],
+        commentsIndex = 0;
+    commentsIndex = EscapeComments(arr, comments, commentsIndex);
+
+    if (settings.RemoveComments) {
+        input = input.replace(/@@comments[0-9]+/g, '');
+        commentsIndex = 0;
+    }
+
+    input = arr.join("\r\n");
     input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
     input = input.replace(/[ ]+;/g, ';');
     input = input.replace(/:[ ]*(PROCESS|ENTITY)/gi, ':$1');
-
-    var arr = input.split("\r\n");
-    var comments = [],
-        commentsIndex = 0;
-    commentsIndex = EscapeComments(arr, comments, commentsIndex);
-    input = arr.join("\r\n");
-
-    if (settings.RemoveComments) {
-        input = input.replace(/@@comments[0-9]+/g, '');
-    }
-
     input = ReplaceKeyWords(input, KeyWords);
     input = ReplaceKeyWords(input, TypeNames);
+
+    arr = input.split("\r\n");
+    ReserveSemicolonInKeywords(arr);
+    input = arr.join("\r\n");
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
 
@@ -311,8 +315,8 @@ function beautify2(input, settings: BeautifierSettings): string {
         RemoveAsserts(arr);//RemoveAsserts must be after EscapeQuotes
     }
 
-    var singleline = [],
-        singlelineIndex = 0;
+    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
+
     var align = [],
         align_max = [],
         align_i1 = 0,
@@ -332,15 +336,12 @@ function beautify2(input, settings: BeautifierSettings): string {
         port_b = false;
     var before_begin = true;
     var l = arr.length;
-    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
+
     for (i = 0; i < l; i++) {
         if (arr[i].indexOf("BEGIN") >= 0) {
             before_begin = false;
         }
 
-        if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
-            arr[i] = arr[i].replace(/;/g, '@@semicolon');
-        }
         if (port_s) {
             port_s += arr[i];
             var k_port = port_s.split("(").length;
@@ -350,7 +351,8 @@ function beautify2(input, settings: BeautifierSettings): string {
                 port_b = false;
             }
         }
-        if ((!port_b && arr[i].regexIndexOf(/(\s|\(|^)(PORT|GENERIC|PROCESS|PROCEDURE)(\s|\(|$)/) >= 0) || (arr[i].regexIndexOf(/:[ ]?=[ ]?\(/) >= 0 && before_begin)) {
+        if ((!port_b && arr[i].regexIndexOf(/(\s|\(|^)(PORT|GENERIC|PROCESS|PROCEDURE)(\s|\(|$)/) >= 0)
+            || (arr[i].regexIndexOf(/:[ ]?=[ ]?\(/) >= 0 && before_begin)) {
             port_b = true;
             port_s = arr[i];
             var k_port = port_s.split("(").length;
@@ -365,7 +367,6 @@ function beautify2(input, settings: BeautifierSettings): string {
                 arr[i] = arr[i].replace(/(PORT|GENERIC|PROCEDURE)([a-z0-9A-Z_ ]+)\(([a-zA-Z0-9_\(\) ]+)/, '$1$2(\r\n$3');
             }
         }
-
     }
     input = arr.join("\r\n");
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
@@ -390,7 +391,7 @@ function beautify2(input, settings: BeautifierSettings): string {
         }
     }
     input = input.replace(/(MAP)[ \r\n]+\(/g, '$1(');
-    input = input.replace(/(;|THEN)[ ]?(@@comments[0-9]+)([a-zA-Z])/g, '$1 $2\r\n$3');
+    //input = input.replace(/(;|THEN)[ ]?(@@comments[0-9]+)([a-zA-Z])/g, '$1 $2\r\n$3');
     input = input.replace(/[\r\n ]+RETURN/g, ' RETURN');
     input = input.replace(/BEGIN[\r\n ]+/g, 'BEGIN\r\n');
     input = input.replace(/ (PORT|GENERIC) /g, '\r\n$1 ');
@@ -803,6 +804,14 @@ function beautify2(input, settings: BeautifierSettings): string {
     return input;
 }
 
+
+function ReserveSemicolonInKeywords(arr: Array<string>) {
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
+            arr[i] = arr[i].replace(/;/g, '@@semicolon');
+        }
+    }
+}
 
 export function ApplyNoNewLineAfter(arr: Array<string>, noNewLineAfter: Array<string>) {
     if (noNewLineAfter == null) {
