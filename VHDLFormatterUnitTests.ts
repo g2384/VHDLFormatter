@@ -5,23 +5,158 @@ import { BeautifierSettings } from "./VHDLFormatter";
 import { RemoveAsserts } from "./VHDLFormatter";
 import { ApplyNoNewLineAfter } from "./VHDLFormatter";
 import { SetNewLinesAfterSymbols } from "./VHDLFormatter";
+import { beautify3 } from "./VHDLFormatter";
+import { FormattedLine } from "./VHDLFormatter";
 
 let testCount: number = 0;
 
 var showUnitTests = true;//window.location.href.indexOf("http") < 0;
 if (showUnitTests) {
     testCount = 0;
-    UnitTest();
+    //UnitTest();
+
     UnitTestIndentDecode();
     UnitTestRemoveAsserts();
     UnitTestApplyNoNewLineAfter();
     UnitTestSetNewLinesAfterSymbols();
+
+    UnitTestbeautify3();
     console.log("total tests: " + testCount);
 }
 
 interface Function {
     readonly name: string;
 }
+
+function UnitTestbeautify3() {
+    console.log("=== beautify3 ===");
+    Beautify3Case1();
+    Beautify3Case2();
+    Beautify3Case3();
+    Beautify3Case4();
+    Beautify3Case5();
+    Beautify3Case6();
+}
+
+function Beautify3Case1() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = ["a;", "b;"];
+    let expected: (FormattedLine | FormattedLine[])[] = [new FormattedLine("a;", 0), new FormattedLine("b;", 0)];
+    UnitTest6(beautify3, "General", settings, inputs, expected, 0, 1, 0);
+}
+
+function Beautify3Case2() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = ["IF x = '1' THEN", "RETURN 1;", "END IF;"];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("IF x = '1' THEN", 0),
+        new FormattedLine("RETURN 1;", 1),
+        new FormattedLine("END IF;", 0)
+    ];
+    UnitTest6(beautify3, "IF END", settings, inputs, expected, 0, 2, 0);
+}
+
+function Beautify3Case3() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "IF x = '1' THEN",
+        "RETURN 1;",
+        "ELSIF x = '0' THEN",
+        "RETURN 0;",
+        "ELSE",
+        "RETURN -1;",
+        "END IF;"];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("IF x = '1' THEN", 0),
+        new FormattedLine("RETURN 1;", 1),
+        new FormattedLine("ELSIF x = '0' THEN", 0),
+        new FormattedLine("RETURN 0;", 1),
+        new FormattedLine("ELSE", 0),
+        new FormattedLine("RETURN -1;", 1),
+        new FormattedLine("END IF;", 0)
+    ];
+    UnitTest6(beautify3, "if elsif else end", settings, inputs, expected, 0, 6, 0);
+}
+
+function Beautify3Case4() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = ["END"];
+    let expected: (FormattedLine | FormattedLine[])[] = [new FormattedLine("END", 0)];
+    UnitTest6(beautify3, "one line END", settings, inputs, expected, 0, 0, 0);
+}
+
+function Beautify3Case5() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "CASE b",
+        "WHEN 1 =>",
+        "c <= d;",
+        "WHEN 2 =>",
+        "d <= f;",
+        "END CASE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("CASE b", 0),
+        new FormattedLine("WHEN 1 =>", 1),
+        new FormattedLine("c <= d;", 2),
+        new FormattedLine("WHEN 2 =>", 1),
+        new FormattedLine("d <= f;", 2),
+        new FormattedLine("END CASE;", 0)
+    ];
+    UnitTest6(beautify3, "case when when end", settings, inputs, expected, 0, 5, 0);
+}
+
+function Beautify3Case6() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "CASE b",
+        "WHEN 1 =>",
+        "c <= d;",
+        "CASE b",
+        "WHEN 1 =>",
+        "c <= d;",
+        "WHEN 2 =>",
+        "d <= f;",
+        "END CASE;",
+        "WHEN 2 =>",
+        "d <= f;",
+        "END CASE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("CASE b", 0),
+        new FormattedLine("WHEN 1 =>", 1),
+        new FormattedLine("c <= d;", 2),
+        new FormattedLine("CASE b", 2),
+        new FormattedLine("WHEN 1 =>", 3),
+        new FormattedLine("c <= d;", 4),
+        new FormattedLine("WHEN 2 =>", 3),
+        new FormattedLine("d <= f;", 4),
+        new FormattedLine("END CASE;", 2),
+        new FormattedLine("WHEN 2 =>", 1),
+        new FormattedLine("d <= f;", 2),
+        new FormattedLine("END CASE;", 0)
+    ];
+    UnitTest6(beautify3, "case & case end", settings, inputs, expected, 0, 11, 0);
+}
+
 
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
@@ -69,6 +204,65 @@ function UnitTestIndentDecode() {
     UnitTest2(indentDecode, "9 blankspaces", "         ", "many blankspace");
 }
 
+function assertFormattedLines(testName, expected: (FormattedLine | FormattedLine[])[], actual: (FormattedLine | FormattedLine[])[], message?, cumulateTestCount?: boolean) {
+    var l = Math.min(actual.length, expected.length);
+    let result: string = "";
+    for (var i = 0; i < l; i++) {
+        if (actual[i] instanceof FormattedLine) {
+            if (expected[i] instanceof FormattedLine) {
+                assertFormattedLine(testName, <FormattedLine>(expected[i]), <FormattedLine>(actual[i]), message, false);
+            }
+            else {
+                console.log("expected FormatLine[], actual FormattedLine. actual:" + (<FormattedLine>(actual[i])).Line);
+            }
+        }
+        else {
+            if (expected[i] instanceof FormattedLine) {
+                console.log("expected FormatLine, actual FormattedLine[]. expected:" + (<FormattedLine>(expected[i])).Line);
+            }
+            else {
+                assertFormattedLines(testName, <FormattedLine[]>(actual[i]), <FormattedLine[]>(expected[i]), message, false);
+            }
+        }
+    }
+    if (actual.length > expected.length) {
+        result += "actual has more items";
+        for (var i = expected.length; i < actual.length; i++) {
+            result += "actual[" + i + "] = " + actual[i];
+        }
+    }
+    else if (actual.length < expected.length) {
+        result += "expected has more items";
+        for (var i = actual.length; i < expected.length; i++) {
+            result += "expected[" + i + "] = " + expected[i];
+        }
+    }
+    if (result.length > 0) {
+        console.log(result);
+    }
+
+    if (cumulateTestCount != false) {
+        testCount++;
+    }
+}
+
+function assertFormattedLine(testName, expected: FormattedLine, actual: FormattedLine, message?, cumulateTestCount?: boolean) {
+    if (expected.Indent != actual.Indent) {
+        console.log(testName + ' failed:\nexpected: "' + expected.Line + '", ' + expected.Indent
+            + ';\nactual: "' + actual.Line + '", ' + actual.Indent);
+    }
+    var result = CompareString(actual.Line, expected.Line);
+    if (result != true) {
+        console.log(testName + " failed: " + result);
+    }
+    else {
+        //console.log(testName + " pass");
+    }
+    if (cumulateTestCount != false) {
+        testCount++;
+    }
+}
+
 function assert(testName, expected, actual, message?) {
     var result = CompareString(actual, expected);
     if (result != true) {
@@ -98,6 +292,17 @@ type ArrayCallback = (arr: Array<string>) => void;
 type Array2Callback = (arr: Array<string>, parameters: Array<string>) => void;
 
 type String2Callback = (text: string, parameters: NewLineSettings) => string;
+
+type BeautifyCallback = (inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number) => number;
+
+function UnitTest6(func: BeautifyCallback, testName: string, parameters: BeautifierSettings, inputs: Array<string>, expected: (FormattedLine | FormattedLine[])[], startIndex: number, expectedEndIndex: number, indent: number) {
+    let actual: (FormattedLine | FormattedLine[])[] = []
+    let endIndex: number = func(inputs, actual, parameters, startIndex, indent);
+    if (endIndex != expectedEndIndex) {
+        console.log(testName + " failed;\nend index, actual: " + endIndex + "; expected: " + expectedEndIndex)
+    }
+    assertFormattedLines(testName, expected, actual);
+}
 
 function UnitTest5(func: String2Callback, testName: string, parameters: NewLineSettings, inputs, expected: string) {
     let actual: string = func(inputs, parameters);

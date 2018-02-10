@@ -46,6 +46,10 @@ function fetchHeader(url, wch) {
         return "";
     }
 }
+String.prototype.regexStartsWith = function (pattern) {
+    var searchResult = this.search(pattern);
+    return searchResult == 0;
+};
 String.prototype.regexIndexOf = function (pattern, startIndex) {
     startIndex = startIndex || 0;
     var searchResult = this.substr(startIndex).search(pattern);
@@ -261,7 +265,13 @@ function beautify(input, settings) {
     input = arr.join("\r\n");
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
-    input = beautify2(input, settings);
+    //input = beautify2(input, settings);
+    //new
+    arr = input.split("\r\n");
+    let result = [];
+    beautify3(arr, result, settings, 0, 0);
+    arr = FormattedLineToString(result, settings.Indentation);
+    input = arr.join("\r\n");
     for (var k = 0; k < commentsIndex; k++) {
         input = input.replace(ILCommentPrefix + k, comments[k]);
     }
@@ -270,6 +280,76 @@ function beautify(input, settings) {
     return input;
 }
 exports.beautify = beautify;
+class FormattedLine {
+    constructor(line, indent) {
+        this.Line = line;
+        this.Indent = indent;
+    }
+}
+exports.FormattedLine = FormattedLine;
+function FormattedLineToString(arr, indentation) {
+    let result = [];
+    if (arr == null) {
+        return result;
+    }
+    arr.forEach(i => {
+        if (i instanceof FormattedLine) {
+            result.push((Array(i.Indent).join(indentation)) + i.Line);
+        }
+        else {
+            result = result.concat(FormattedLineToString(i, indentation));
+        }
+    });
+    return result;
+}
+function beautifyCaseBlock(inputs, result, settings, startIndex, indent, isFirstKeyWord) {
+    if (!inputs[startIndex].regexStartsWith(/(CASE)([\s]|$)/)) {
+        return startIndex;
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    let i = beautify3(inputs, result, settings, startIndex + 1, indent + 2);
+    result[i].Indent = indent;
+    return i;
+}
+exports.beautifyCaseBlock = beautifyCaseBlock;
+function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord) {
+    let i;
+    let ignoreFirstKeyWords = ["WHEN"];
+    let blockMidKeyWords = ["ELSE", "ELSIF"].concat(ignoreFirstKeyWords);
+    let blockStartsKeyWords = ["IF", "CASE"];
+    let blockEndsKeyWords = ["END"];
+    let ignoreFirstKeyWordsStr = ignoreFirstKeyWords.join("|");
+    let newLineAfterKeyWordsStr = blockStartsKeyWords.join("|");
+    let blockEndKeyWordsStr = blockEndsKeyWords.join("|");
+    let blockMidKeyWordsStr = blockMidKeyWords.join("|");
+    let regexBlockMidKeyWords = new RegExp("(" + blockMidKeyWordsStr + ")([\\s]|$)");
+    let regexIgnoreFirstKeyWords = new RegExp("(" + ignoreFirstKeyWordsStr + ")([\\s]|$)");
+    let regexBlockStartsKeywords = new RegExp("(" + newLineAfterKeyWordsStr + ")([\\s]|$)");
+    let regexBlockEndsKeyWords = new RegExp("(" + blockEndKeyWordsStr + ")([\\s]|$)");
+    for (i = startIndex; i < inputs.length; i++) {
+        let input = inputs[i];
+        if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
+            i = beautifyCaseBlock(inputs, result, settings, i, indent);
+            continue;
+        }
+        result.push(new FormattedLine(input, indent));
+        if (startIndex != 0
+            && (input.regexStartsWith(regexBlockMidKeyWords))) {
+            result[i].Indent--;
+        }
+        else if (startIndex != 0
+            && (input.regexStartsWith(regexBlockEndsKeyWords))) {
+            result[i].Indent--;
+            return i;
+        }
+        if (input.regexStartsWith(regexBlockStartsKeywords)) {
+            i = beautify3(inputs, result, settings, i + 1, indent + 1);
+        }
+    }
+    i--;
+    return i;
+}
+exports.beautify3 = beautify3;
 function beautify2(input, settings) {
     let arr = input.split("\r\n");
     let quotes = EscapeQuotes(arr);

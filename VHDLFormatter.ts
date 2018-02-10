@@ -55,9 +55,14 @@ declare global {
         regexIndexOf: (pattern: RegExp, startIndex?: number) => number;
         regexLastIndexOf: (pattern: RegExp, startIndex: number) => number;
         reverse: () => string;
+        regexStartsWith: (pattern: RegExp) => boolean;
     }
 }
 
+String.prototype.regexStartsWith = function (pattern): boolean {
+    var searchResult = this.search(pattern);
+    return searchResult == 0;
+}
 String.prototype.regexIndexOf = function (pattern, startIndex) {
     startIndex = startIndex || 0;
     var searchResult = this.substr(startIndex).search(pattern);
@@ -297,7 +302,14 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
 
-    input = beautify2(input, settings);
+    //input = beautify2(input, settings);
+
+    //new
+    arr = input.split("\r\n");
+    let result: (FormattedLine | FormattedLine[])[] = [];
+    beautify3(arr, result, settings, 0, 0);
+    arr = FormattedLineToString(result, settings.Indentation);
+    input = arr.join("\r\n");
 
     for (var k = 0; k < commentsIndex; k++) {
         input = input.replace(ILCommentPrefix + k, comments[k]);
@@ -306,6 +318,81 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
     return input;
+}
+
+export class FormattedLine {
+    Line: string;
+    Indent: number;
+    constructor(line: string, indent: number) {
+        this.Line = line;
+        this.Indent = indent;
+    }
+}
+
+function FormattedLineToString(arr: (FormattedLine | FormattedLine[])[], indentation: string): Array<string> {
+    let result: Array<string> = [];
+    if (arr == null) {
+        return result;
+    }
+    arr.forEach(i => {
+        if (i instanceof FormattedLine) {
+            result.push((Array(i.Indent).join(indentation)) + i.Line);
+        }
+        else {
+            result = result.concat(FormattedLineToString(i, indentation));
+        }
+    });
+    return result;
+}
+
+export function beautifyCaseBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, isFirstKeyWord?: boolean): number {
+    if (!inputs[startIndex].regexStartsWith(/(CASE)([\s]|$)/)) {
+        return startIndex;
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+
+    let i = beautify3(inputs, result, settings, startIndex + 1, indent + 2);
+    (<FormattedLine>result[i]).Indent = indent;
+    return i;
+}
+
+export function beautify3(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, isFirstKeyWord?: boolean): number {
+    let i: number;
+    let ignoreFirstKeyWords: Array<string> = ["WHEN"];
+    let blockMidKeyWords: Array<string> = ["ELSE", "ELSIF"].concat(ignoreFirstKeyWords);
+    let blockStartsKeyWords: Array<string> = ["IF", "CASE"];
+    let blockEndsKeyWords: Array<string> = ["END"];
+
+    let ignoreFirstKeyWordsStr: string = ignoreFirstKeyWords.join("|");
+    let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
+    let blockEndKeyWordsStr: string = blockEndsKeyWords.join("|");
+    let blockMidKeyWordsStr: string = blockMidKeyWords.join("|");
+    let regexBlockMidKeyWords: RegExp = new RegExp("(" + blockMidKeyWordsStr + ")([\\s]|$)")
+    let regexIgnoreFirstKeyWords: RegExp = new RegExp("(" + ignoreFirstKeyWordsStr + ")([\\s]|$)")
+    let regexBlockStartsKeywords: RegExp = new RegExp("(" + newLineAfterKeyWordsStr + ")([\\s]|$)")
+    let regexBlockEndsKeyWords: RegExp = new RegExp("(" + blockEndKeyWordsStr + ")([\\s]|$)")
+    for (i = startIndex; i < inputs.length; i++) {
+        let input: string = inputs[i];
+        if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
+            i = beautifyCaseBlock(inputs, result, settings, i, indent);
+            continue;
+        }
+        result.push(new FormattedLine(input, indent));
+        if (startIndex != 0
+            && (input.regexStartsWith(regexBlockMidKeyWords))) {
+            (<FormattedLine>result[i]).Indent--;
+        }
+        else if (startIndex != 0
+            && (input.regexStartsWith(regexBlockEndsKeyWords))) {
+            (<FormattedLine>result[i]).Indent--;
+            return i;
+        }
+        if (input.regexStartsWith(regexBlockStartsKeywords)) {
+            i = beautify3(inputs, result, settings, i + 1, indent + 1);
+        }
+    }
+    i--;
+    return i;
 }
 
 function beautify2(input, settings: BeautifierSettings): string {

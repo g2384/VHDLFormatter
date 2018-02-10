@@ -7,16 +7,142 @@ const VHDLFormatter_4 = require("./VHDLFormatter");
 const VHDLFormatter_5 = require("./VHDLFormatter");
 const VHDLFormatter_6 = require("./VHDLFormatter");
 const VHDLFormatter_7 = require("./VHDLFormatter");
+const VHDLFormatter_8 = require("./VHDLFormatter");
+const VHDLFormatter_9 = require("./VHDLFormatter");
 let testCount = 0;
 var showUnitTests = true; //window.location.href.indexOf("http") < 0;
 if (showUnitTests) {
     testCount = 0;
-    UnitTest();
+    //UnitTest();
     UnitTestIndentDecode();
     UnitTestRemoveAsserts();
     UnitTestApplyNoNewLineAfter();
     UnitTestSetNewLinesAfterSymbols();
+    UnitTestbeautify3();
     console.log("total tests: " + testCount);
+}
+function UnitTestbeautify3() {
+    console.log("=== beautify3 ===");
+    Beautify3Case1();
+    Beautify3Case2();
+    Beautify3Case3();
+    Beautify3Case4();
+    Beautify3Case5();
+    Beautify3Case6();
+}
+function Beautify3Case1() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = ["a;", "b;"];
+    let expected = [new VHDLFormatter_9.FormattedLine("a;", 0), new VHDLFormatter_9.FormattedLine("b;", 0)];
+    UnitTest6(VHDLFormatter_8.beautify3, "General", settings, inputs, expected, 0, 1, 0);
+}
+function Beautify3Case2() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = ["IF x = '1' THEN", "RETURN 1;", "END IF;"];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("IF x = '1' THEN", 0),
+        new VHDLFormatter_9.FormattedLine("RETURN 1;", 1),
+        new VHDLFormatter_9.FormattedLine("END IF;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "IF END", settings, inputs, expected, 0, 2, 0);
+}
+function Beautify3Case3() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "IF x = '1' THEN",
+        "RETURN 1;",
+        "ELSIF x = '0' THEN",
+        "RETURN 0;",
+        "ELSE",
+        "RETURN -1;",
+        "END IF;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("IF x = '1' THEN", 0),
+        new VHDLFormatter_9.FormattedLine("RETURN 1;", 1),
+        new VHDLFormatter_9.FormattedLine("ELSIF x = '0' THEN", 0),
+        new VHDLFormatter_9.FormattedLine("RETURN 0;", 1),
+        new VHDLFormatter_9.FormattedLine("ELSE", 0),
+        new VHDLFormatter_9.FormattedLine("RETURN -1;", 1),
+        new VHDLFormatter_9.FormattedLine("END IF;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "if elsif else end", settings, inputs, expected, 0, 6, 0);
+}
+function Beautify3Case4() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = ["END"];
+    let expected = [new VHDLFormatter_9.FormattedLine("END", 0)];
+    UnitTest6(VHDLFormatter_8.beautify3, "one line END", settings, inputs, expected, 0, 0, 0);
+}
+function Beautify3Case5() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "CASE b",
+        "WHEN 1 =>",
+        "c <= d;",
+        "WHEN 2 =>",
+        "d <= f;",
+        "END CASE;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("CASE b", 0),
+        new VHDLFormatter_9.FormattedLine("WHEN 1 =>", 1),
+        new VHDLFormatter_9.FormattedLine("c <= d;", 2),
+        new VHDLFormatter_9.FormattedLine("WHEN 2 =>", 1),
+        new VHDLFormatter_9.FormattedLine("d <= f;", 2),
+        new VHDLFormatter_9.FormattedLine("END CASE;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "case when when end", settings, inputs, expected, 0, 5, 0);
+}
+function Beautify3Case6() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "CASE b",
+        "WHEN 1 =>",
+        "c <= d;",
+        "CASE b",
+        "WHEN 1 =>",
+        "c <= d;",
+        "WHEN 2 =>",
+        "d <= f;",
+        "END CASE;",
+        "WHEN 2 =>",
+        "d <= f;",
+        "END CASE;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("CASE b", 0),
+        new VHDLFormatter_9.FormattedLine("WHEN 1 =>", 1),
+        new VHDLFormatter_9.FormattedLine("c <= d;", 2),
+        new VHDLFormatter_9.FormattedLine("CASE b", 2),
+        new VHDLFormatter_9.FormattedLine("WHEN 1 =>", 3),
+        new VHDLFormatter_9.FormattedLine("c <= d;", 4),
+        new VHDLFormatter_9.FormattedLine("WHEN 2 =>", 3),
+        new VHDLFormatter_9.FormattedLine("d <= f;", 4),
+        new VHDLFormatter_9.FormattedLine("END CASE;", 2),
+        new VHDLFormatter_9.FormattedLine("WHEN 2 =>", 1),
+        new VHDLFormatter_9.FormattedLine("d <= f;", 2),
+        new VHDLFormatter_9.FormattedLine("END CASE;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "case & case end", settings, inputs, expected, 0, 11, 0);
 }
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
@@ -57,6 +183,62 @@ function UnitTestIndentDecode() {
     UnitTest2(VHDLFormatter_2.indentDecode, "4 blankspaces", "    ", "four blankspace");
     UnitTest2(VHDLFormatter_2.indentDecode, "9 blankspaces", "         ", "many blankspace");
 }
+function assertFormattedLines(testName, expected, actual, message, cumulateTestCount) {
+    var l = Math.min(actual.length, expected.length);
+    let result = "";
+    for (var i = 0; i < l; i++) {
+        if (actual[i] instanceof VHDLFormatter_9.FormattedLine) {
+            if (expected[i] instanceof VHDLFormatter_9.FormattedLine) {
+                assertFormattedLine(testName, (expected[i]), (actual[i]), message, false);
+            }
+            else {
+                console.log("expected FormatLine[], actual FormattedLine. actual:" + (actual[i]).Line);
+            }
+        }
+        else {
+            if (expected[i] instanceof VHDLFormatter_9.FormattedLine) {
+                console.log("expected FormatLine, actual FormattedLine[]. expected:" + (expected[i]).Line);
+            }
+            else {
+                assertFormattedLines(testName, (actual[i]), (expected[i]), message, false);
+            }
+        }
+    }
+    if (actual.length > expected.length) {
+        result += "actual has more items";
+        for (var i = expected.length; i < actual.length; i++) {
+            result += "actual[" + i + "] = " + actual[i];
+        }
+    }
+    else if (actual.length < expected.length) {
+        result += "expected has more items";
+        for (var i = actual.length; i < expected.length; i++) {
+            result += "expected[" + i + "] = " + expected[i];
+        }
+    }
+    if (result.length > 0) {
+        console.log(result);
+    }
+    if (cumulateTestCount != false) {
+        testCount++;
+    }
+}
+function assertFormattedLine(testName, expected, actual, message, cumulateTestCount) {
+    if (expected.Indent != actual.Indent) {
+        console.log(testName + ' failed:\nexpected: "' + expected.Line + '", ' + expected.Indent
+            + ';\nactual: "' + actual.Line + '", ' + actual.Indent);
+    }
+    var result = CompareString(actual.Line, expected.Line);
+    if (result != true) {
+        console.log(testName + " failed: " + result);
+    }
+    else {
+        //console.log(testName + " pass");
+    }
+    if (cumulateTestCount != false) {
+        testCount++;
+    }
+}
 function assert(testName, expected, actual, message) {
     var result = CompareString(actual, expected);
     if (result != true) {
@@ -76,6 +258,14 @@ function assertArray(testName, expected, actual, message) {
         //console.log(testName + " pass");
     }
     testCount++;
+}
+function UnitTest6(func, testName, parameters, inputs, expected, startIndex, expectedEndIndex, indent) {
+    let actual = [];
+    let endIndex = func(inputs, actual, parameters, startIndex, indent);
+    if (endIndex != expectedEndIndex) {
+        console.log(testName + " failed;\nend index, actual: " + endIndex + "; expected: " + expectedEndIndex);
+    }
+    assertFormattedLines(testName, expected, actual);
 }
 function UnitTest5(func, testName, parameters, inputs, expected) {
     let actual = func(inputs, parameters);
