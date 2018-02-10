@@ -50,6 +50,9 @@ function fetchHeader(url, wch) {
         return "";
     }
 }
+String.prototype.count = function (text) {
+    return this.split(text).length - 1;
+};
 String.prototype.regexStartsWith = function (pattern) {
     var searchResult = this.search(pattern);
     return searchResult == 0;
@@ -238,7 +241,7 @@ class BeautifierSettings {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
-        this.SignAlign = signAlign;
+        this.SignAlignRegional = signAlign;
         this.SignAlignAll = signAlignAll;
         this.KeywordCase = keywordCase;
         this.Indentation = indentation;
@@ -272,6 +275,13 @@ function beautify(input, settings) {
     input = arr.join("\r\n");
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
+    arr = input.split("\r\n");
+    let quotes = EscapeQuotes(arr);
+    if (settings.RemoveAsserts) {
+        RemoveAsserts(arr); //RemoveAsserts must be after EscapeQuotes
+    }
+    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
+    input = arr.join("\r\n");
     //input = beautify2(input, settings);
     //new
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
@@ -283,8 +293,9 @@ function beautify(input, settings) {
     input = input.replace(/([\(\)])[ ]?(THEN)/gi, '$1 $2');
     input = input.replace(/(^|[\(\)])[ ]?(AND|OR|XOR|XNOR)[ ]*([\(])/g, '$1 $2 $3');
     input = input.replace(/ ([\-\*\/=+<>])[ ]*([\-\*\/=+<>]) /g, " $1$2 ");
-    input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
+    //input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
     input = input.replace(/[ ]+/g, ' ');
+    input = input.replace(/[ \t]+\r\n/g, "\r\n");
     input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
@@ -293,6 +304,9 @@ function beautify(input, settings) {
     beautify3(arr, result, settings, 0, 0);
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
+    for (var k = 0; k < quotes.length; k++) {
+        input = input.replace(ILQuotesPrefix + k, quotes[k]);
+    }
     for (var k = 0; k < commentsIndex; k++) {
         input = input.replace(ILCommentPrefix + k, comments[k]);
     }
@@ -315,7 +329,12 @@ function FormattedLineToString(arr, indentation) {
     }
     arr.forEach(i => {
         if (i instanceof FormattedLine) {
-            result.push((Array(i.Indent + 1).join(indentation)) + i.Line);
+            if (i.Line.length > 0) {
+                result.push((Array(i.Indent + 1).join(indentation)) + i.Line);
+            }
+            else {
+                result.push("");
+            }
         }
         else {
             result = result.concat(FormattedLineToString(i, indentation));
@@ -324,8 +343,113 @@ function FormattedLineToString(arr, indentation) {
     return result;
 }
 exports.FormattedLineToString = FormattedLineToString;
-function beautifyCaseBlock(inputs, result, settings, startIndex, indent, isFirstKeyWord) {
-    if (!inputs[startIndex].regexStartsWith(/(CASE)([\s]|$)/)) {
+function GetCloseparentheseEndIndex(inputs, startIndex) {
+    let openParentheseCount = 0;
+    let closeParentheseCount = 0;
+    for (let i = startIndex; i < inputs.length; i++) {
+        let input = inputs[i];
+        openParentheseCount += input.count("(");
+        closeParentheseCount += input.count(")");
+        if (openParentheseCount > 0
+            && openParentheseCount <= closeParentheseCount) {
+            return i;
+        }
+    }
+    return startIndex;
+}
+function beautifyPortGenericBlock(inputs, result, settings, startIndex, indent, mode) {
+    let firstLine = inputs[startIndex];
+    let regex = new RegExp("[\\w\\s:]*(" + mode + ")([\\s]|$)");
+    if (!firstLine.regexStartsWith(regex)) {
+        return startIndex;
+    }
+    let firstLineHasParenthese = firstLine.indexOf("(") >= 0;
+    let hasParenthese = firstLineHasParenthese;
+    let blockBodyStartIndex = startIndex;
+    let secondLineHasParenthese = inputs[startIndex + 1].startsWith("(");
+    if (secondLineHasParenthese) {
+        hasParenthese = true;
+        blockBodyStartIndex++;
+    }
+    let endIndex = hasParenthese ? GetCloseparentheseEndIndex(inputs, startIndex) : startIndex;
+    if (endIndex != startIndex && firstLineHasParenthese) {
+        inputs[startIndex] = inputs[startIndex].replace(/(PORT|GENERIC|PROCEDURE)([\w ]+)\(([\w\(\) ]+)/, '$1$2(\r\n$3');
+        let newInputs = inputs[startIndex].split("\r\n");
+        if (newInputs.length == 2) {
+            inputs[startIndex] = newInputs[0];
+            inputs.splice(startIndex + 1, 0, newInputs[1]);
+            endIndex++;
+        }
+    }
+    else if (endIndex != startIndex && secondLineHasParenthese) {
+        inputs[startIndex + 1] = inputs[startIndex + 1].replace(/\(([\w\(\) ]+)/, '(\r\n$1');
+        let newInputs = inputs[startIndex + 1].split("\r\n");
+        if (newInputs.length == 2) {
+            inputs[startIndex + 1] = newInputs[0];
+            inputs.splice(startIndex + 2, 0, newInputs[1]);
+            endIndex++;
+        }
+    }
+    if (firstLineHasParenthese && inputs[startIndex].indexOf("MAP") > 0) {
+        inputs[startIndex] = inputs[startIndex].replace(/([^\w])(MAP)\s+\(/g, '$1$2(');
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (secondLineHasParenthese) {
+        result.push(new FormattedLine(inputs[startIndex + 1], indent));
+    }
+    let blockBodyEndIndex = endIndex;
+    let i = beautify3(inputs, result, settings, blockBodyStartIndex + 1, indent + 1, endIndex);
+    if (inputs[i].startsWith(")")) {
+        result[i].Indent--;
+        blockBodyEndIndex--;
+    }
+    if (settings.SignAlignRegional) {
+        blockBodyStartIndex++;
+        SignAlignRegional(result, blockBodyStartIndex, blockBodyEndIndex);
+    }
+    return i;
+}
+exports.beautifyPortGenericBlock = beautifyPortGenericBlock;
+function SignAlignRegional(result, startIndex, endIndex) {
+    let maxSymbolIndex = {};
+    let allSymbolIndex = {};
+    for (let i = startIndex; i <= endIndex; i++) {
+        let line = result[i].Line;
+        SetSymbolIndices(line, ":", maxSymbolIndex, allSymbolIndex, i);
+        SetSymbolIndices(line, ":=", maxSymbolIndex, allSymbolIndex, i);
+        SetSymbolIndices(line, "=>", maxSymbolIndex, allSymbolIndex, i);
+    }
+    for (let key in maxSymbolIndex) {
+        let maxIndex = maxSymbolIndex[key];
+        for (let lineIndex in allSymbolIndex[key]) {
+            let symbolIndex = allSymbolIndex[key][lineIndex];
+            if (symbolIndex == maxIndex) {
+                continue;
+            }
+            let line = result[lineIndex].Line;
+            result[lineIndex].Line = line.substring(0, symbolIndex)
+                + (Array(maxIndex - symbolIndex + 1).join(" "))
+                + line.substring(symbolIndex);
+        }
+    }
+}
+exports.SignAlignRegional = SignAlignRegional;
+function SetSymbolIndices(line, symbol, maxSymbolIndex, allSymbolIndex, index) {
+    let regex = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
+    let colonIndex = line.regexIndexOf(regex);
+    if (colonIndex > 0) {
+        if (maxSymbolIndex.hasOwnProperty(symbol)) {
+            maxSymbolIndex[symbol] = Math.max(maxSymbolIndex[symbol], colonIndex);
+        }
+        else {
+            maxSymbolIndex[symbol] = colonIndex;
+            allSymbolIndex[symbol] = {};
+        }
+        allSymbolIndex[symbol][index] = colonIndex;
+    }
+}
+function beautifyCaseBlock(inputs, result, settings, startIndex, indent) {
+    if (!inputs[startIndex].regexStartsWith(/(.+:\s*)?(CASE)([\s]|$)/)) {
         return startIndex;
     }
     result.push(new FormattedLine(inputs[startIndex], indent));
@@ -334,9 +458,9 @@ function beautifyCaseBlock(inputs, result, settings, startIndex, indent, isFirst
     return i;
 }
 exports.beautifyCaseBlock = beautifyCaseBlock;
-function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord) {
+function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
     let i;
-    let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w_](?!.+[^\w_]IS([^\w_]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;
+    let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w](?!.+[^\w]IS([^\w]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;
     let blockMidKeyWords = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
     let blockStartsKeyWords = [
         "IF",
@@ -346,23 +470,35 @@ function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord)
         "PACKAGE",
         "PROCESS",
         "POSTPONED PROCESS",
-        "(\\w+:\\s+PROCESS)",
+        "([\\w\\s]+:\\s*PROCESS)",
         "FUNCTION",
         "IMPURE FUNCTION",
         "(.+\\sPROTECTED)",
-        "COMPONENT"
+        "COMPONENT",
+        "ENTITY"
     ];
     let blockEndsKeyWords = ["END"];
     let newLineAfterKeyWordsStr = blockStartsKeyWords.join("|");
     let blockEndKeyWordsStr = blockEndsKeyWords.join("|");
     let blockMidKeyWordsStr = blockMidKeyWords.join("|");
-    let regexBlockMidKeyWords = new RegExp("(" + blockMidKeyWordsStr + ")([^\\w_]|$)");
-    let regexBlockStartsKeywords = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w_]|$)");
-    let regexBlockEndsKeyWords = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w_]|$)");
-    for (i = startIndex; i < inputs.length; i++) {
+    let regexBlockMidKeyWords = new RegExp("(" + blockMidKeyWordsStr + ")([^\\w]|$)");
+    let regexBlockStartsKeywords = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w]|$)");
+    let regexBlockEndsKeyWords = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w]|$)");
+    if (endIndex == null) {
+        endIndex = inputs.length - 1;
+    }
+    for (i = startIndex; i <= endIndex; i++) {
         let input = inputs[i].trim();
-        if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
+        if (input.regexStartsWith(/(.+:\s*)?(CASE)([\s]|$)/)) {
             i = beautifyCaseBlock(inputs, result, settings, i, indent);
+            continue;
+        }
+        if (input.regexStartsWith(/[\w\s:]*PORT([\s]|$)/)) {
+            i = beautifyPortGenericBlock(inputs, result, settings, i, indent, "PORT");
+            continue;
+        }
+        if (input.regexStartsWith(/[\w\s:]*GENERIC([\s]|$)/)) {
+            i = beautifyPortGenericBlock(inputs, result, settings, i, indent, "GENERIC");
             continue;
         }
         result.push(new FormattedLine(input, indent));
@@ -712,7 +848,7 @@ function beautify2(input, settings) {
                     lastAlignedSign = "";
                 }
             }
-            else if (settings.SignAlign) {
+            else if (settings.SignAlignRegional) {
                 if (port_b && signAlignPos != "") {
                     if (str.indexOf(signAlignPos) >= 0) {
                         var a1 = arr[i].split(signAlignPos);
@@ -860,7 +996,7 @@ function beautify2(input, settings) {
             input = input.replace("@@alignall" + k, Array((align_groups_max[k] - align_groups[k] + 1)).join(" "));
         }
     }
-    if (settings.SignAlign) {
+    if (settings.SignAlignRegional) {
         for (var k = 0; k < align_i; k++) {
             input = input.replace("@@align" + k, Array((align_max[k] - align[k] + 2)).join(" "));
         }

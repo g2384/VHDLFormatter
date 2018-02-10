@@ -188,7 +188,7 @@
         <input type="checkbox" id="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
     <br>
     <label>
-        <input type="checkbox" id="sign_align">Align signs in PORT()</label>
+        <input type="checkbox" id="sign_align">Align signs in PORT() GENERIC()</label>
     <br>
     <label>
         <input type="checkbox" id="sign_align_all">Align signs in all places</label>
@@ -309,7 +309,9 @@
 
             var newLineSettingsDict = {};
             newLineSettingsDict["generic"] = new_line_after_generic;
+            newLineSettingsDict["generic map"] = new_line_after_generic;
             newLineSettingsDict["port"] = new_line_after_port;
+            newLineSettingsDict["port map"] = new_line_after_port;
             newLineSettingsDict[";"] = new_line_after_semicolon;
             newLineSettingsDict["then"] = new_line_after_then;
             newLineSettingsDict["else"] = new_line_after_else;
