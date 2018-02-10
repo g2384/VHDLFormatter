@@ -66,6 +66,12 @@
             margin-bottom: 0px;
         }
 
+        form span {
+            width: 170px;
+            display: inline-block;
+            text-align: right;
+        }
+
         a {
             color: #4b9aff;
             text-decoration: none;
@@ -75,7 +81,7 @@
             text-decoration: underline;
         }
     </style>
-    <link href="highlight.css" />
+    <link href="highlight.css" rel="stylesheet" />
     <script src="highlight.js"></script>
     <script>
         function selectText(element) {
@@ -122,16 +128,52 @@
     <label>
         <input type="checkbox" id="no_format" onclick="noFormat()">Only highlight, don't format</label>
     <br> New line after
-    <label>
-        <input type="checkbox" checked="checked" id="new_line_after_then">THEN</label>,
-    <label>
-        <input type="checkbox" checked="checked" id="new_line_after_semicolon">semicolon ";"</label>,
-    <label>
-        <input type="checkbox" id="new_line_after_else">ELSE</label>,
-    <label>
-        <input type="checkbox" id="new_line_after_port">PORT or PORT MAP</label>,
-    <label>
-        <input type="checkbox" id="new_line_after_generic">GENERIC</label>
+    <br>
+    <form id="new_line_after_then">
+        <span>THEN</span>
+        <label>
+            <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_thencase" value="None">None</label>
+    </form>
+    <form id="new_line_after_semicolon">
+        <span>semicolon ";"</span>
+        <label>
+            <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
+    </form>
+    <form id="new_line_after_else">
+        <span>ELSE</span>
+        <label>
+            <input type="radio" name="new_line_after_elsecase" value="NewLine" checked="checked">New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_elsecase" value="None">None</label>
+    </form>
+    <form id="new_line_after_port">
+        <span>PORT or PORT MAP</span>
+        <label>
+            <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
+    </form>
+    <form id="new_line_after_generic">
+        <span>GENERIC</span>
+        <label>
+            <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
+        <label>
+            <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
+    </form>
     <br>
     <label>
         <input type="checkbox" id="remove_comments">Remove commments</label>
@@ -220,9 +262,10 @@
 		 
 	<span class="hljs-keyword">END</span> <span class="hljs-keyword">PROCESS</span>;
 <span class="hljs-keyword">END</span> EXA;</code></pre>
-<script> var exports = {}; </script>
+    <script>
+        var exports = {};
+    </script>
     <script src="VHDLFormatter.js"></script>
-    <script src="VHDLFormatterUnitTests.js"></script>
     <script>
         let lastModifiedDate = fetchHeader(location.href, 'Last-Modified');
         if (lastModifiedDate != "") {
@@ -244,10 +287,11 @@
             var check_alias = document.getElementById("check_alias").checked;
             var sign_align = document.getElementById("sign_align").checked;
             var sign_align_all = document.getElementById("sign_align_all").checked;
-            var new_line_after_port = document.getElementById("new_line_after_port").checked;
-            var new_line_after_then = document.getElementById("new_line_after_then").checked;
-            var new_line_after_semicolon = document.getElementById("new_line_after_semicolon").checked;
-            var new_line_after_generic = document.getElementById("new_line_after_generic").checked;
+            var new_line_after_port = document.getElementById("new_line_after_port").elements.namedItem("new_line_after_portcase").value;
+            var new_line_after_then = document.getElementById("new_line_after_then").elements.namedItem("new_line_after_thencase").value;
+            var new_line_after_semicolon = document.getElementById("new_line_after_semicolon").elements.namedItem("new_line_after_semicoloncase").value;
+            var new_line_after_else = document.getElementById("new_line_after_else").elements.namedItem("new_line_after_elsecase").value;
+            var new_line_after_generic = document.getElementById("new_line_after_generic").elements.namedItem("new_line_after_genericcase").value;
             var use_space = document.getElementById("use_space").checked;
             var compress = document.getElementById("compress").checked;
             var cust_indent = document.getElementById("cust_indent").value;
@@ -271,7 +315,8 @@
             newLineSettingsDict["else"] = new_line_after_else;
             newLineSettings = ConstructNewLineSettings(newLineSettingsDict);
 
-            beautifierSettings = BeautifierSettings(remove_comments, remove_report, check_alias, sign_align, sign_align_all,
+            beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias, sign_align,
+                sign_align_all,
                 keywordcase, indentation, newLineSettings);
 
             input = beautify(input, beautifierSettings);

@@ -7,25 +7,48 @@ import { ApplyNoNewLineAfter } from "./VHDLFormatter";
 import { SetNewLinesAfterSymbols } from "./VHDLFormatter";
 import { beautify3 } from "./VHDLFormatter";
 import { FormattedLine } from "./VHDLFormatter";
+import { FormattedLineToString } from "./VHDLFormatter";
 
 let testCount: number = 0;
 
 var showUnitTests = true;//window.location.href.indexOf("http") < 0;
 if (showUnitTests) {
     testCount = 0;
-    //UnitTest();
+    UnitTest();
 
     UnitTestIndentDecode();
     UnitTestRemoveAsserts();
     UnitTestApplyNoNewLineAfter();
     UnitTestSetNewLinesAfterSymbols();
-
+    UnitTestFormattedLineToString();
     UnitTestbeautify3();
     console.log("total tests: " + testCount);
 }
 
 interface Function {
     readonly name: string;
+}
+
+function UnitTestFormattedLineToString() {
+    console.log("=== FormattedLineToString ===");
+    FormattedLineToStringCase1();
+    FormattedLineToStringCase2();
+}
+
+function FormattedLineToStringCase1() {
+    let inputs: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("a;", 0),
+        new FormattedLine("b;", 0)];
+    let expected: Array<string> = ["a;", "b;"];
+    UnitTest7(FormattedLineToString, "General", "    ", inputs, expected);
+}
+
+function FormattedLineToStringCase2() {
+    let inputs: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("a;", 1),
+        new FormattedLine("b;", 2)];
+    let expected: Array<string> = [" a;", "  b;"];
+    UnitTest7(FormattedLineToString, "General", " ", inputs, expected);
 }
 
 function UnitTestbeautify3() {
@@ -43,6 +66,7 @@ function UnitTestbeautify3() {
     Beautify3Case11();
     Beautify3Case12();
     Beautify3Case13();
+    Beautify3Case14();
 }
 
 function Beautify3Case1() {
@@ -381,7 +405,31 @@ function Beautify3Case13() {
         new FormattedLine("IMPURE FUNCTION value RETURN INTEGER;", 1),
         new FormattedLine("END PROTECTED SharedCounter;", 0)
     ];
-    UnitTest6(beautify3, "package", settings, inputs, expected, 0, expected.length - 1, 0);
+    UnitTest6(beautify3, "type projected", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+
+function Beautify3Case14() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "PACKAGE p IS",
+        "TYPE SharedCounter IS PROTECTED",
+        "PROCEDURE increment (N : INTEGER := 1);",
+        "IMPURE FUNCTION value RETURN INTEGER;",
+        "END PROTECTED SharedCounter;",
+        "TYPE SharedCounter IS PROTECTED BODY"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("PACKAGE p IS", 0),
+        new FormattedLine("TYPE SharedCounter IS PROTECTED", 1),
+        new FormattedLine("PROCEDURE increment (N : INTEGER := 1);", 2),
+        new FormattedLine("IMPURE FUNCTION value RETURN INTEGER;", 2),
+        new FormattedLine("END PROTECTED SharedCounter;", 1),
+        new FormattedLine("TYPE SharedCounter IS PROTECTED BODY", 1)
+    ];
+    UnitTest6(beautify3, "type projected", settings, inputs, expected, 0, expected.length - 1, 0);
 }
 
 function UnitTestSetNewLinesAfterSymbols() {
@@ -493,7 +541,7 @@ function compareFormattedLine(expected: FormattedLine, actual: FormattedLine, me
     return result;
 }
 
-function assert(testName, expected, actual, message?) {
+function assert(testName, expected: string, actual: string, message?) {
     var result = CompareString(actual, expected);
     if (result != true) {
         console.log(testName + " failed: " + result);
@@ -524,6 +572,13 @@ type Array2Callback = (arr: Array<string>, parameters: Array<string>) => void;
 type String2Callback = (text: string, parameters: NewLineSettings) => string;
 
 type BeautifyCallback = (inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number) => number;
+
+type FormattedLinesCallback = (inputs: (FormattedLine | FormattedLine[])[], indentation: string) => Array<string>;
+
+function UnitTest7(func: FormattedLinesCallback, testName: string, indentation: string, inputs: (FormattedLine | FormattedLine[])[], expected: Array<string>) {
+    let actual = func(inputs, indentation);
+    assertArray(testName, expected, actual);
+}
 
 function UnitTest6(func: BeautifyCallback, testName: string, parameters: BeautifierSettings, inputs: Array<string>, expected: (FormattedLine | FormattedLine[])[], startIndex: number, expectedEndIndex: number, indent: number) {
     let actual: (FormattedLine | FormattedLine[])[] = []
@@ -570,16 +625,12 @@ function UnitTest() {
     let actual = beautify(input, settings);
     assert("General", expected, actual);
 
-    let newSettings = deepCopy(settings);
-    newSettings.RemoveComments = true;
-    expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT \r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";
-    actual = beautify(input, newSettings);
-    assert("Remove comments", expected, actual);
+    IntegrationTest2();
 
     let new_line_after_symbols_2: NewLineSettings = new NewLineSettings();
     new_line_after_symbols_2.newLineAfter = [];
     new_line_after_symbols_2.noNewLineAfter = ["then", ";", "generic", "port"];
-    newSettings = deepCopy(settings);
+    let newSettings = deepCopy(settings);
     newSettings.NewLineSettings = new_line_after_symbols_2;
     expected = "a; b; c;";
     input = "a; \r\nb;\r\n c;"
@@ -675,6 +726,18 @@ function UnitTest() {
     expected = "BEGIN\r\n    P0 : PROCESS (input)\r\n        VARIABLE value : INTEGER;\r\n    BEGIN\r\n        result(i) := '0';\r\n    END PROCESS P0;\r\nEND behavior;";
     actual = beautify(input, newSettings);
     assert("Indent after Begin", expected, actual);
+}
+
+function IntegrationTest2() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    settings.RemoveComments = true;
+    let input = "architecture TB of TB_CPU is\r\n    component CPU_IF\r\n    port   -- port list\r\n    end component;\r\n    signal CPU_DATA_VALID: std_ulogic;\r\n    signal CLK, RESET: std_ulogic := '0';\r\n    constant PERIOD : time := 10 ns;\r\n    constant MAX_SIM: time := 50 * PERIOD;\r\n    begin\r\n    -- concurrent statements\r\n    end TB;"
+    let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT \r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";
+    let actual = beautify(input, settings);
+    assert("Remove comments", expected, actual);
 }
 
 function CompareString(actual: string, expected: string) {

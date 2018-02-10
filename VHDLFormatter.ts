@@ -18,8 +18,12 @@ export class NewLineSettings {
         this.noNewLineAfter.push(keyword);
     }
 
-    push(keyword: string, addNewLine: boolean) {
-        if (addNewLine) {
+    push(keyword: string, addNewLine: string) {
+        let str = addNewLine.toLowerCase();
+        if (str.indexOf("none") >= 0) {
+            return;
+        }
+        else if (str.indexOf("no") < 0) {
             this.newLineAfterPush(keyword);
         }
         else {
@@ -277,17 +281,20 @@ let KeyWords: Array<string> = ["ABS", "ACCESS", "AFTER", "ALIAS", "ALL", "AND", 
 let TypeNames: Array<string> = ["BOOLEAN", "BIT", "CHARACTER", "INTEGER", "TIME", "NATURAL", "POSITIVE", "STRING"];
 
 export function beautify(input: string, settings: BeautifierSettings) {
+    input = input.replace("\r\n", "\n");
+    input = input.replace("\n", "\r\n");
     var arr = input.split("\r\n");
     var comments = [],
         commentsIndex = 0;
     commentsIndex = EscapeComments(arr, comments, commentsIndex);
 
+    input = arr.join("\r\n");
     if (settings.RemoveComments) {
+        input = input.replace(/\r\n[ \t]*@@comments[0-9]+[ \t]*\r\n/g, '\r\n');
         input = input.replace(/@@comments[0-9]+/g, '');
         commentsIndex = 0;
     }
 
-    input = arr.join("\r\n");
     input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
@@ -305,6 +312,20 @@ export function beautify(input: string, settings: BeautifierSettings) {
     //input = beautify2(input, settings);
 
     //new
+    input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
+    input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
+    input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
+    input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
+    input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
+    input = input.replace(/(IF)[ ]?([\(\)])/g, '$1 $2');
+    input = input.replace(/([\(\)])[ ]?(THEN)/gi, '$1 $2');
+    input = input.replace(/(^|[\(\)])[ ]?(AND|OR|XOR|XNOR)[ ]*([\(])/g, '$1 $2 $3');
+    input = input.replace(/ ([\-\*\/=+<>])[ ]*([\-\*\/=+<>]) /g, " $1$2 ");
+    input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
+    input = input.replace(/[ ]+/g, ' ');
+    input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
+    input = input.replace(/[\r\n\s]+$/g, '');
+    input = input.replace(/[ \t]+\)/g, ')');
     arr = input.split("\r\n");
     let result: (FormattedLine | FormattedLine[])[] = [];
     beautify3(arr, result, settings, 0, 0);
@@ -329,14 +350,14 @@ export class FormattedLine {
     }
 }
 
-function FormattedLineToString(arr: (FormattedLine | FormattedLine[])[], indentation: string): Array<string> {
+export function FormattedLineToString(arr: (FormattedLine | FormattedLine[])[], indentation: string): Array<string> {
     let result: Array<string> = [];
     if (arr == null) {
         return result;
     }
     arr.forEach(i => {
         if (i instanceof FormattedLine) {
-            result.push((Array(i.Indent).join(indentation)) + i.Line);
+            result.push((Array(i.Indent + 1).join(indentation)) + i.Line);
         }
         else {
             result = result.concat(FormattedLineToString(i, indentation));
@@ -360,7 +381,19 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
     let i: number;
     let regexOneLineBlockKeyWords: RegExp = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w_](?!.+[^\w_]IS([^\w_]|$))/);//match PROCEDURE..; but not PROCEDURE .. IS;
     let blockMidKeyWords: Array<string> = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
-    let blockStartsKeyWords: Array<string> = ["IF", "CASE", "ARCHITECTURE", "PROCEDURE", "PACKAGE", "PROCESS", "POSTPONED PROCESS","(\\w+:\\s+PROCESS)","FUNCTION","IMPURE FUNCTION","TYPE\\s.+\\sPROTECTED"];
+    let blockStartsKeyWords: Array<string> = [
+        "IF",
+        "CASE",
+        "ARCHITECTURE",
+        "PROCEDURE",
+        "PACKAGE",
+        "PROCESS",
+        "POSTPONED PROCESS",
+        "(\\w+:\\s+PROCESS)",
+        "FUNCTION",
+        "IMPURE FUNCTION",
+        "(.+\\sPROTECTED)",
+        "COMPONENT"];
     let blockEndsKeyWords: Array<string> = ["END"];
 
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
@@ -370,7 +403,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
     let regexBlockStartsKeywords: RegExp = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w_]|$)")
     let regexBlockEndsKeyWords: RegExp = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w_]|$)")
     for (i = startIndex; i < inputs.length; i++) {
-        let input: string = inputs[i];
+        let input: string = inputs[i].trim();
         if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
             i = beautifyCaseBlock(inputs, result, settings, i, indent);
             continue;

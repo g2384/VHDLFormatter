@@ -9,17 +9,40 @@ const VHDLFormatter_6 = require("./VHDLFormatter");
 const VHDLFormatter_7 = require("./VHDLFormatter");
 const VHDLFormatter_8 = require("./VHDLFormatter");
 const VHDLFormatter_9 = require("./VHDLFormatter");
+const VHDLFormatter_10 = require("./VHDLFormatter");
 let testCount = 0;
 var showUnitTests = true; //window.location.href.indexOf("http") < 0;
 if (showUnitTests) {
     testCount = 0;
-    //UnitTest();
+    UnitTest();
     UnitTestIndentDecode();
     UnitTestRemoveAsserts();
     UnitTestApplyNoNewLineAfter();
     UnitTestSetNewLinesAfterSymbols();
+    UnitTestFormattedLineToString();
     UnitTestbeautify3();
     console.log("total tests: " + testCount);
+}
+function UnitTestFormattedLineToString() {
+    console.log("=== FormattedLineToString ===");
+    FormattedLineToStringCase1();
+    FormattedLineToStringCase2();
+}
+function FormattedLineToStringCase1() {
+    let inputs = [
+        new VHDLFormatter_9.FormattedLine("a;", 0),
+        new VHDLFormatter_9.FormattedLine("b;", 0)
+    ];
+    let expected = ["a;", "b;"];
+    UnitTest7(VHDLFormatter_10.FormattedLineToString, "General", "    ", inputs, expected);
+}
+function FormattedLineToStringCase2() {
+    let inputs = [
+        new VHDLFormatter_9.FormattedLine("a;", 1),
+        new VHDLFormatter_9.FormattedLine("b;", 2)
+    ];
+    let expected = [" a;", "  b;"];
+    UnitTest7(VHDLFormatter_10.FormattedLineToString, "General", " ", inputs, expected);
 }
 function UnitTestbeautify3() {
     console.log("=== beautify3 ===");
@@ -36,6 +59,7 @@ function UnitTestbeautify3() {
     Beautify3Case11();
     Beautify3Case12();
     Beautify3Case13();
+    Beautify3Case14();
 }
 function Beautify3Case1() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -362,7 +386,30 @@ function Beautify3Case13() {
         new VHDLFormatter_9.FormattedLine("IMPURE FUNCTION value RETURN INTEGER;", 1),
         new VHDLFormatter_9.FormattedLine("END PROTECTED SharedCounter;", 0)
     ];
-    UnitTest6(VHDLFormatter_8.beautify3, "package", settings, inputs, expected, 0, expected.length - 1, 0);
+    UnitTest6(VHDLFormatter_8.beautify3, "type projected", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+function Beautify3Case14() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "PACKAGE p IS",
+        "TYPE SharedCounter IS PROTECTED",
+        "PROCEDURE increment (N : INTEGER := 1);",
+        "IMPURE FUNCTION value RETURN INTEGER;",
+        "END PROTECTED SharedCounter;",
+        "TYPE SharedCounter IS PROTECTED BODY"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("PACKAGE p IS", 0),
+        new VHDLFormatter_9.FormattedLine("TYPE SharedCounter IS PROTECTED", 1),
+        new VHDLFormatter_9.FormattedLine("PROCEDURE increment (N : INTEGER := 1);", 2),
+        new VHDLFormatter_9.FormattedLine("IMPURE FUNCTION value RETURN INTEGER;", 2),
+        new VHDLFormatter_9.FormattedLine("END PROTECTED SharedCounter;", 1),
+        new VHDLFormatter_9.FormattedLine("TYPE SharedCounter IS PROTECTED BODY", 1)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "type projected", settings, inputs, expected, 0, expected.length - 1, 0);
 }
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
@@ -483,6 +530,10 @@ function assertArray(testName, expected, actual, message) {
     }
     testCount++;
 }
+function UnitTest7(func, testName, indentation, inputs, expected) {
+    let actual = func(inputs, indentation);
+    assertArray(testName, expected, actual);
+}
 function UnitTest6(func, testName, parameters, inputs, expected, startIndex, expectedEndIndex, indent) {
     let actual = [];
     let endIndex = func(inputs, actual, parameters, startIndex, indent);
@@ -521,15 +572,11 @@ function UnitTest() {
     let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT -- port list\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\n    -- concurrent statements\r\nEND TB;";
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("General", expected, actual);
-    let newSettings = deepCopy(settings);
-    newSettings.RemoveComments = true;
-    expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT \r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";
-    actual = VHDLFormatter_1.beautify(input, newSettings);
-    assert("Remove comments", expected, actual);
+    IntegrationTest2();
     let new_line_after_symbols_2 = new VHDLFormatter_3.NewLineSettings();
     new_line_after_symbols_2.newLineAfter = [];
     new_line_after_symbols_2.noNewLineAfter = ["then", ";", "generic", "port"];
-    newSettings = deepCopy(settings);
+    let newSettings = deepCopy(settings);
     newSettings.NewLineSettings = new_line_after_symbols_2;
     expected = "a; b; c;";
     input = "a; \r\nb;\r\n c;";
@@ -609,6 +656,17 @@ function UnitTest() {
     expected = "BEGIN\r\n    P0 : PROCESS (input)\r\n        VARIABLE value : INTEGER;\r\n    BEGIN\r\n        result(i) := '0';\r\n    END PROCESS P0;\r\nEND behavior;";
     actual = VHDLFormatter_1.beautify(input, newSettings);
     assert("Indent after Begin", expected, actual);
+}
+function IntegrationTest2() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    settings.RemoveComments = true;
+    let input = "architecture TB of TB_CPU is\r\n    component CPU_IF\r\n    port   -- port list\r\n    end component;\r\n    signal CPU_DATA_VALID: std_ulogic;\r\n    signal CLK, RESET: std_ulogic := '0';\r\n    constant PERIOD : time := 10 ns;\r\n    constant MAX_SIM: time := 50 * PERIOD;\r\n    begin\r\n    -- concurrent statements\r\n    end TB;";
+    let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT \r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("Remove comments", expected, actual);
 }
 function CompareString(actual, expected) {
     var l = Math.min(actual.length, expected.length);

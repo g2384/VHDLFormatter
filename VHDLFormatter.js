@@ -15,7 +15,11 @@ class NewLineSettings {
         this.noNewLineAfter.push(keyword);
     }
     push(keyword, addNewLine) {
-        if (addNewLine) {
+        let str = addNewLine.toLowerCase();
+        if (str.indexOf("none") >= 0) {
+            return;
+        }
+        else if (str.indexOf("no") < 0) {
             this.newLineAfterPush(keyword);
         }
         else {
@@ -245,14 +249,17 @@ exports.BeautifierSettings = BeautifierSettings;
 let KeyWords = ["ABS", "ACCESS", "AFTER", "ALIAS", "ALL", "AND", "ARCHITECTURE", "ARRAY", "ASSERT", "ATTRIBUTE", "BEGIN", "BLOCK", "BODY", "BUFFER", "BUS", "CASE", "COMPONENT", "CONFIGURATION", "CONSTANT", "CONTEXT", "COVER", "DISCONNECT", "DOWNTO", "DEFAULT", "ELSE", "ELSIF", "END", "ENTITY", "EXIT", "FAIRNESS", "FILE", "FOR", "FORCE", "FUNCTION", "GENERATE", "GENERIC", "GROUP", "GUARDED", "IF", "IMPURE", "IN", "INERTIAL", "INOUT", "IS", "LABEL", "LIBRARY", "LINKAGE", "LITERAL", "LOOP", "MAP", "MOD", "NAND", "NEW", "NEXT", "NOR", "NOT", "NULL", "OF", "ON", "OPEN", "OR", "OTHERS", "OUT", "PACKAGE", "PORT", "POSTPONED", "PROCEDURE", "PROCESS", "PROPERTY", "PROTECTED", "PURE", "RANGE", "RECORD", "REGISTER", "REJECT", "RELEASE", "REM", "REPORT", "RESTRICT", "RESTRICT_GUARANTEE", "RETURN", "ROL", "ROR", "SELECT", "SEQUENCE", "SEVERITY", "SHARED", "SIGNAL", "SLA", "SLL", "SRA", "SRL", "STRONG", "SUBTYPE", "THEN", "TO", "TRANSPORT", "TYPE", "UNAFFECTED", "UNITS", "UNTIL", "USE", "VARIABLE", "VMODE", "VPROP", "VUNIT", "WAIT", "WHEN", "WHILE", "WITH", "XNOR", "XOR"];
 let TypeNames = ["BOOLEAN", "BIT", "CHARACTER", "INTEGER", "TIME", "NATURAL", "POSITIVE", "STRING"];
 function beautify(input, settings) {
+    input = input.replace("\r\n", "\n");
+    input = input.replace("\n", "\r\n");
     var arr = input.split("\r\n");
     var comments = [], commentsIndex = 0;
     commentsIndex = EscapeComments(arr, comments, commentsIndex);
+    input = arr.join("\r\n");
     if (settings.RemoveComments) {
+        input = input.replace(/\r\n[ \t]*@@comments[0-9]+[ \t]*\r\n/g, '\r\n');
         input = input.replace(/@@comments[0-9]+/g, '');
         commentsIndex = 0;
     }
-    input = arr.join("\r\n");
     input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
@@ -267,6 +274,20 @@ function beautify(input, settings) {
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
     //input = beautify2(input, settings);
     //new
+    input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
+    input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
+    input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
+    input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
+    input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
+    input = input.replace(/(IF)[ ]?([\(\)])/g, '$1 $2');
+    input = input.replace(/([\(\)])[ ]?(THEN)/gi, '$1 $2');
+    input = input.replace(/(^|[\(\)])[ ]?(AND|OR|XOR|XNOR)[ ]*([\(])/g, '$1 $2 $3');
+    input = input.replace(/ ([\-\*\/=+<>])[ ]*([\-\*\/=+<>]) /g, " $1$2 ");
+    input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
+    input = input.replace(/[ ]+/g, ' ');
+    input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
+    input = input.replace(/[\r\n\s]+$/g, '');
+    input = input.replace(/[ \t]+\)/g, ')');
     arr = input.split("\r\n");
     let result = [];
     beautify3(arr, result, settings, 0, 0);
@@ -294,7 +315,7 @@ function FormattedLineToString(arr, indentation) {
     }
     arr.forEach(i => {
         if (i instanceof FormattedLine) {
-            result.push((Array(i.Indent).join(indentation)) + i.Line);
+            result.push((Array(i.Indent + 1).join(indentation)) + i.Line);
         }
         else {
             result = result.concat(FormattedLineToString(i, indentation));
@@ -302,6 +323,7 @@ function FormattedLineToString(arr, indentation) {
     });
     return result;
 }
+exports.FormattedLineToString = FormattedLineToString;
 function beautifyCaseBlock(inputs, result, settings, startIndex, indent, isFirstKeyWord) {
     if (!inputs[startIndex].regexStartsWith(/(CASE)([\s]|$)/)) {
         return startIndex;
@@ -316,7 +338,20 @@ function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord)
     let i;
     let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w_](?!.+[^\w_]IS([^\w_]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;
     let blockMidKeyWords = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
-    let blockStartsKeyWords = ["IF", "CASE", "ARCHITECTURE", "PROCEDURE", "PACKAGE", "PROCESS", "POSTPONED PROCESS", "(\\w+:\\s+PROCESS)", "FUNCTION", "IMPURE FUNCTION", "TYPE\\s.+\\sPROTECTED"];
+    let blockStartsKeyWords = [
+        "IF",
+        "CASE",
+        "ARCHITECTURE",
+        "PROCEDURE",
+        "PACKAGE",
+        "PROCESS",
+        "POSTPONED PROCESS",
+        "(\\w+:\\s+PROCESS)",
+        "FUNCTION",
+        "IMPURE FUNCTION",
+        "(.+\\sPROTECTED)",
+        "COMPONENT"
+    ];
     let blockEndsKeyWords = ["END"];
     let newLineAfterKeyWordsStr = blockStartsKeyWords.join("|");
     let blockEndKeyWordsStr = blockEndsKeyWords.join("|");
@@ -325,7 +360,7 @@ function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord)
     let regexBlockStartsKeywords = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w_]|$)");
     let regexBlockEndsKeyWords = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w_]|$)");
     for (i = startIndex; i < inputs.length; i++) {
-        let input = inputs[i];
+        let input = inputs[i].trim();
         if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
             i = beautifyCaseBlock(inputs, result, settings, i, indent);
             continue;
