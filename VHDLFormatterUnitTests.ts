@@ -36,6 +36,13 @@ function UnitTestbeautify3() {
     Beautify3Case4();
     Beautify3Case5();
     Beautify3Case6();
+    Beautify3Case7();
+    Beautify3Case8();
+    Beautify3Case9();
+    Beautify3Case10();
+    Beautify3Case11();
+    Beautify3Case12();
+    Beautify3Case13();
 }
 
 function Beautify3Case1() {
@@ -157,6 +164,225 @@ function Beautify3Case6() {
     UnitTest6(beautify3, "case & case end", settings, inputs, expected, 0, 11, 0);
 }
 
+function Beautify3Case7() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "ARCHITECTURE a OF one IS",
+        "SIGNAL x : INTEGER;",
+        "BEGIN",
+        "-- architecture",
+        "END ARCHITECTURE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("ARCHITECTURE a OF one IS", 0),
+        new FormattedLine("SIGNAL x : INTEGER;", 1),
+        new FormattedLine("BEGIN", 0),
+        new FormattedLine("-- architecture", 1),
+        new FormattedLine("END ARCHITECTURE;", 0),
+    ];
+    UnitTest6(beautify3, "architecture", settings, inputs, expected, 0, 4, 0);
+}
+
+function Beautify3Case8() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "ARCHITECTURE a OF one IS",
+        "SIGNAL x : INTEGER;",
+        "BEGIN",
+        "-- architecture",
+        "END ARCHITECTURE;",
+        "ARCHITECTURE b OF one IS",
+        "SIGNAL x : INTEGER;",
+        "BEGIN",
+        "-- architecture",
+        "END ARCHITECTURE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("ARCHITECTURE a OF one IS", 0),
+        new FormattedLine("SIGNAL x : INTEGER;", 1),
+        new FormattedLine("BEGIN", 0),
+        new FormattedLine("-- architecture", 1),
+        new FormattedLine("END ARCHITECTURE;", 0),
+        new FormattedLine("ARCHITECTURE b OF one IS", 0),
+        new FormattedLine("SIGNAL x : INTEGER;", 1),
+        new FormattedLine("BEGIN", 0),
+        new FormattedLine("-- architecture", 1),
+        new FormattedLine("END ARCHITECTURE;", 0),
+    ];
+    UnitTest6(beautify3, "architecture 2", settings, inputs, expected, 0, 9, 0);
+}
+
+function Beautify3Case9() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER) IS",
+        "VARIABLE i : INTEGER;",
+        "BEGIN",
+        "y := x + 1;",
+        "END PROCEDURE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER) IS", 0),
+        new FormattedLine("VARIABLE i : INTEGER;", 1),
+        new FormattedLine("BEGIN", 0),
+        new FormattedLine("y := x + 1;", 1),
+        new FormattedLine("END PROCEDURE;", 0)
+    ];
+    UnitTest6(beautify3, "procedure", settings, inputs, expected, 0, 4, 0);
+}
+
+function Beautify3Case10() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "PACKAGE three IS",
+        "SIGNAL s : INTEGER;",
+        "ALIAS sa IS s;",
+        "END PACKAGE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("PACKAGE three IS", 0),
+        new FormattedLine("SIGNAL s : INTEGER;", 1),
+        new FormattedLine("ALIAS sa IS s;", 1),
+        new FormattedLine("END PACKAGE;", 0)
+    ];
+    UnitTest6(beautify3, "package", settings, inputs, expected, 0, 3, 0);
+}
+
+function Beautify3Case11() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "PACKAGE p IS",
+        "PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER);",
+        "END PACKAGE;",
+        "PACKAGE BODY p IS",
+        "PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER) IS",
+        "VARIABLE i : INTEGER;",
+        "BEGIN",
+        "y := x + 1;",
+        "END PROCEDURE;",
+        "PROCEDURE bar(FILE x : text);",
+        "PROCEDURE baz IS",
+        "TYPE foo;",
+        "ALIAS x IS y;",
+        "BEGIN",
+        "END PROCEDURE;",
+        "PROCEDURE tralala IS",
+        "USE work.foo;",
+        "BEGIN",
+        "END PROCEDURE;",
+        "END PACKAGE BODY;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("PACKAGE p IS", 0),
+        new FormattedLine("PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER);", 1),
+        new FormattedLine("END PACKAGE;", 0),
+        new FormattedLine("PACKAGE BODY p IS", 0),
+        new FormattedLine("PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER) IS", 1),
+        new FormattedLine("VARIABLE i : INTEGER;", 2),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("y := x + 1;", 2),
+        new FormattedLine("END PROCEDURE;", 1),
+        new FormattedLine("PROCEDURE bar(FILE x : text);", 1),
+        new FormattedLine("PROCEDURE baz IS", 1),
+        new FormattedLine("TYPE foo;", 2),
+        new FormattedLine("ALIAS x IS y;", 2),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("END PROCEDURE;", 1),
+        new FormattedLine("PROCEDURE tralala IS", 1),
+        new FormattedLine("USE work.foo;", 2),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("END PROCEDURE;", 1),
+        new FormattedLine("END PACKAGE BODY;", 0)
+    ];
+    UnitTest6(beautify3, "package", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+
+function Beautify3Case12() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "ARCHITECTURE a OF b IS",
+        "SIGNAL x : INTEGER := 0;",
+        "BEGIN",
+        "p: PROCESS IS",
+        "BEGIN",
+        "END PROCESS;",
+        "PROCESS",
+        "VARIABLE y : INTEGER := 5;",
+        "BEGIN",
+        "x <= y;",
+        "END PROCESS;",
+        "PROCESS (x) IS",
+        "BEGIN",
+        "x <= x + 1;",
+        "END PROCESS;",
+        "POSTPONED PROCESS IS",
+        "BEGIN",
+        "END PROCESS;",
+        "POSTPONED assert x = 1;",
+        "END ARCHITECTURE;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("ARCHITECTURE a OF b IS", 0),
+        new FormattedLine("SIGNAL x : INTEGER := 0;", 1),
+        new FormattedLine("BEGIN", 0),
+        new FormattedLine("p: PROCESS IS", 1),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("END PROCESS;", 1),
+        new FormattedLine("PROCESS", 1),
+        new FormattedLine("VARIABLE y : INTEGER := 5;", 2),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("x <= y;", 2),
+        new FormattedLine("END PROCESS;", 1),
+        new FormattedLine("PROCESS (x) IS", 1),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("x <= x + 1;", 2),
+        new FormattedLine("END PROCESS;", 1),
+        new FormattedLine("POSTPONED PROCESS IS", 1),
+        new FormattedLine("BEGIN", 1),
+        new FormattedLine("END PROCESS;", 1),
+        new FormattedLine("POSTPONED assert x = 1;", 1),
+        new FormattedLine("END ARCHITECTURE;", 0)
+    ];
+    UnitTest6(beautify3, "package", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+
+function Beautify3Case13() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs: Array<string> = [
+        "TYPE SharedCounter IS PROTECTED",
+        "PROCEDURE increment (N : INTEGER := 1);",
+        "IMPURE FUNCTION value RETURN INTEGER;",
+        "END PROTECTED SharedCounter;"
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("TYPE SharedCounter IS PROTECTED", 0),
+        new FormattedLine("PROCEDURE increment (N : INTEGER := 1);", 1),
+        new FormattedLine("IMPURE FUNCTION value RETURN INTEGER;", 1),
+        new FormattedLine("END PROTECTED SharedCounter;", 0)
+    ];
+    UnitTest6(beautify3, "package", settings, inputs, expected, 0, expected.length - 1, 0);
+}
 
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
@@ -204,24 +430,30 @@ function UnitTestIndentDecode() {
     UnitTest2(indentDecode, "9 blankspaces", "         ", "many blankspace");
 }
 
-function assertFormattedLines(testName, expected: (FormattedLine | FormattedLine[])[], actual: (FormattedLine | FormattedLine[])[], message?, cumulateTestCount?: boolean) {
+function compareFormattedLines(expected: (FormattedLine | FormattedLine[])[], actual: (FormattedLine | FormattedLine[])[], message?): string {
     var l = Math.min(actual.length, expected.length);
     let result: string = "";
     for (var i = 0; i < l; i++) {
         if (actual[i] instanceof FormattedLine) {
             if (expected[i] instanceof FormattedLine) {
-                assertFormattedLine(testName, <FormattedLine>(expected[i]), <FormattedLine>(actual[i]), message, false);
+                let compareResult = compareFormattedLine(<FormattedLine>(expected[i]), <FormattedLine>(actual[i]), message, false);
+                if (compareResult.length > 0) {
+                    result += "index " + i + "\n" + compareResult;
+                }
             }
             else {
-                console.log("expected FormatLine[], actual FormattedLine. actual:" + (<FormattedLine>(actual[i])).Line);
+                result += "index " + i + "\nexpected FormatLine[], actual FormattedLine. actual:" + (<FormattedLine>(actual[i])).Line;
             }
         }
         else {
             if (expected[i] instanceof FormattedLine) {
-                console.log("expected FormatLine, actual FormattedLine[]. expected:" + (<FormattedLine>(expected[i])).Line);
+                result += "index " + i + "\nexpected FormatLine, actual FormattedLine[]. expected:" + (<FormattedLine>(expected[i])).Line;
             }
             else {
-                assertFormattedLines(testName, <FormattedLine[]>(actual[i]), <FormattedLine[]>(expected[i]), message, false);
+                let compareResult = compareFormattedLines(<FormattedLine[]>(actual[i]), <FormattedLine[]>(expected[i]), message);
+                if (compareResult.length > 0) {
+                    result += "index " + i + "\n" + compareResult;
+                }
             }
         }
     }
@@ -237,30 +469,28 @@ function assertFormattedLines(testName, expected: (FormattedLine | FormattedLine
             result += "expected[" + i + "] = " + expected[i];
         }
     }
-    if (result.length > 0) {
-        console.log(result);
-    }
-
-    if (cumulateTestCount != false) {
-        testCount++;
-    }
+    return result;
 }
 
-function assertFormattedLine(testName, expected: FormattedLine, actual: FormattedLine, message?, cumulateTestCount?: boolean) {
+function assertFormattedLines(testName, expected: (FormattedLine | FormattedLine[])[], actual: (FormattedLine | FormattedLine[])[], message?) {
+    let result = compareFormattedLines(expected, actual, message);
+    if (result.length > 0) {
+        console.log(testName + " failed:\n" + result);
+    }
+    testCount++;
+}
+
+function compareFormattedLine(expected: FormattedLine, actual: FormattedLine, message?, cumulateTestCount?: boolean) {
+    let result = "";
     if (expected.Indent != actual.Indent) {
-        console.log(testName + ' failed:\nexpected: "' + expected.Line + '", ' + expected.Indent
-            + ';\nactual: "' + actual.Line + '", ' + actual.Indent);
+        result += 'indents are not equal;\nexpected: "' + expected.Line + '", ' + expected.Indent
+            + ';\nactual: "' + actual.Line + '", ' + actual.Indent + "\n";
     }
-    var result = CompareString(actual.Line, expected.Line);
-    if (result != true) {
-        console.log(testName + " failed: " + result);
+    let compareResult = CompareString(actual.Line, expected.Line);
+    if (compareResult != true) {
+        result += compareResult;
     }
-    else {
-        //console.log(testName + " pass");
-    }
-    if (cumulateTestCount != false) {
-        testCount++;
-    }
+    return result;
 }
 
 function assert(testName, expected, actual, message?) {

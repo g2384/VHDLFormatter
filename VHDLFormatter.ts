@@ -358,19 +358,17 @@ export function beautifyCaseBlock(inputs: Array<string>, result: (FormattedLine 
 
 export function beautify3(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, isFirstKeyWord?: boolean): number {
     let i: number;
-    let ignoreFirstKeyWords: Array<string> = ["WHEN"];
-    let blockMidKeyWords: Array<string> = ["ELSE", "ELSIF"].concat(ignoreFirstKeyWords);
-    let blockStartsKeyWords: Array<string> = ["IF", "CASE"];
+    let regexOneLineBlockKeyWords: RegExp = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w_](?!.+[^\w_]IS([^\w_]|$))/);//match PROCEDURE..; but not PROCEDURE .. IS;
+    let blockMidKeyWords: Array<string> = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
+    let blockStartsKeyWords: Array<string> = ["IF", "CASE", "ARCHITECTURE", "PROCEDURE", "PACKAGE", "PROCESS", "POSTPONED PROCESS","(\\w+:\\s+PROCESS)","FUNCTION","IMPURE FUNCTION","TYPE\\s.+\\sPROTECTED"];
     let blockEndsKeyWords: Array<string> = ["END"];
 
-    let ignoreFirstKeyWordsStr: string = ignoreFirstKeyWords.join("|");
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
     let blockEndKeyWordsStr: string = blockEndsKeyWords.join("|");
     let blockMidKeyWordsStr: string = blockMidKeyWords.join("|");
-    let regexBlockMidKeyWords: RegExp = new RegExp("(" + blockMidKeyWordsStr + ")([\\s]|$)")
-    let regexIgnoreFirstKeyWords: RegExp = new RegExp("(" + ignoreFirstKeyWordsStr + ")([\\s]|$)")
-    let regexBlockStartsKeywords: RegExp = new RegExp("(" + newLineAfterKeyWordsStr + ")([\\s]|$)")
-    let regexBlockEndsKeyWords: RegExp = new RegExp("(" + blockEndKeyWordsStr + ")([\\s]|$)")
+    let regexBlockMidKeyWords: RegExp = new RegExp("(" + blockMidKeyWordsStr + ")([^\\w_]|$)")
+    let regexBlockStartsKeywords: RegExp = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w_]|$)")
+    let regexBlockEndsKeyWords: RegExp = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w_]|$)")
     for (i = startIndex; i < inputs.length; i++) {
         let input: string = inputs[i];
         if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
@@ -386,6 +384,9 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             && (input.regexStartsWith(regexBlockEndsKeyWords))) {
             (<FormattedLine>result[i]).Indent--;
             return i;
+        }
+        if (input.regexStartsWith(regexOneLineBlockKeyWords)) {
+            continue;
         }
         if (input.regexStartsWith(regexBlockStartsKeywords)) {
             i = beautify3(inputs, result, settings, i + 1, indent + 1);

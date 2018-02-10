@@ -314,18 +314,16 @@ function beautifyCaseBlock(inputs, result, settings, startIndex, indent, isFirst
 exports.beautifyCaseBlock = beautifyCaseBlock;
 function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord) {
     let i;
-    let ignoreFirstKeyWords = ["WHEN"];
-    let blockMidKeyWords = ["ELSE", "ELSIF"].concat(ignoreFirstKeyWords);
-    let blockStartsKeyWords = ["IF", "CASE"];
+    let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w_](?!.+[^\w_]IS([^\w_]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;
+    let blockMidKeyWords = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
+    let blockStartsKeyWords = ["IF", "CASE", "ARCHITECTURE", "PROCEDURE", "PACKAGE", "PROCESS", "POSTPONED PROCESS", "(\\w+:\\s+PROCESS)", "FUNCTION", "IMPURE FUNCTION", "TYPE\\s.+\\sPROTECTED"];
     let blockEndsKeyWords = ["END"];
-    let ignoreFirstKeyWordsStr = ignoreFirstKeyWords.join("|");
     let newLineAfterKeyWordsStr = blockStartsKeyWords.join("|");
     let blockEndKeyWordsStr = blockEndsKeyWords.join("|");
     let blockMidKeyWordsStr = blockMidKeyWords.join("|");
-    let regexBlockMidKeyWords = new RegExp("(" + blockMidKeyWordsStr + ")([\\s]|$)");
-    let regexIgnoreFirstKeyWords = new RegExp("(" + ignoreFirstKeyWordsStr + ")([\\s]|$)");
-    let regexBlockStartsKeywords = new RegExp("(" + newLineAfterKeyWordsStr + ")([\\s]|$)");
-    let regexBlockEndsKeyWords = new RegExp("(" + blockEndKeyWordsStr + ")([\\s]|$)");
+    let regexBlockMidKeyWords = new RegExp("(" + blockMidKeyWordsStr + ")([^\\w_]|$)");
+    let regexBlockStartsKeywords = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w_]|$)");
+    let regexBlockEndsKeyWords = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w_]|$)");
     for (i = startIndex; i < inputs.length; i++) {
         let input = inputs[i];
         if (input.regexStartsWith(/(CASE)([\s]|$)/)) {
@@ -341,6 +339,9 @@ function beautify3(inputs, result, settings, startIndex, indent, isFirstKeyWord)
             && (input.regexStartsWith(regexBlockEndsKeyWords))) {
             result[i].Indent--;
             return i;
+        }
+        if (input.regexStartsWith(regexOneLineBlockKeyWords)) {
+            continue;
         }
         if (input.regexStartsWith(regexBlockStartsKeywords)) {
             i = beautify3(inputs, result, settings, i + 1, indent + 1);
