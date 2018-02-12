@@ -289,8 +289,8 @@ let KeyWords: Array<string> = ["ABS", "ACCESS", "AFTER", "ALIAS", "ALL", "AND", 
 let TypeNames: Array<string> = ["BOOLEAN", "BIT", "CHARACTER", "INTEGER", "TIME", "NATURAL", "POSITIVE", "STRING"];
 
 export function beautify(input: string, settings: BeautifierSettings) {
-    input = input.replace("\r\n", "\n");
-    input = input.replace("\n", "\r\n");
+    input = input.replace(/\r\n/g, "\n");
+    input = input.replace(/\n/g, "\r\n");
     var arr = input.split("\r\n");
     var comments = [],
         commentsIndex = 0;
@@ -454,47 +454,43 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
     }
     if (settings.SignAlignRegional) {
         blockBodyStartIndex++;
-        SignAlignRegional(result, blockBodyStartIndex, blockBodyEndIndex);
+        SignsAlignRegional(result, blockBodyStartIndex, blockBodyEndIndex);
     }
     return i;
 }
 
-export function SignAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
-    let maxSymbolIndex = {};
+export function SignsAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
+    SignAlignRegional(result, startIndex, endIndex, ":");
+    SignAlignRegional(result, startIndex, endIndex, ":=");
+    SignAlignRegional(result, startIndex, endIndex, "=>");
+}
+
+export function SignAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string) {
+    let maxSymbolIndex: number = -1;
     let allSymbolIndex = {};
     for (let i = startIndex; i <= endIndex; i++) {
         let line = (<FormattedLine>result[i]).Line;
-        SetSymbolIndices(line, ":", maxSymbolIndex, allSymbolIndex, i);
-        SetSymbolIndices(line, ":=", maxSymbolIndex, allSymbolIndex, i);
-        SetSymbolIndices(line, "=>", maxSymbolIndex, allSymbolIndex, i);
-    }
-    for (let key in maxSymbolIndex) {
-        let maxIndex = maxSymbolIndex[key];
-        for (let lineIndex in allSymbolIndex[key]) {
-            let symbolIndex = allSymbolIndex[key][lineIndex];
-            if (symbolIndex == maxIndex) {
-                continue;
-            }
-            let line = (<FormattedLine>result[lineIndex]).Line;
-            (<FormattedLine>result[lineIndex]).Line = line.substring(0, symbolIndex)
-                + (Array(maxIndex - symbolIndex + 1).join(" "))
-                + line.substring(symbolIndex);
+        let regex: RegExp = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
+        let colonIndex = line.regexIndexOf(regex);
+        if (colonIndex > 0) {
+            maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
+            allSymbolIndex[i] = colonIndex;
         }
     }
-}
 
-function SetSymbolIndices(line: string, symbol: string, maxSymbolIndex: {}, allSymbolIndex: {}, index: number) {
-    let regex: RegExp = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
-    let colonIndex = line.regexIndexOf(regex);
-    if (colonIndex > 0) {
-        if (maxSymbolIndex.hasOwnProperty(symbol)) {
-            maxSymbolIndex[symbol] = Math.max(maxSymbolIndex[symbol], colonIndex);
+    if (maxSymbolIndex < 0) {
+        return;
+    }
+
+    for (let lineIndex in allSymbolIndex) {
+        let symbolIndex = allSymbolIndex[lineIndex];
+        if (symbolIndex == maxSymbolIndex) {
+            continue;
         }
-        else {
-            maxSymbolIndex[symbol] = colonIndex;
-            allSymbolIndex[symbol] = {};
-        }
-        allSymbolIndex[symbol][index] = colonIndex;
+        let line = (<FormattedLine>result[lineIndex]).Line;
+        (<FormattedLine>result[lineIndex]).Line = line.substring(0, symbolIndex)
+            + (Array(maxSymbolIndex - symbolIndex + 1).join(" "))
+            + line.substring(symbolIndex);
     }
 }
 

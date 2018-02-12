@@ -594,6 +594,7 @@ function UnitTest() {
     assert("ENTITY ARCHITECTURE", expected, actual);
     IntegrationTest5();
     IntegrationTest6();
+    IntegrationTest7();
     input = 'if a(3 downto 0) > "0100" then\r\na(3 downto 0) := a(3 downto 0) + "0011" ;\r\nend if ;';
     expected = 'IF a(3 DOWNTO 0) > "0100" THEN\r\n    a(3 DOWNTO 0) := a(3 DOWNTO 0) + "0011";\r\nEND IF;';
     actual = VHDLFormatter_1.beautify(input, settings);
@@ -674,6 +675,16 @@ function IntegrationTest6() {
     let expected = "PORT MAP\r\n(\r\n    input_1 => input_1_sig,\r\n    input_2 => input_2_sig,\r\n    output  => output_sig\r\n);";
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("Sign align in PORT & new line after MAP", expected, actual);
+}
+function IntegrationTest7() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    settings.SignAlignRegional = true;
+    let input = "entity p is\r\n  generic\r\n  (\r\n    -- INCLK\r\n    INCLK0_INPUT_FREQUENCY  : natural;\r\n\r\n    -- CLK1\r\n    CLK1_DIVIDE_BY          : natural := 1;\r\n    CLK1_MULTIPLY_BY        : unnatural:= 1;\r\n    CLK1_PHASE_SHIFT        : string := \"0\"\r\n  );\r\n	port\r\n	(\r\n		inclk0	: in std_logic  := '0';\r\n		c0		    : out std_logic ;\r\n		c1		    : out std_logic \r\n	);\r\nEND pll;";
+    let expected = "ENTITY p IS\r\n    GENERIC (\r\n        -- INCLK\r\n        INCLK0_INPUT_FREQUENCY : NATURAL;\r\n\r\n        -- CLK1\r\n        CLK1_DIVIDE_BY         : NATURAL   := 1;\r\n        CLK1_MULTIPLY_BY       : unnatural := 1;\r\n        CLK1_PHASE_SHIFT       : STRING    := \"0\"\r\n    );\r\n    PORT (\r\n        inclk0 : IN std_logic := '0';\r\n        c0     : OUT std_logic;\r\n        c1     : OUT std_logic\r\n    );\r\nEND pll;";
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("Sign align in PORT & GENERIC", expected, actual);
 }
 function IntegrationTest2() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
