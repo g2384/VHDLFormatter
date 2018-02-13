@@ -14,7 +14,7 @@ let testCount = 0;
 var showUnitTests = true; //window.location.href.indexOf("http") < 0;
 if (showUnitTests) {
     testCount = 0;
-    UnitTest();
+    IntegrationTest();
     UnitTestIndentDecode();
     UnitTestRemoveAsserts();
     UnitTestApplyNoNewLineAfter();
@@ -563,7 +563,7 @@ function UnitTest2(func, testName, inputs, expected) {
 function deepCopy(objectToCopy) {
     return (JSON.parse(JSON.stringify(objectToCopy)));
 }
-function UnitTest() {
+function IntegrationTest() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
@@ -649,8 +649,10 @@ function UnitTest() {
     assert("Double BEGIN", expected, actual);
     let newSettings2 = deepCopy(newSettings);
     newSettings2.SignAlignAll = true;
+    newSettings2.NewLineSettings.newLineAfter = ["then", ";", "generic", "port"];
+    newSettings2.NewLineSettings.noNewLineAfter = [];
     input = "entity a is\r\n    port ( w  : in  std_logic_vector (7 downto 0) ;\r\n           w_s : out std_logic_vector (3 downto 0) ; ) ;\r\nend a ;\r\narchitecture b of a is\r\nbegin\r\n    process ( w )\r\n    variable t : std_logic_vector (4 downto 0) ;\r\n    variable bcd     : std_logic_vector (11 downto 0) ;\r\nbegin\r\n    b(2 downto 0) := w(7 downto 5) ;\r\n    t         := w(4 downto 0) ;\r\n    w_s <= b(11 downto 8) ;\r\n    w <= b(3  downto 0) ;\r\nend process ;\r\nend b ;";
-    expected = "ENTITY a IS\r\n    PORT\r\n    (\r\n        w   : IN std_logic_vector (7 DOWNTO 0);\r\n        w_s : OUT std_logic_vector (3 DOWNTO 0); \r\n    );\r\nEND a;\r\nARCHITECTURE b OF a IS\r\nBEGIN\r\n    PROCESS (w)\r\n    VARIABLE t   : std_logic_vector (4 DOWNTO 0);\r\n    VARIABLE bcd : std_logic_vector (11 DOWNTO 0);\r\n    BEGIN\r\n        b(2 DOWNTO 0) := w(7 DOWNTO 5);\r\n        t             := w(4 DOWNTO 0);\r\n        w_s <= b(11 DOWNTO 8);\r\n        w   <= b(3 DOWNTO 0);\r\n    END PROCESS;\r\nEND b;";
+    expected = "ENTITY a IS\r\n    PORT\r\n    (\r\n        w   : IN std_logic_vector (7 DOWNTO 0);\r\n        w_s : OUT std_logic_vector (3 DOWNTO 0);\r\n    );\r\nEND a;\r\nARCHITECTURE b OF a IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t   : std_logic_vector (4 DOWNTO 0);\r\n        VARIABLE bcd : std_logic_vector (11 DOWNTO 0);\r\n    BEGIN\r\n        b(2 DOWNTO 0) := w(7 DOWNTO 5);\r\n        t             := w(4 DOWNTO 0);\r\n        w_s <= b(11 DOWNTO 8);\r\n        w   <= b(3 DOWNTO 0);\r\n    END PROCESS;\r\nEND b;";
     actual = VHDLFormatter_1.beautify(input, newSettings2);
     assert("Align signs in all places", expected, actual);
 }

@@ -345,6 +345,9 @@ export function beautify(input: string, settings: BeautifierSettings) {
     arr = input.split("\r\n");
     let result: (FormattedLine | FormattedLine[])[] = [];
     beautify3(arr, result, settings, 0, 0);
+    if (settings.SignAlignAll) {
+        AlignSigns(result, 0, result.length - 1);
+    }
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
 
@@ -452,38 +455,55 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
         (<FormattedLine>result[i]).Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional) {
+    if (settings.SignAlignRegional && !settings.SignAlignAll) {
         blockBodyStartIndex++;
-        SignsAlignRegional(result, blockBodyStartIndex, blockBodyEndIndex);
+        AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
     }
     return i;
 }
 
-export function SignsAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
-    SignAlignRegional(result, startIndex, endIndex, ":");
-    SignAlignRegional(result, startIndex, endIndex, ":=");
-    SignAlignRegional(result, startIndex, endIndex, "=>");
+export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
+    AlignSign_(result, startIndex, endIndex, ":");
+    AlignSign_(result, startIndex, endIndex, ":=");
+    AlignSign_(result, startIndex, endIndex, "=>");
+    AlignSign_(result, startIndex, endIndex, "<=");
 }
 
-export function SignAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string) {
+function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string) {
     let maxSymbolIndex: number = -1;
-    let allSymbolIndex = {};
+    let symbolIndices = {};
+    let startLine = startIndex;
     for (let i = startIndex; i <= endIndex; i++) {
         let line = (<FormattedLine>result[i]).Line;
         let regex: RegExp = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
-            allSymbolIndex[i] = colonIndex;
+            symbolIndices[i] = colonIndex;
+        }
+        else if (!line.startsWith(ILCommentPrefix) && line.length != 0) {
+            if (startLine < i - 1) // if cannot find the symbol, a block of symbols ends
+            {
+                AlignSign(result, startLine, i - 1, symbol, maxSymbolIndex, symbolIndices);
+            }
+            maxSymbolIndex = -1;
+            symbolIndices = {};
+            startLine = i;
         }
     }
+    if (startLine < endIndex) // if cannot find the symbol, a block of symbols ends
+    {
+        AlignSign(result, startLine, endIndex, symbol, maxSymbolIndex, symbolIndices);
+    }
+}
 
+export function AlignSign(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string, maxSymbolIndex: number = -1, symbolIndices = {}) {
     if (maxSymbolIndex < 0) {
         return;
     }
 
-    for (let lineIndex in allSymbolIndex) {
-        let symbolIndex = allSymbolIndex[lineIndex];
+    for (let lineIndex in symbolIndices) {
+        let symbolIndex = symbolIndices[lineIndex];
         if (symbolIndex == maxSymbolIndex) {
             continue;
         }

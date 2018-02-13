@@ -302,6 +302,9 @@ function beautify(input, settings) {
     arr = input.split("\r\n");
     let result = [];
     beautify3(arr, result, settings, 0, 0);
+    if (settings.SignAlignAll) {
+        AlignSigns(result, 0, result.length - 1);
+    }
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
     for (var k = 0; k < quotes.length; k++) {
@@ -403,36 +406,51 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, indent, 
         result[i].Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional) {
+    if (settings.SignAlignRegional && !settings.SignAlignAll) {
         blockBodyStartIndex++;
-        SignsAlignRegional(result, blockBodyStartIndex, blockBodyEndIndex);
+        AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
     }
     return i;
 }
 exports.beautifyPortGenericBlock = beautifyPortGenericBlock;
-function SignsAlignRegional(result, startIndex, endIndex) {
-    SignAlignRegional(result, startIndex, endIndex, ":");
-    SignAlignRegional(result, startIndex, endIndex, ":=");
-    SignAlignRegional(result, startIndex, endIndex, "=>");
+function AlignSigns(result, startIndex, endIndex) {
+    AlignSign_(result, startIndex, endIndex, ":");
+    AlignSign_(result, startIndex, endIndex, ":=");
+    AlignSign_(result, startIndex, endIndex, "=>");
+    AlignSign_(result, startIndex, endIndex, "<=");
 }
-exports.SignsAlignRegional = SignsAlignRegional;
-function SignAlignRegional(result, startIndex, endIndex, symbol) {
+exports.AlignSigns = AlignSigns;
+function AlignSign_(result, startIndex, endIndex, symbol) {
     let maxSymbolIndex = -1;
-    let allSymbolIndex = {};
+    let symbolIndices = {};
+    let startLine = startIndex;
     for (let i = startIndex; i <= endIndex; i++) {
         let line = result[i].Line;
         let regex = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
-            allSymbolIndex[i] = colonIndex;
+            symbolIndices[i] = colonIndex;
+        }
+        else if (!line.startsWith(ILCommentPrefix) && line.length != 0) {
+            if (startLine < i - 1) {
+                AlignSign(result, startLine, i - 1, symbol, maxSymbolIndex, symbolIndices);
+            }
+            maxSymbolIndex = -1;
+            symbolIndices = {};
+            startLine = i;
         }
     }
+    if (startLine < endIndex) {
+        AlignSign(result, startLine, endIndex, symbol, maxSymbolIndex, symbolIndices);
+    }
+}
+function AlignSign(result, startIndex, endIndex, symbol, maxSymbolIndex = -1, symbolIndices = {}) {
     if (maxSymbolIndex < 0) {
         return;
     }
-    for (let lineIndex in allSymbolIndex) {
-        let symbolIndex = allSymbolIndex[lineIndex];
+    for (let lineIndex in symbolIndices) {
+        let symbolIndex = symbolIndices[lineIndex];
         if (symbolIndex == maxSymbolIndex) {
             continue;
         }
@@ -442,7 +460,7 @@ function SignAlignRegional(result, startIndex, endIndex, symbol) {
             + line.substring(symbolIndex);
     }
 }
-exports.SignAlignRegional = SignAlignRegional;
+exports.AlignSign = AlignSign;
 function beautifyCaseBlock(inputs, result, settings, startIndex, indent) {
     if (!inputs[startIndex].regexStartsWith(/(.+:\s*)?(CASE)([\s]|$)/)) {
         return startIndex;
