@@ -616,6 +616,8 @@ function deepCopy(objectToCopy: BeautifierSettings): BeautifierSettings {
 }
 
 function IntegrationTest() {
+    console.log("=== IntegrationTests ===");
+    
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
@@ -706,10 +708,7 @@ function IntegrationTest() {
     actual = beautify(input, newSettings);
     assert("New line after PORT (single line)", expected, actual);
 
-    input = "process xyx (vf,fr,\r\nde -- comment\r\n)";
-    expected = "PROCESS xyx (vf, fr, \r\n             de -- comment\r\n             )";
-    actual = beautify(input, newSettings);
-    assert("Align parameters in PROCESS", expected, actual);
+    //IntegrationTest20();
 
     input = "architecture a of b is\r\nbegin\r\n    process (w)\r\n    variable t : std_logic_vector (4 downto 0) ;\r\nbegin\r\n    a := (others => '0') ;\r\nend process ;\r\nend a;";
     expected = "ARCHITECTURE a OF b IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t : std_logic_vector (4 DOWNTO 0);\r\n    BEGIN\r\n        a := (OTHERS => '0');\r\n    END PROCESS;\r\nEND a;";
@@ -724,6 +723,17 @@ function IntegrationTest() {
     expected = "ENTITY a IS\r\n    PORT\r\n    (\r\n        w   : IN std_logic_vector (7 DOWNTO 0);\r\n        w_s : OUT std_logic_vector (3 DOWNTO 0);\r\n    );\r\nEND a;\r\nARCHITECTURE b OF a IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t   : std_logic_vector (4 DOWNTO 0);\r\n        VARIABLE bcd : std_logic_vector (11 DOWNTO 0);\r\n    BEGIN\r\n        b(2 DOWNTO 0) := w(7 DOWNTO 5);\r\n        t             := w(4 DOWNTO 0);\r\n        w_s <= b(11 DOWNTO 8);\r\n        w   <= b(3 DOWNTO 0);\r\n    END PROCESS;\r\nEND b;";
     actual = beautify(input, newSettings2);
     assert("Align signs in all places", expected, actual);
+}
+
+function IntegrationTest20() {
+    let new_line_after_symbols = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let input = "process xyx (vf,fr,\r\nde -- comment\r\n)";
+    let expected = "PROCESS xyx (vf, fr, \r\n             de -- comment\r\n             )";
+    let actual = beautify(input, settings);
+    assert("Align parameters in PROCESS", expected, actual);
 }
 
 function IntegrationTest5() {
