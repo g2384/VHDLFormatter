@@ -543,7 +543,8 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "(.+\\sPROTECTED)",
         "COMPONENT",
         "ENTITY",
-        "([\\w\\s]+:\\s*BLOCK)",];
+        "([\\w\\s]+:\\s*BLOCK)",
+        "(WITH\\s+[\\w\\s]+SELECT)"/*need more logics here // nvc/test/parse/conc.vhd*/];
     let blockEndsKeyWords: Array<string> = ["END"];
 
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");

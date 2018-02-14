@@ -490,6 +490,7 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         "COMPONENT",
         "ENTITY",
         "([\\w\\s]+:\\s*BLOCK)",
+        "(WITH\\s+[\\w\\s]+SELECT)"
     ];
     let blockEndsKeyWords = ["END"];
     let newLineAfterKeyWordsStr = blockStartsKeyWords.join("|");
