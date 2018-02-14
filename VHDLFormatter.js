@@ -488,7 +488,8 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         "IMPURE FUNCTION",
         "(.+\\sPROTECTED)",
         "COMPONENT",
-        "ENTITY"
+        "ENTITY",
+        "([\\w\\s]+:\\s*BLOCK)",
     ];
     let blockEndsKeyWords = ["END"];
     let newLineAfterKeyWordsStr = blockStartsKeyWords.join("|");

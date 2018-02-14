@@ -60,6 +60,7 @@ function UnitTestbeautify3() {
     Beautify3Case12();
     Beautify3Case13();
     Beautify3Case14();
+    Beautify3Case15();
 }
 function Beautify3Case1() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -411,6 +412,23 @@ function Beautify3Case14() {
     ];
     UnitTest6(VHDLFormatter_8.beautify3, "type projected", settings, inputs, expected, 0, expected.length - 1, 0);
 }
+function Beautify3Case15() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "constant a : integer := 2#1101#",
+        "constant b : integer := 3#20#;",
+        "constant g : integer := 2:1_0:;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("constant a : integer := 2#1101#", 0),
+        new VHDLFormatter_9.FormattedLine("constant b : integer := 3#20#;", 0),
+        new VHDLFormatter_9.FormattedLine("constant g : integer := 2:1_0:;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "constant", settings, inputs, expected, 0, expected.length - 1, 0);
+}
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
     let input = "a; @@comments1\r\nb;";
@@ -653,6 +671,46 @@ function IntegrationTest() {
     expected = "ENTITY a IS\r\n    PORT\r\n    (\r\n        w   : IN std_logic_vector (7 DOWNTO 0);\r\n        w_s : OUT std_logic_vector (3 DOWNTO 0);\r\n    );\r\nEND a;\r\nARCHITECTURE b OF a IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t   : std_logic_vector (4 DOWNTO 0);\r\n        VARIABLE bcd : std_logic_vector (11 DOWNTO 0);\r\n    BEGIN\r\n        b(2 DOWNTO 0) := w(7 DOWNTO 5);\r\n        t             := w(4 DOWNTO 0);\r\n        w_s <= b(11 DOWNTO 8);\r\n        w   <= b(3 DOWNTO 0);\r\n    END PROCESS;\r\nEND b;";
     actual = VHDLFormatter_1.beautify(input, newSettings2);
     assert("Align signs in all places", expected, actual);
+    IntegrationTest23();
+    IntegrationTest24();
+    IntegrationTest25();
+    IntegrationTest26();
+}
+function IntegrationTest23() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "\t", new_line_after_symbols);
+    let input = "PACKAGE p IS\r\n	TYPE int_array IS ARRAY (INTEGER RANGE <>) OF INTEGER;\r\n	TYPE ten_ints IS ARRAY (1 TO 10) OF INTEGER;\r\n	TYPE chars IS (A, B, C);\r\n	TYPE char_counts IS ARRAY (chars) OF INTEGER;\r\n	TYPE two_d IS ARRAY (1 TO 3, 4 TO 6) OF INTEGER;\r\n	TYPE ab_chars IS ARRAY (chars RANGE A TO B) OF INTEGER;\r\nEND PACKAGE;";
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("Type array", input, actual);
+}
+function IntegrationTest24() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let input = "ARCHITECTURE a OF e IS\r\n    ATTRIBUTE foo : INTEGER;\r\n    ATTRIBUTE foo OF x : SIGNAL IS 5;\r\n    ATTRIBUTE foo OF x : COMPONENT IS 5;\r\n    ATTRIBUTE foo OF x : LABEL IS 6;\r\n    ATTRIBUTE foo OF x : TYPE IS 4;\r\nBEGIN\r\n    ASSERT x'foo(5);\r\nEND ARCHITECTURE;";
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("attribute", input, actual);
+}
+function IntegrationTest25() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let input = 'PACKAGE bitstring IS\r\n    CONSTANT x : t := X"1234";\r\n    CONSTANT y : t := O"1234";\r\n    CONSTANT z : t := X"ab";\r\n    CONSTANT b : t := B"101";\r\n    CONSTANT c : t := x"f";\r\n    CONSTANT d : t := X"a_b";\r\nEND PACKAGE;\r\nPACKAGE bitstring_error IS\r\n    CONSTANT e1 : t := O"9"; -- Error\r\nEND PACKAGE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("bitstring", input, actual);
+}
+function IntegrationTest26() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let input = 'ARCHITECTURE a OF e IS\r\nBEGIN\r\n    b : BLOCK IS\r\n    BEGIN\r\n    END BLOCK;\r\n    c : BLOCK IS\r\n        SIGNAL x : INTEGER;\r\n        SIGNAL y : real;\r\n    BEGIN\r\n        x <= y;\r\n    END BLOCK;\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("block", input, actual);
 }
 function IntegrationTest20() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();

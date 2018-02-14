@@ -542,7 +542,8 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "IMPURE FUNCTION",
         "(.+\\sPROTECTED)",
         "COMPONENT",
-        "ENTITY"];
+        "ENTITY",
+        "([\\w\\s]+:\\s*BLOCK)",];
     let blockEndsKeyWords: Array<string> = ["END"];
 
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
