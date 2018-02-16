@@ -597,7 +597,6 @@ export function beautifySemicolonBlock(inputs: Array<string>, result: (Formatted
     return [endIndex, parentEndIndex];
 }
 
-//cannot format entity_instance.vhd
 export function beautify3(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, endIndex?: number): number {
     let i: number;
     let regexOneLineBlockKeyWords: RegExp = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w](?!.+[^\w]IS([^\w]|$))/);//match PROCEDURE..; but not PROCEDURE .. IS;
