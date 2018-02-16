@@ -2,6 +2,15 @@ let isTesting = false;
 const ILCommentPrefix = "@@comments";
 const ILQuotesPrefix = "@@quotes";
 
+enum FormatMode {
+    Default,
+    EndsWithSemicolon,
+    CaseWhen,
+    IfElse,
+}
+
+let Mode: FormatMode = FormatMode.Default;
+
 export class NewLineSettings {
     newLineAfter: Array<string>;
     noNewLineAfter: Array<string>;
@@ -192,7 +201,7 @@ function MixLetters(input: string) {
 function EscapeComments(arr: Array<string>, comments: Array<string>, commentIndex: number): number {
     for (var i = 0; i < arr.length; i++) {
         let line: string = arr[i];
-        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|]/);
+        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|\\]/);
         var commentStartIndex = line.indexOf("--");
         if (firstCharIndex < commentStartIndex && firstCharIndex >= 0) {
             comments.push(line.substr(commentStartIndex));
@@ -409,11 +418,11 @@ function GetCloseparentheseEndIndex(inputs: Array<string>, startIndex: number): 
     return startIndex;
 }
 
-export function beautifyPortGenericBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, mode: string): number {
+export function beautifyPortGenericBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number, mode: string): [number, number] {
     let firstLine: string = inputs[startIndex];
     let regex: RegExp = new RegExp("[\\w\\s:]*(" + mode + ")([\\s]|$)");
     if (!firstLine.regexStartsWith(regex)) {
-        return startIndex;
+        return [startIndex, parentEndIndex];
     }
     let firstLineHasParenthese: boolean = firstLine.indexOf("(") >= 0;
     let hasParenthese: boolean = firstLineHasParenthese;
@@ -431,6 +440,7 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
             inputs[startIndex] = newInputs[0];
             inputs.splice(startIndex + 1, 0, newInputs[1]);
             endIndex++;
+            parentEndIndex++;
         }
     }
     else if (endIndex != startIndex && secondLineHasParenthese) {
@@ -440,6 +450,7 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
             inputs[startIndex + 1] = newInputs[0];
             inputs.splice(startIndex + 2, 0, newInputs[1]);
             endIndex++;
+            parentEndIndex++;
         }
     }
     if (firstLineHasParenthese && inputs[startIndex].indexOf("MAP") > 0) {
@@ -459,7 +470,7 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
         blockBodyStartIndex++;
         AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
     }
-    return i;
+    return [i, parentEndIndex];
 }
 
 export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
@@ -475,7 +486,7 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
     let startLine = startIndex;
     for (let i = startIndex; i <= endIndex; i++) {
         let line = (<FormattedLine>result[i]).Line;
-        let regex: RegExp = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
+        let regex: RegExp = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
@@ -525,10 +536,46 @@ export function beautifyCaseBlock(inputs: Array<string>, result: (FormattedLine 
     return i;
 }
 
+export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+    let openBracketsCount = 0;
+    let closeBracketsCount = 0;
+    let endIndex = 0;
+    for (let i = startIndex; i < inputs.length; i++) {
+        let input = inputs[i];
+        let indexOfSemicolon = input.indexOf(";");
+        let splitIndex = indexOfSemicolon < 0 ? input.length : indexOfSemicolon + 1;
+        let stringBeforeSemicolon = input.substring(0, splitIndex);
+        let stringAfterSemicolon = input.substring(splitIndex);
+        stringAfterSemicolon = stringAfterSemicolon.replace(/@@comment[0-9]+/, "");
+        openBracketsCount += stringBeforeSemicolon.count("(");
+        closeBracketsCount += stringBeforeSemicolon.count(")");
+        if (indexOfSemicolon < 0) {
+            continue;
+        }
+        if (openBracketsCount == closeBracketsCount) {
+            endIndex = i;
+            if (stringAfterSemicolon.length > 0 && settings.NewLineSettings.newLineAfter.indexOf(";") >= 0) {
+                inputs[i] = stringBeforeSemicolon;
+                inputs.splice(i, 0, stringAfterSemicolon);
+                parentEndIndex++;
+            }
+            break;
+        }
+    }
+
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+    }
+
+    return [endIndex, parentEndIndex];
+}
+
+//cannot format entity_instance.vhd
 export function beautify3(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, endIndex?: number): number {
     let i: number;
     let regexOneLineBlockKeyWords: RegExp = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w](?!.+[^\w]IS([^\w]|$))/);//match PROCEDURE..; but not PROCEDURE .. IS;
-    let blockMidKeyWords: Array<string> = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
+    let blockMidKeyWords: Array<string> = ["BEGIN"];
     let blockStartsKeyWords: Array<string> = [
         "IF",
         "CASE",
@@ -537,42 +584,66 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "PACKAGE",
         "PROCESS",
         "POSTPONED PROCESS",
-        "([\\w\\s]+:\\s*PROCESS)",
+        "PROCESS",
         "FUNCTION",
         "IMPURE FUNCTION",
-        "(.+\\sPROTECTED)",
-        "COMPONENT",
-        "ENTITY",
-        "([\\w\\s]+:\\s*BLOCK)",
-        "(WITH\\s+[\\w\\s]+SELECT)"/*need more logics here // nvc/test/parse/conc.vhd*/];
+        "(.*\\s*PROTECTED)",
+        "(COMPONENT(?!.+;))",
+        "(ENTITY(?!.+;))",
+        "FOR",
+        "WHILE",
+        "LOOP",
+        "(.*\\s*GENERATE)",
+        "(CONTEXT[\\w\\s\\\\]+IS)",
+        "(CONFIGURATION(?!.+;))",
+        "BLOCK",
+        "UNITS",
+        "\\w+\\s+\\w+\\s+IS\\s+RECORD"];
     let blockEndsKeyWords: Array<string> = ["END"];
+    let blockEndsWithSemicolon: Array<string> = ["(WITH\\s+[\\w\\s\\\\]+SELECT)", "([\\w\\\\]+[\\s]*<=)", "([\\w\\\\]+[\\s]*:=)", "FOR\\s+[\\w\\s,]+:\\s*\\w+\\s+USE", "REPORT"];
 
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
     let blockEndKeyWordsStr: string = blockEndsKeyWords.join("|");
     let blockMidKeyWordsStr: string = blockMidKeyWords.join("|");
+    let blockEndsWithSemicolonStr: string = blockEndsWithSemicolon.join("|");
     let regexBlockMidKeyWords: RegExp = new RegExp("(" + blockMidKeyWordsStr + ")([^\\w]|$)")
-    let regexBlockStartsKeywords: RegExp = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w]|$)")
+    let regexBlockStartsKeywords: RegExp = new RegExp("([\\w]+\\s*:\\s*)?(" + newLineAfterKeyWordsStr + ")([^\\w]|$)")
     let regexBlockEndsKeyWords: RegExp = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w]|$)")
+    let regexblockEndsWithSemicolon: RegExp = new RegExp("(" + blockEndsWithSemicolonStr + ")([^\\w]|$)")
+    let regexMidKeyWhen: RegExp = new RegExp("(" + "WHEN" + ")([^\\w]|$)")
+    let regexMidKeyElse: RegExp = new RegExp("(" + "ELSE|ELSIF" + ")([^\\w]|$)")
     if (endIndex == null) {
         endIndex = inputs.length - 1;
     }
     for (i = startIndex; i <= endIndex; i++) {
         let input: string = inputs[i].trim();
+        if (Mode != FormatMode.EndsWithSemicolon && input.regexStartsWith(regexblockEndsWithSemicolon)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
         if (input.regexStartsWith(/(.+:\s*)?(CASE)([\s]|$)/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.CaseWhen;
             i = beautifyCaseBlock(inputs, result, settings, i, indent);
+            Mode = modeCache;
             continue;
         }
         if (input.regexStartsWith(/[\w\s:]*PORT([\s]|$)/)) {
-            i = beautifyPortGenericBlock(inputs, result, settings, i, indent, "PORT");
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PORT");
             continue;
         }
         if (input.regexStartsWith(/[\w\s:]*GENERIC([\s]|$)/)) {
-            i = beautifyPortGenericBlock(inputs, result, settings, i, indent, "GENERIC");
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "GENERIC");
             continue;
         }
         result.push(new FormattedLine(input, indent));
         if (startIndex != 0
-            && (input.regexStartsWith(regexBlockMidKeyWords))) {
+            && (input.regexStartsWith(regexBlockMidKeyWords)
+                || (Mode != FormatMode.EndsWithSemicolon && input.regexStartsWith(regexMidKeyElse))
+                || (Mode == FormatMode.CaseWhen && input.regexStartsWith(regexMidKeyWhen)))) {
             (<FormattedLine>result[i]).Indent--;
         }
         else if (startIndex != 0

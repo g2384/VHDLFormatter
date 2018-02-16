@@ -61,6 +61,11 @@ function UnitTestbeautify3() {
     Beautify3Case13();
     Beautify3Case14();
     Beautify3Case15();
+    Beautify3Case16();
+    Beautify3Case17();
+    Beautify3Case18();
+    Beautify3Case19();
+    Beautify3Case20();
 }
 function Beautify3Case1() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -429,6 +434,111 @@ function Beautify3Case15() {
     ];
     UnitTest6(VHDLFormatter_8.beautify3, "constant", settings, inputs, expected, 0, expected.length - 1, 0);
 }
+function Beautify3Case16() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "x <= 1 WHEN foo",
+        "ELSE 2 WHEN bar",
+        "ELSE 3;",
+        "y <= 2;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("x <= 1 WHEN foo", 0),
+        new VHDLFormatter_9.FormattedLine("ELSE 2 WHEN bar", 1),
+        new VHDLFormatter_9.FormattedLine("ELSE 3;", 1),
+        new VHDLFormatter_9.FormattedLine("y <= 2;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "one line ends with ;", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+function Beautify3Case17() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "WITH y SELECT x <=",
+        "1 WHEN a,",
+        "2 WHEN b,",
+        "3 WHEN OTHERS;",
+        "y <= 2;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("WITH y SELECT x <=", 0),
+        new VHDLFormatter_9.FormattedLine("1 WHEN a,", 1),
+        new VHDLFormatter_9.FormattedLine("2 WHEN b,", 1),
+        new VHDLFormatter_9.FormattedLine("3 WHEN OTHERS;", 1),
+        new VHDLFormatter_9.FormattedLine("y <= 2;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "WITH SELECT line ends with ;", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+function Beautify3Case18() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "CONFIGURATION conf OF ent IS",
+        "USE work.foo;",
+        "ATTRIBUTE x OF y : SIGNAL IS 5;",
+        "FOR arch",
+        "FOR ALL : comp",
+        "USE ENTITY work.foo(x);",
+        "END FOR;",
+        "END FOR;",
+        "END CONFIGURATION;",
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("CONFIGURATION conf OF ent IS", 0),
+        new VHDLFormatter_9.FormattedLine("USE work.foo;", 1),
+        new VHDLFormatter_9.FormattedLine("ATTRIBUTE x OF y : SIGNAL IS 5;", 1),
+        new VHDLFormatter_9.FormattedLine("FOR arch", 1),
+        new VHDLFormatter_9.FormattedLine("FOR ALL : comp", 2),
+        new VHDLFormatter_9.FormattedLine("USE ENTITY work.foo(x);", 3),
+        new VHDLFormatter_9.FormattedLine("END FOR;", 2),
+        new VHDLFormatter_9.FormattedLine("END FOR;", 1),
+        new VHDLFormatter_9.FormattedLine("END CONFIGURATION;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "configuration & for", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+function Beautify3Case19() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "FUNCTION \" + \"(x, y : integer) return integer IS",
+        "BEGIN",
+        "RETURN 42;",
+        "END FUNCTION \"+\";",
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("FUNCTION \" + \"(x, y : integer) return integer IS", 0),
+        new VHDLFormatter_9.FormattedLine("BEGIN", 0),
+        new VHDLFormatter_9.FormattedLine("RETURN 42;", 1),
+        new VHDLFormatter_9.FormattedLine("END FUNCTION \"+\";", 0),
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+function Beautify3Case20() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "m <= ((1, 2, 3, 4)",
+        "(5, 6, 7, 8));",
+        "y <= 2;"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("m <= ((1, 2, 3, 4)", 0),
+        new VHDLFormatter_9.FormattedLine("(5, 6, 7, 8));", 1),
+        new VHDLFormatter_9.FormattedLine("y <= 2;", 0)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
+}
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
     let input = "a; @@comments1\r\nb;";
@@ -675,6 +785,19 @@ function IntegrationTest() {
     IntegrationTest24();
     IntegrationTest25();
     IntegrationTest26();
+    IntegrationTest27();
+    IntegrationTest28();
+    IntegrationTest29();
+    IntegrationTest30();
+    IntegrationTest31();
+    IntegrationTest32();
+    IntegrationTest33();
+    IntegrationTest34();
+    IntegrationTest35();
+    IntegrationTest36();
+    IntegrationTest37();
+    IntegrationTest38();
+    IntegrationTest39();
 }
 function IntegrationTest23() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -711,6 +834,124 @@ function IntegrationTest26() {
     let input = 'ARCHITECTURE a OF e IS\r\nBEGIN\r\n    b : BLOCK IS\r\n    BEGIN\r\n    END BLOCK;\r\n    c : BLOCK IS\r\n        SIGNAL x : INTEGER;\r\n        SIGNAL y : real;\r\n    BEGIN\r\n        x <= y;\r\n    END BLOCK;\r\nEND ARCHITECTURE;';
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("block", input, actual);
+}
+function IntegrationTest27() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'CONTEXT widget_context IS\r\n	LIBRARY ieee;\r\n	USE ieee.std_logic_1164.ALL, ieee.numeric_std.ALL;\r\n	USE widget_lib.widget_defs.ALL;\r\n	USE widget_lib.widget_comps.ALL;\r\nEND CONTEXT;\r\n\r\nCONTEXT dongle_context IS\r\n	LIBRARY widget_lib;\r\n	CONTEXT widget_lib.widget_context;\r\nEND CONTEXT;\r\n\r\nLIBRARY foo;\r\nUSE foo.moo;\r\n\r\nCONTEXT bad IS -- Error\r\nEND CONTEXT;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("context", input, actual);
+}
+function IntegrationTest28() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE foo OF bar IS\r\n	SIGNAL \\foo bar\\ : INTEGER;\r\n	SIGNAL \\a\\\\b\\ : INTEGER;\r\n	SIGNAL \\Thing!!! \\ : INTEGER;\r\n	SIGNAL \\name\\ : INTEGER;\r\n	SIGNAL name : INTEGER;\r\nBEGIN\r\n	\\foo.bar.baz\\ <= \\hello\\;\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("extended \\", input, actual);
+}
+function IntegrationTest29() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'PACKAGE func IS\r\n	FUNCTION add(x, y : INTEGER; y : IN INTEGER) RETURN INTEGER;\r\n	IMPURE FUNCTION naughty RETURN INTEGER;\r\n	FUNCTION "+"(x, y : INTEGER) RETURN INTEGER;\r\nEND PACKAGE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("extended \\", input, actual);
+}
+function IntegrationTest30() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE a OF g IS\r\nBEGIN\r\n\r\n	g1 : IF foo GENERATE\r\n		SIGNAL x : INTEGER;\r\n	BEGIN\r\n		x <= 5;\r\n	END GENERATE;\r\n\r\n	g2 : IF bar GENERATE\r\n		g2a : IF x < 5 GENERATE\r\n			g <= 7;\r\n		END GENERATE;\r\n	END GENERATE;\r\n\r\n	g3 : FOR i IN 1 TO 40 GENERATE\r\n		SIGNAL x : INTEGER;\r\n	BEGIN\r\n		f <= h;\r\n	END GENERATE;\r\n\r\n	g4 : FOR i IN x\'RANGE GENERATE\r\n	END GENERATE;\r\n\r\n	g5 : FOR i IN x\'RANGE GENERATE\r\n	BEGIN\r\n	END GENERATE;\r\n\r\n	g6 : FOR i IN 1 TO 3 GENERATE\r\n		COMPONENT sub_ent IS\r\n			PORT (val : OUT NATURAL);\r\n		END COMPONENT sub_ent; -- OK\r\n	BEGIN\r\n	END GENERATE;\r\n\r\n	g7 : IF true GENERATE\r\n		PROCEDURE doit IS -- OK\r\n		BEGIN\r\n			write(OUTPUT, "OK." & LF);\r\n		END PROCEDURE doit;\r\n	BEGIN\r\n	END GENERATE g7;\r\n\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("generate", input, actual);
+}
+function IntegrationTest31() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ENTITY ent IS\r\nEND ENTITY;\r\n\r\nARCHITECTURE a OF ent IS\r\nBEGIN\r\n	main : PROCESS\r\n	BEGIN\r\n		REPORT """""";\r\n		WAIT;\r\n	END PROCESS;\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("report \"\"", input, actual);
+}
+function IntegrationTest32() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'PACKAGE p IS\r\n\r\n	TYPE SharedCounter IS PROTECTED\r\n		PROCEDURE increment (N : INTEGER := 1);\r\n		PROCEDURE decrement (N : INTEGER := 1);\r\n		IMPURE FUNCTION value RETURN INTEGER;\r\n	END PROTECTED SharedCounter;\r\n\r\n	TYPE SharedCounter IS PROTECTED BODY\r\n		VARIABLE counter : INTEGER := 0;\r\n\r\n		PROCEDURE increment (N : INTEGER := 1) IS\r\n		BEGIN\r\n			counter := counter + N;\r\n		END PROCEDURE increment;\r\n\r\n		PROCEDURE decrement (N : INTEGER := 1) IS\r\n		BEGIN\r\n			counter := counter - N;\r\n		END PROCEDURE decrement;\r\n\r\n		IMPURE FUNCTION value RETURN INTEGER IS\r\n		BEGIN\r\n			RETURN counter;\r\n		END FUNCTION value;\r\n	END PROTECTED BODY;\r\n\r\nEND PACKAGE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("protected", input, actual);
+}
+function IntegrationTest33() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE a OF b IS\r\nBEGIN\r\n\r\n	-- Wait statements\r\n	PROCESS IS\r\n	BEGIN\r\n		WAIT FOR 1 ns;\r\n		block_forever : WAIT;\r\n		WAIT ON x;\r\n		WAIT ON x, y, z(1 DOWNTO 0);\r\n		WAIT ON w(1) FOR 2 ns;\r\n		WAIT UNTIL x = 3;\r\n		WAIT UNTIL y = x FOR 5 ns;\r\n		WAIT ON x UNTIL x = 2 FOR 1 ns;\r\n	END PROCESS;\r\n\r\n	-- Blocking assignment\r\n	PROCESS IS\r\n		VARIABLE a : INTEGER;\r\n	BEGIN\r\n		a := 2;\r\n		a := a + (a * 3);\r\n	END PROCESS;\r\n\r\n	-- Assert and report\r\n	PROCESS IS\r\n	BEGIN\r\n		ASSERT true;\r\n		ASSERT false SEVERITY note;\r\n		ASSERT 1 > 2 REPORT "oh no" SEVERITY failure;\r\n		REPORT "hello";\r\n		REPORT "boo" SEVERITY error;\r\n	END PROCESS;\r\n\r\n	-- Function calls\r\n	PROCESS IS\r\n	BEGIN\r\n		x := foo(1, 2, 3);\r\n		a := "ABS"(b);\r\n	END PROCESS;\r\n\r\n	-- If\r\n	PROCESS IS\r\n	BEGIN\r\n		IF true THEN\r\n			x := 1;\r\n		END IF;\r\n		test : IF true THEN\r\n			x := y;\r\n		END IF test;\r\n		IF x > 2 THEN\r\n			x := 5;\r\n		ELSE\r\n			y := 2;\r\n		END IF;\r\n		IF x > 3 THEN\r\n			NULL;\r\n		ELSIF x > 5 THEN\r\n			NULL;\r\n		ELSIF true THEN\r\n			NULL;\r\n		ELSE\r\n			x := 2;\r\n		END IF;\r\n	END PROCESS;\r\n\r\n	-- Null\r\n	PROCESS IS\r\n	BEGIN\r\n		NULL;\r\n	END PROCESS;\r\n\r\n	-- Return\r\n	PROCESS IS\r\n	BEGIN\r\n		RETURN 4 * 4;\r\n	END PROCESS;\r\n\r\n	-- While\r\n	PROCESS IS\r\n	BEGIN\r\n		WHILE n > 0 LOOP\r\n			n := n - 1;\r\n		END LOOP;\r\n		LOOP\r\n			NULL;\r\n		END LOOP;\r\n	END PROCESS;\r\n\r\n	-- Delayed assignment\r\n	PROCESS IS\r\n	BEGIN\r\n		x <= 4 AFTER 5 ns;\r\n		x <= 5 AFTER 1 ns, 7 AFTER 8 ns;\r\n		x <= 5, 7 AFTER 8 ns;\r\n		x <= INERTIAL 5;\r\n		x <= TRANSPORT 4 AFTER 2 ns;\r\n		x <= REJECT 4 ns INERTIAL 6 AFTER 10 ns;\r\n	END PROCESS;\r\n\r\n	-- For\r\n	PROCESS IS\r\n	BEGIN\r\n		FOR i IN 0 TO 10 LOOP\r\n			NULL;\r\n		END LOOP;\r\n		FOR i IN foo\'RANGE LOOP\r\n			NULL;\r\n		END LOOP;\r\n	END PROCESS;\r\n\r\n	-- Exit\r\n	PROCESS IS\r\n	BEGIN\r\n		EXIT;\r\n		EXIT WHEN x = 1;\r\n	END PROCESS;\r\n\r\n	-- Procedure call\r\n	PROCESS IS\r\n	BEGIN\r\n		foo(x, y, 1);\r\n		bar;\r\n		foo(a => 1, b => 2, 3);\r\n	END PROCESS;\r\n\r\n	-- Case\r\n	PROCESS IS\r\n	BEGIN\r\n		CASE x IS\r\n			WHEN 1 =>\r\n				NULL;\r\n			WHEN 2 =>\r\n				NULL;\r\n			WHEN 3 | 4 =>\r\n				NULL;\r\n			WHEN OTHERS =>\r\n				NULL;\r\n		END CASE;\r\n	END PROCESS;\r\n\r\n	-- Next\r\n	PROCESS IS\r\n	BEGIN\r\n		NEXT;\r\n		NEXT WHEN foo = 5;\r\n	END PROCESS;\r\n\r\n	-- Signal assignment to aggregate\r\n	PROCESS IS\r\n	BEGIN\r\n		(x, y, z) <= foo;\r\n	END PROCESS;\r\n\r\n	-- Case statement range bug\r\n	PROCESS IS\r\n	BEGIN\r\n		CASE f IS\r\n			WHEN 1 =>\r\n				FOR i IN x\'RANGE LOOP\r\n				END LOOP;\r\n		END CASE;\r\n	END PROCESS;\r\n\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("sequence", input, actual);
+}
+function IntegrationTest34() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE a OF b IS\r\n	FOR x : y USE ENTITY work.foo;\r\n	FOR x1, x2 : y USE ENTITY work.foo;\r\n	FOR x : y USE ENTITY work.foo(bar);\r\n	FOR x : y USE ENTITY work.foo(bar)\r\n		GENERIC MAP(a => 1)\r\n		PORT MAP(b => g);\r\n	FOR ALL : y USE CONFIGURATION yah;\r\n	FOR OTHERS : y USE OPEN;\r\nBEGIN\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("spec", input, actual);
+}
+function IntegrationTest35() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE a OF b IS\r\n	TYPE my_int IS RANGE 0 TO 100;\r\n	SIGNAL x : my_int := 2;\r\n\r\n	TYPE resistance IS RANGE 0 TO 10000000\r\n	UNITS\r\n		ohm;\r\n		kohm = 1000 ohm;\r\n		Mohm = 1000 kohm;\r\n	END UNITS;\r\n	SIGNAL r : resistance := 100 ohm;\r\n\r\n	SUBTYPE big_r IS resistance RANGE 1000 TO 2000;\r\n\r\n	SUBTYPE my_small_int IS my_int RANGE 0 TO 5;\r\n\r\n	SUBTYPE foo IS my_int RANGE 2 TO my_int\'high;\r\n\r\n	SUBTYPE rint IS resolved my_int;\r\n\r\n	TYPE p IS ACCESS my_int;\r\n\r\n	TYPE f IS FILE OF my_int;\r\n\r\n	FILE f1 : f OPEN READ_MODE IS "foo";\r\n\r\n	FILE f2 : f IS "bar";\r\n\r\n	FILE f3 : f;\r\n\r\n	TYPE r1 IS RECORD\r\n		a : INTEGER;\r\n		b : INTEGER;\r\n		c : foo(1 TO 5);\r\n	END RECORD;\r\n\r\n	FILE f4 : f IS OUT "bar"; -- VHDL-87 compat\r\n\r\n	FILE f5 : f IS IN "bar"; -- VHDL-87 compat\r\n\r\n	TYPE r2 IS RECORD\r\n		x : INTEGER;\r\n	END RECORD r2;\r\n\r\nBEGIN\r\n\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("types", input, actual);
+}
+function IntegrationTest36() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE test OF bufr_test IS\r\nBEGIN\r\n\r\n	BUF_DATA_CLK : BUFR\r\n	GENERIC MAP(\r\n		BUFR_DIVIDE => "BYPASS",\r\n		SIM_DEVICE => "7SERIES")\r\n	PORT MAP(\r\n		O => amu_adc_dco,\r\n		CE => \'1\',\r\n		CLR => \'0\',\r\n		I => amu_adc_dco_i);\r\n\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("new line after (", input, actual);
+}
+function IntegrationTest37() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ENTITY nest1 IS\r\nEND ENTITY;\r\nARCHITECTURE test OF nest1 IS\r\nBEGIN\r\n	PROCESS IS\r\n		VARIABLE x : INTEGER := 2;\r\n		VARIABLE y : bit_vector(7 DOWNTO 0);\r\n		IMPURE FUNCTION add_to_x(y : INTEGER) RETURN INTEGER IS\r\n			IMPURE FUNCTION do_it RETURN INTEGER IS\r\n			BEGIN\r\n				RETURN x + y;\r\n			END FUNCTION;\r\n		BEGIN\r\n			RETURN do_it;\r\n		END FUNCTION;\r\n	BEGIN\r\n		ASSERT add_to_x(5) = 7;\r\n		WAIT;\r\n	END PROCESS;\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("nested functions", input, actual);
+}
+function IntegrationTest38() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'REPORT INTEGER\'image(a) & " " & INTEGER\'image(b) & " "\r\n	& INTEGER\'image(c) & " " & INTEGER\'image(d) & " "\r\n	& INTEGER\'image(e) & " " & INTEGER\'image(f);\r\nWAIT;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("report severl lines", input, actual);
+}
+function IntegrationTest39() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'assert v /  = ( X  "01", X  "02" )  ;';
+    let expected = 'ASSERT v /= (X "01", X "02");';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("signs", expected, actual);
 }
 function IntegrationTest20() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
