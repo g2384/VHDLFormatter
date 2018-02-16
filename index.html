@@ -112,7 +112,9 @@
         <br>
         <a href="https://github.com/g2384/g2384.github.io/issues" target="_blank">Report bugs if your code is not properly formatted, please provide sample code which causes the failure</a>
     </p>
-    <div id="lastModified"></div>
+    <p>
+        <a href="https://github.com/g2384/VHDLFormatter#readme">Release notes</a>
+    </p>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
     <form id="keyword">Keyword Case:
@@ -263,11 +265,6 @@
     </script>
     <script src="VHDLFormatter.js"></script>
     <script>
-        let lastModifiedDate = fetchHeader(location.href, 'Last-Modified');
-        if (lastModifiedDate != "") {
-            document.getElementById("lastModified").innerHTML = "<p>Last modified: " + lastModifiedDate + "</p>";
-        }
-
         function f() {
             var input = document.getElementById("in").value;
             var no_format = document.getElementById("no_format").checked;
