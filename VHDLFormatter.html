@@ -9,12 +9,12 @@
             tab-size: 4;
             font-family: Helvetica, arial;
         }
-
+        
         textarea {
             width: 100%;
             font-family: Consolas, Courier;
         }
-
+        
         .btn {
             margin: 10px 10px;
             padding: 5px 8px;
@@ -28,22 +28,22 @@
             white-space: nowrap;
             border: 1px solid rgb(194, 194, 194);
         }
-
+        
         .btn:hover {
             background-color: #afd9ee;
         }
-
+        
         .show {
             display: none;
         }
-
+        
         input[type="checkbox"]+label {
             display: inline-block;
             width: 19px;
             height: 19px;
             margin: -1px 4px 0 0;
         }
-
+        
         .wordwrap {
             white-space: pre-wrap;
             white-space: -moz-pre-wrap;
@@ -51,32 +51,32 @@
             white-space: -o-pre-wrap;
             word-wrap: break-word;
         }
-
+        
         label {
             cursor: pointer;
             line-height: 1.5em;
         }
-
+        
         label:hover {
             color: #555;
             text-decoration: underline;
         }
-
+        
         form {
             margin-bottom: 0px;
         }
-
+        
         form span {
             width: 170px;
             display: inline-block;
             text-align: right;
         }
-
+        
         a {
             color: #4b9aff;
             text-decoration: none;
         }
-
+        
         a:hover {
             text-decoration: underline;
         }
@@ -117,11 +117,9 @@
     <br>
     <form id="keyword">Keyword Case:
         <label>
-            <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label>
-        |
+            <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label> |
         <label>
-            <input type="radio" name="keywordcase" value="LowerCase">lowercase</label>
-        |
+            <input type="radio" name="keywordcase" value="LowerCase">lowercase</label> |
         <label>
             <input type="radio" name="keywordcase" value="DefaultCase">Default</label>
     </form>
@@ -150,11 +148,11 @@
     <form id="new_line_after_else">
         <span>ELSE</span>
         <label>
-            <input type="radio" name="new_line_after_elsecase" value="NewLine" checked="checked">New Line</label>
+            <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
         <label>
             <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
         <label>
-            <input type="radio" name="new_line_after_elsecase" value="None">None</label>
+            <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
     </form>
     <form id="new_line_after_port">
         <span>PORT or PORT MAP</span>
@@ -176,11 +174,9 @@
     </form>
     <br>
     <label>
-        <input type="checkbox" id="remove_comments">Remove commments</label>
-    |
+        <input type="checkbox" id="remove_comments">Remove commments</label> |
     <label>
-        <input type="checkbox" id="remove_lines">Remove blank lines</label>
-    |
+        <input type="checkbox" id="remove_lines">Remove blank lines</label> |
     <label>
         <input type="checkbox" id="remove_report">Remove REPORT</label>
     <br>

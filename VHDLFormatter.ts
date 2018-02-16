@@ -7,6 +7,7 @@ enum FormatMode {
     EndsWithSemicolon,
     CaseWhen,
     IfElse,
+    PortGeneric,
 }
 
 let Mode: FormatMode = FormatMode.Default;
@@ -427,7 +428,7 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
     let firstLineHasParenthese: boolean = firstLine.indexOf("(") >= 0;
     let hasParenthese: boolean = firstLineHasParenthese;
     let blockBodyStartIndex = startIndex;
-    let secondLineHasParenthese: boolean = inputs[startIndex + 1].startsWith("(");
+    let secondLineHasParenthese: boolean = startIndex + 1 < inputs.length && inputs[startIndex + 1].startsWith("(");
     if (secondLineHasParenthese) {
         hasParenthese = true;
         blockBodyStartIndex++;
@@ -443,7 +444,7 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
             parentEndIndex++;
         }
     }
-    else if (endIndex != startIndex && secondLineHasParenthese) {
+    else if (endIndex > startIndex + 1 && secondLineHasParenthese) {
         inputs[startIndex + 1] = inputs[startIndex + 1].replace(/\(([\w\(\) ]+)/, '(\r\n$1');
         let newInputs = inputs[startIndex + 1].split("\r\n");
         if (newInputs.length == 2) {
@@ -458,7 +459,11 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
     }
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (secondLineHasParenthese) {
-        result.push(new FormattedLine(inputs[startIndex + 1], indent));
+        let secondLineIndent = indent;
+        if (endIndex == startIndex + 1) {
+            secondLineIndent++;
+        }
+        result.push(new FormattedLine(inputs[startIndex + 1], secondLineIndent));
     }
     let blockBodyEndIndex = endIndex;
     let i = beautify3(inputs, result, settings, blockBodyStartIndex + 1, indent + 1, endIndex);
@@ -536,10 +541,10 @@ export function beautifyCaseBlock(inputs: Array<string>, result: (FormattedLine 
     return i;
 }
 
-export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+function getSemicolonBlockEndIndex(inputs: Array<string>, settings: BeautifierSettings, startIndex: number, parentEndIndex: number): [number, number] {
+    let endIndex = 0;
     let openBracketsCount = 0;
     let closeBracketsCount = 0;
-    let endIndex = 0;
     for (let i = startIndex; i < inputs.length; i++) {
         let input = inputs[i];
         let indexOfSemicolon = input.indexOf(";");
@@ -562,7 +567,28 @@ export function beautifySemicolonBlock(inputs: Array<string>, result: (Formatted
             break;
         }
     }
+    return [endIndex, parentEndIndex];
+}
 
+export function beautifyComponentBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number): number {
+    let endIndex = startIndex;
+    for (let i = startIndex; i < inputs.length; i++) {
+        if (inputs[i].regexStartsWith(/END(\s|$)/)) {
+            endIndex = i;
+            break;
+        }
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+    }
+
+    return endIndex;
+}
+
+export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+    let endIndex = startIndex;
+    [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (endIndex != startIndex) {
         let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
@@ -588,7 +614,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "FUNCTION",
         "IMPURE FUNCTION",
         "(.*\\s*PROTECTED)",
-        "(COMPONENT(?!.+;))",
+        "(COMPONENT)",
         "(ENTITY(?!.+;))",
         "FOR",
         "WHILE",
@@ -616,7 +642,24 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         endIndex = inputs.length - 1;
     }
     for (i = startIndex; i <= endIndex; i++) {
+        if (indent < 0) {
+            indent = 0;
+        }
         let input: string = inputs[i].trim();
+        if (input.regexStartsWith(/COMPONENT\s/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            i = beautifyComponentBlock(inputs, result, settings, i, indent);
+            Mode = modeCache;
+            continue;
+        }
+        if (input.regexStartsWith(/\w+\s*:\s*ENTITY/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
         if (Mode != FormatMode.EndsWithSemicolon && input.regexStartsWith(regexblockEndsWithSemicolon)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;

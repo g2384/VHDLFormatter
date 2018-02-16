@@ -66,6 +66,7 @@ function UnitTestbeautify3() {
     Beautify3Case18();
     Beautify3Case19();
     Beautify3Case20();
+    Beautify3Case21();
 }
 function Beautify3Case1() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -539,6 +540,27 @@ function Beautify3Case20() {
     ];
     UnitTest6(VHDLFormatter_8.beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
 }
+function Beautify3Case21() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["port", "generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let inputs = [
+        "g: ENTITY work.foo",
+        "GENERIC MAP( X => 1 )",
+        "PORT MAP( a, b );",
+        "h: ENTITY work.foo",
+        "PORT MAP( a => open );"
+    ];
+    let expected = [
+        new VHDLFormatter_9.FormattedLine("g: ENTITY work.foo", 0),
+        new VHDLFormatter_9.FormattedLine("GENERIC MAP( X => 1 )", 1),
+        new VHDLFormatter_9.FormattedLine("PORT MAP( a, b );", 1),
+        new VHDLFormatter_9.FormattedLine("h: ENTITY work.foo", 0),
+        new VHDLFormatter_9.FormattedLine("PORT MAP( a => open );", 1)
+    ];
+    UnitTest6(VHDLFormatter_8.beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
+}
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
     let input = "a; @@comments1\r\nb;";
@@ -798,6 +820,8 @@ function IntegrationTest() {
     IntegrationTest37();
     IntegrationTest38();
     IntegrationTest39();
+    IntegrationTest40();
+    IntegrationTest41();
 }
 function IntegrationTest23() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -952,6 +976,24 @@ function IntegrationTest39() {
     let expected = 'ASSERT v /= (X "01", X "02");';
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("signs", expected, actual);
+}
+function IntegrationTest40() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let input = 'PORT MAP\r\n    (we => NOT cpu_rw, spo => ram_dout);\r\nPORT MAP(we => NOT cpu_rw, spo => ram_dout);\r\nPORT MAP\r\n(\r\n    we => NOT cpu_rw, spo => ram_dout\r\n);';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("port map in newline", input, actual);
+}
+function IntegrationTest41() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE test3 OF test IS\r\n	COMPONENT comp IS PORT (a : BOOLEAN);\r\n	END COMPONENT;\r\n	SIGNAL s_ok : BOOLEAN;\r\nBEGIN\r\n	comp PORT MAP(a => s_ok); -- unlabeled component instantiation\r\nEND ARCHITECTURE;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("end component", input, actual);
 }
 function IntegrationTest20() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();

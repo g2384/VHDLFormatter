@@ -9,6 +9,7 @@ var FormatMode;
     FormatMode[FormatMode["EndsWithSemicolon"] = 1] = "EndsWithSemicolon";
     FormatMode[FormatMode["CaseWhen"] = 2] = "CaseWhen";
     FormatMode[FormatMode["IfElse"] = 3] = "IfElse";
+    FormatMode[FormatMode["PortGeneric"] = 4] = "PortGeneric";
 })(FormatMode || (FormatMode = {}));
 let Mode = FormatMode.Default;
 class NewLineSettings {
@@ -377,7 +378,7 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
     let firstLineHasParenthese = firstLine.indexOf("(") >= 0;
     let hasParenthese = firstLineHasParenthese;
     let blockBodyStartIndex = startIndex;
-    let secondLineHasParenthese = inputs[startIndex + 1].startsWith("(");
+    let secondLineHasParenthese = startIndex + 1 < inputs.length && inputs[startIndex + 1].startsWith("(");
     if (secondLineHasParenthese) {
         hasParenthese = true;
         blockBodyStartIndex++;
@@ -393,7 +394,7 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
             parentEndIndex++;
         }
     }
-    else if (endIndex != startIndex && secondLineHasParenthese) {
+    else if (endIndex > startIndex + 1 && secondLineHasParenthese) {
         inputs[startIndex + 1] = inputs[startIndex + 1].replace(/\(([\w\(\) ]+)/, '(\r\n$1');
         let newInputs = inputs[startIndex + 1].split("\r\n");
         if (newInputs.length == 2) {
@@ -408,7 +409,11 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
     }
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (secondLineHasParenthese) {
-        result.push(new FormattedLine(inputs[startIndex + 1], indent));
+        let secondLineIndent = indent;
+        if (endIndex == startIndex + 1) {
+            secondLineIndent++;
+        }
+        result.push(new FormattedLine(inputs[startIndex + 1], secondLineIndent));
     }
     let blockBodyEndIndex = endIndex;
     let i = beautify3(inputs, result, settings, blockBodyStartIndex + 1, indent + 1, endIndex);
@@ -481,10 +486,10 @@ function beautifyCaseBlock(inputs, result, settings, startIndex, indent) {
     return i;
 }
 exports.beautifyCaseBlock = beautifyCaseBlock;
-function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndIndex, indent) {
+function getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex) {
+    let endIndex = 0;
     let openBracketsCount = 0;
     let closeBracketsCount = 0;
-    let endIndex = 0;
     for (let i = startIndex; i < inputs.length; i++) {
         let input = inputs[i];
         let indexOfSemicolon = input.indexOf(";");
@@ -507,6 +512,26 @@ function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndI
             break;
         }
     }
+    return [endIndex, parentEndIndex];
+}
+function beautifyComponentBlock(inputs, result, settings, startIndex, indent) {
+    let endIndex = startIndex;
+    for (let i = startIndex; i < inputs.length; i++) {
+        if (inputs[i].regexStartsWith(/END(\s|$)/)) {
+            endIndex = i;
+            break;
+        }
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+    }
+    return endIndex;
+}
+exports.beautifyComponentBlock = beautifyComponentBlock;
+function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndIndex, indent) {
+    let endIndex = startIndex;
+    [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (endIndex != startIndex) {
         let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
@@ -531,7 +556,7 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         "FUNCTION",
         "IMPURE FUNCTION",
         "(.*\\s*PROTECTED)",
-        "(COMPONENT(?!.+;))",
+        "(COMPONENT)",
         "(ENTITY(?!.+;))",
         "FOR",
         "WHILE",
@@ -559,7 +584,24 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         endIndex = inputs.length - 1;
     }
     for (i = startIndex; i <= endIndex; i++) {
+        if (indent < 0) {
+            indent = 0;
+        }
         let input = inputs[i].trim();
+        if (input.regexStartsWith(/COMPONENT\s/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            i = beautifyComponentBlock(inputs, result, settings, i, indent);
+            Mode = modeCache;
+            continue;
+        }
+        if (input.regexStartsWith(/\w+\s*:\s*ENTITY/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
         if (Mode != FormatMode.EndsWithSemicolon && input.regexStartsWith(regexblockEndsWithSemicolon)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
