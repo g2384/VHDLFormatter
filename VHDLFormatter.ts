@@ -157,8 +157,14 @@ export function indentDecode(input: string): string {
                     break;
                 case "\t":
                     char = "tab";
+                    break;
+                default:
+                    char = "'" + char + "'";
             }
             repeatedCharCount = repeatedCharCount > 8 ? 8 : repeatedCharCount;
+            if (repeatedCharCount > 0) {
+                char += "s";
+            }
             result += count[repeatedCharCount] + char;
             repeatedCharCount = 0;
         }

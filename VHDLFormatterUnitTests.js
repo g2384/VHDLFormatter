@@ -596,9 +596,10 @@ function UnitTestRemoveAsserts() {
 function UnitTestIndentDecode() {
     console.log("=== IndentDecode ===");
     UnitTest2(VHDLFormatter_2.indentDecode, "one blankspace", " ", "one blankspace");
-    UnitTest2(VHDLFormatter_2.indentDecode, "mixed chars", " A ", "one blankspace & one A & one blankspace");
-    UnitTest2(VHDLFormatter_2.indentDecode, "4 blankspaces", "    ", "four blankspace");
-    UnitTest2(VHDLFormatter_2.indentDecode, "9 blankspaces", "         ", "many blankspace");
+    UnitTest2(VHDLFormatter_2.indentDecode, "mixed chars", " A ", "one blankspace & one 'A' & one blankspace");
+    UnitTest2(VHDLFormatter_2.indentDecode, "4 blankspaces", "    ", "four blankspaces");
+    UnitTest2(VHDLFormatter_2.indentDecode, "9 blankspaces", "         ", "many blankspaces");
+    UnitTest2(VHDLFormatter_2.indentDecode, "2 As", "AA", "two 'A's");
 }
 function compareFormattedLines(expected, actual, message) {
     var l = Math.min(actual.length, expected.length);

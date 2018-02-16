@@ -7,7 +7,7 @@
             margin: 0 auto;
             max-width: 960px;
             tab-size: 4;
-            font-family: Helvetica, arial;
+            font-family: arial, sans-serif;
         }
         
         textarea {
@@ -80,6 +80,11 @@
         a:hover {
             text-decoration: underline;
         }
+        
+        p {
+            line-height: 1em;
+            margin: 0.5em 0em;
+        }
     </style>
     <link href="highlight.css" rel="stylesheet" />
     <script src="highlight.js"></script>
@@ -106,14 +111,10 @@
 <body>
     <h2>VHDL Beautifier, Formatter</h2>
     <h4>Beautify and format your VHDL code online</h4>
-    <p>
-        Proper formatting makes code easier to read and understand.
-        <br> Please make a backup before you replace your code!
-        <br>
-        <a href="https://github.com/g2384/g2384.github.io/issues" target="_blank">Report bugs if your code is not properly formatted, please provide sample code which causes the failure</a>
-    </p>
-    <p>
-        <a href="https://github.com/g2384/VHDLFormatter#readme">Release notes</a>
+    <p>Proper formatting makes code easier to read and understand.</p>
+    <p>Please make a backup before you replace your code!</p>
+    <p style="color:#888">
+        [<a href="https://github.com/g2384/VHDLFormatter#readme">Release notes</a>] [<a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>] [<a href="https://github.com/g2384/VHDLFormatter">Source code</a>]
     </p>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
@@ -194,7 +195,7 @@
     <label>
         <input type="checkbox" id="use_space">Customise Indentation (tab is \t): </label>
     <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
-    <span id="indent_s">four blankspace</span>)
+    <span id="indent_s">four blankspaces</span>)
     <br>
     <label>
         <input type="checkbox" id="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
