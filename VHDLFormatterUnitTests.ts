@@ -901,6 +901,8 @@ function IntegrationTest() {
     IntegrationTest39();
     IntegrationTest40();
     IntegrationTest41();
+    IntegrationTest42();
+    IntegrationTest43();
 }
 
 function IntegrationTest23() {
@@ -1090,6 +1092,26 @@ function IntegrationTest41() {
     new_line_after_symbols.noNewLineAfter = ["generic"];
     let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
     let input = 'ARCHITECTURE test3 OF test IS\r\n	COMPONENT comp IS PORT (a : BOOLEAN);\r\n	END COMPONENT;\r\n	SIGNAL s_ok : BOOLEAN;\r\nBEGIN\r\n	comp PORT MAP(a => s_ok); -- unlabeled component instantiation\r\nEND ARCHITECTURE;';
+    let actual = beautify(input, settings);
+    assert("end component", input, actual);
+}
+
+function IntegrationTest42() {
+    let new_line_after_symbols = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ENTITY bar IS\r\nEND ENTITY bar;\r\nENTITY \\foo\\ IS\r\n	PORT (test : IN BIT);\r\nEND ENTITY \\foo\\;\r\nARCHITECTURE structural OF \\foo\\ IS\r\nBEGIN -- architecture structural\r\nEND ARCHITECTURE structural;\r\nARCHITECTURE structural OF bar IS\r\n	SIGNAL test : BIT;\r\nBEGIN -- architecture structural\r\n	foo_1 : ENTITY work.\\foo\\\r\n		PORT MAP(test => test);\r\nEND ARCHITECTURE structural;';
+    let actual = beautify(input, settings);
+    assert("end component", input, actual);
+}
+
+function IntegrationTest43() {
+    let new_line_after_symbols = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'ARCHITECTURE test OF issue122 IS\r\n	IMPURE FUNCTION func(x : INTEGER) RETURN INTEGER IS\r\n		IMPURE FUNCTION nested RETURN INTEGER IS\r\n		BEGIN\r\n			RETURN x;\r\n		END FUNCTION;\r\n		VARIABLE v : INTEGER := nested;\r\n	BEGIN\r\n		RETURN v;\r\n	END FUNCTION;\r\nBEGIN\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assert("end component", input, actual);
 }
