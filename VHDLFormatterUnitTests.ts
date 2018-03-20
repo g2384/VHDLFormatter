@@ -903,6 +903,8 @@ function IntegrationTest() {
     IntegrationTest41();
     IntegrationTest42();
     IntegrationTest43();
+    IntegrationTest44();
+    IntegrationTest45();
 }
 
 function IntegrationTest23() {
@@ -1114,6 +1116,28 @@ function IntegrationTest43() {
     let input = 'ARCHITECTURE test OF issue122 IS\r\n	IMPURE FUNCTION func(x : INTEGER) RETURN INTEGER IS\r\n		IMPURE FUNCTION nested RETURN INTEGER IS\r\n		BEGIN\r\n			RETURN x;\r\n		END FUNCTION;\r\n		VARIABLE v : INTEGER := nested;\r\n	BEGIN\r\n		RETURN v;\r\n	END FUNCTION;\r\nBEGIN\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assert("end component", input, actual);
+}
+
+function IntegrationTest44() {
+    let new_line_after_symbols = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let input = 'REPORT\n"A_ARITH_MOD_tester.main Tester is now ready. A total of " &\nINTEGER\'image(totalTests) & " tests have been detected.";';
+    let expected = 'REPORT\r\n	"A_ARITH_MOD_tester.main Tester is now ready. A total of " &\r\n	INTEGER\'image(totalTests) & " tests have been detected.";';
+    let actual = beautify(input, settings);
+    assert("ingore keywords in quotes", expected, actual);
+}
+
+function IntegrationTest45() {
+    let new_line_after_symbols = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new BeautifierSettings(false, false, false, false, false, "lowercase", "	", new_line_after_symbols);
+    let input = 'REPORT\n"A_ARITH_MOD_tester.main Tester is now ready. A total OF " &\nINTEGER\'image(totalTests) & " tests have been detected.";';
+    let expected = 'report\r\n	"A_ARITH_MOD_tester.main Tester is now ready. A total OF " &\r\n	integer\'image(totalTests) & " tests have been detected.";';
+    let actual = beautify(input, settings);
+    assert("ingore keywords in quotes & convert to lowercase", expected, actual);
 }
 
 function IntegrationTest20() {
