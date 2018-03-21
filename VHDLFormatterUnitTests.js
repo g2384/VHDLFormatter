@@ -827,6 +827,11 @@ function IntegrationTest() {
     IntegrationTest43();
     IntegrationTest44();
     IntegrationTest45();
+    IntegrationTest46();
+    IntegrationTest47();
+    IntegrationTest48();
+    IntegrationTest49();
+    IntegrationTest50();
 }
 function IntegrationTest23() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -880,7 +885,7 @@ function IntegrationTest28() {
     let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
     let input = 'ARCHITECTURE foo OF bar IS\r\n	SIGNAL \\foo bar\\ : INTEGER;\r\n	SIGNAL \\a\\\\b\\ : INTEGER;\r\n	SIGNAL \\Thing!!! \\ : INTEGER;\r\n	SIGNAL \\name\\ : INTEGER;\r\n	SIGNAL name : INTEGER;\r\nBEGIN\r\n	\\foo.bar.baz\\ <= \\hello\\;\r\nEND ARCHITECTURE;';
     let actual = VHDLFormatter_1.beautify(input, settings);
-    assert("extended \\", input, actual);
+    assert("extended \\ 28", input, actual);
 }
 function IntegrationTest29() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -889,7 +894,7 @@ function IntegrationTest29() {
     let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
     let input = 'PACKAGE func IS\r\n	FUNCTION add(x, y : INTEGER; y : IN INTEGER) RETURN INTEGER;\r\n	IMPURE FUNCTION naughty RETURN INTEGER;\r\n	FUNCTION "+"(x, y : INTEGER) RETURN INTEGER;\r\nEND PACKAGE;';
     let actual = VHDLFormatter_1.beautify(input, settings);
-    assert("extended \\", input, actual);
+    assert("extended \\ 29", input, actual);
 }
 function IntegrationTest30() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -1029,14 +1034,57 @@ function IntegrationTest44() {
     assert("ingore keywords in quotes", expected, actual);
 }
 function IntegrationTest45() {
-    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "lowercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    settings.Indentation = "	";
     let input = 'REPORT\n"A_ARITH_MOD_tester.main Tester is now ready. A total OF " &\nINTEGER\'image(totalTests) & " tests have been detected.";';
     let expected = 'report\r\n	"A_ARITH_MOD_tester.main Tester is now ready. A total OF " &\r\n	integer\'image(totalTests) & " tests have been detected.";';
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("ingore keywords in quotes & convert to lowercase", expected, actual);
+}
+function IntegrationTest46() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    let input = 'impure function delay(\r\n    l : integer\r\n) return time is\r\n    variable r : real;\r\nbegin\r\n    result := 2ps;\r\n    return result;\r\nend function;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("impure function indent", input, actual);
+}
+function IntegrationTest47() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    settings.Indentation = " ";
+    let input = 'result := 1\r\n 1\r\n + 1; -- hello';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("multiline expression & comment", input, actual);
+}
+function IntegrationTest48() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    let input = 'function delay(\r\n    l : integer\r\n) return time is\r\n    variable r : real;\r\nbegin\r\n    result := 2ps;\r\n    return result;\r\nend function;';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("function indent", input, actual);
+}
+function IntegrationTest49() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignRegional = true;
+    settings.SignAlignKeyWords = ["PROCEDURE"];
+    let input = 'PROCEDURE wait_until(\r\n    SIGNAL a : IN data_status;\r\n    b        : data_status\r\n);';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("align sign in procedure", input, actual);
+}
+function IntegrationTest50() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignRegional = true;
+    let input = 'PROCEDURE wait_until(\r\n    SIGNAL a : IN data_status;\r\n    b : data_status\r\n);';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("does not align sign in procedure", input, actual);
+}
+function GetDefaultSettings() {
+    let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    new_line_after_symbols.noNewLineAfter = ["generic"];
+    let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    return settings;
 }
 function IntegrationTest20() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -1054,6 +1102,7 @@ function IntegrationTest5() {
     new_line_after_symbols.noNewLineAfter = ["generic"];
     let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
     settings.SignAlignRegional = true;
+    settings.SignAlignKeyWords = ["PORT"];
     let input = "port map(\r\ninput_1 => input_1_sig,\r\ninput_2 => input_2_sig,\r\noutput => output_sig\r\n);";
     let expected = "PORT MAP(\r\n    input_1 => input_1_sig,\r\n    input_2 => input_2_sig,\r\n    output  => output_sig\r\n);";
     let actual = VHDLFormatter_1.beautify(input, settings);
@@ -1065,6 +1114,7 @@ function IntegrationTest6() {
     new_line_after_symbols.noNewLineAfter = ["generic"];
     let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
     settings.SignAlignRegional = true;
+    settings.SignAlignKeyWords = ["PORT"];
     let input = "port map(\r\ninput_1 => input_1_sig,\r\ninput_2 => input_2_sig,\r\noutput => output_sig\r\n);";
     let expected = "PORT MAP\r\n(\r\n    input_1 => input_1_sig,\r\n    input_2 => input_2_sig,\r\n    output  => output_sig\r\n);";
     let actual = VHDLFormatter_1.beautify(input, settings);
@@ -1075,6 +1125,7 @@ function IntegrationTest7() {
     new_line_after_symbols.newLineAfter = ["then", ";"];
     let settings = new VHDLFormatter_4.BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
     settings.SignAlignRegional = true;
+    settings.SignAlignKeyWords = ["PORT", "GENERIC"];
     let input = "entity p is\r\n  generic\r\n  (\r\n    -- INCLK\r\n    INCLK0_INPUT_FREQUENCY  : natural;\r\n\r\n    -- CLK1\r\n    CLK1_DIVIDE_BY          : natural := 1;\r\n    CLK1_MULTIPLY_BY        : unnatural:= 1;\r\n    CLK1_PHASE_SHIFT        : string := \"0\"\r\n  );\r\n	port\r\n	(\r\n		inclk0	: in std_logic  := '0';\r\n		c0		    : out std_logic ;\r\n		c1		    : out std_logic \r\n	);\r\nEND pll;";
     let expected = "ENTITY p IS\r\n    GENERIC (\r\n        -- INCLK\r\n        INCLK0_INPUT_FREQUENCY : NATURAL;\r\n\r\n        -- CLK1\r\n        CLK1_DIVIDE_BY         : NATURAL   := 1;\r\n        CLK1_MULTIPLY_BY       : unnatural := 1;\r\n        CLK1_PHASE_SHIFT       : STRING    := \"0\"\r\n    );\r\n    PORT (\r\n        inclk0 : IN std_logic := '0';\r\n        c0     : OUT std_logic;\r\n        c1     : OUT std_logic\r\n    );\r\nEND pll;";
     let actual = VHDLFormatter_1.beautify(input, settings);

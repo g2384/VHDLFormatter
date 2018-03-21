@@ -185,9 +185,15 @@
     <br>
     <label>
         <input type="checkbox" id="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
-    <br>
+    <br> Align signs in
     <label>
-        <input type="checkbox" id="sign_align">Align signs in PORT() GENERIC()</label>
+        <input type="checkbox" id="sign_align_port">PORT()</label>
+    <label>
+        <input type="checkbox" id="sign_align_generic">GENERIC()</label>
+    <label>
+        <input type="checkbox" id="sign_align_procedure">PROCEDURE()</label>
+    <label>
+        <input type="checkbox" id="sign_align_function">FUNCTION()</label>
     <br>
     <label>
         <input type="checkbox" id="sign_align_all">Align signs in all places</label>
@@ -279,7 +285,10 @@
             var remove_lines = document.getElementById("remove_lines").checked;
             var remove_report = document.getElementById("remove_report").checked;
             var check_alias = document.getElementById("check_alias").checked;
-            var sign_align = document.getElementById("sign_align").checked;
+            var sign_align_port = document.getElementById("sign_align_port").checked;
+            var sign_align_function = document.getElementById("sign_align_function").checked;
+            var sign_align_procedure = document.getElementById("sign_align_procedure").checked;
+            var sign_align_generic = document.getElementById("sign_align_generic").checked;
             var sign_align_all = document.getElementById("sign_align_all").checked;
             var new_line_after_port = document.getElementById("new_line_after_port").elements.namedItem("new_line_after_portcase").value;
             var new_line_after_then = document.getElementById("new_line_after_then").elements.namedItem("new_line_after_thencase").value;
@@ -310,10 +319,26 @@
             newLineSettingsDict["then"] = new_line_after_then;
             newLineSettingsDict["else"] = new_line_after_else;
             newLineSettings = ConstructNewLineSettings(newLineSettingsDict);
+            var signAlignKeywords = [];
+            if (sign_align_function) {
+                signAlignKeywords.push("FUNCTION");
+                signAlignKeywords.push("IMPURE FUNCTION");
+            }
+            if (sign_align_generic) {
+                signAlignKeywords.push("GENERIC");
+            }
+            if (sign_align_port) {
+                signAlignKeywords.push("PORT");
+            }
+            if (sign_align_procedure) {
+                signAlignKeywords.push("PROCEDURE");
+            }
+            sign_align = signAlignKeywords.length > 0;
 
             beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias, sign_align,
                 sign_align_all,
                 keywordcase, indentation, newLineSettings);
+            beautifierSettings.SignAlignKeyWords = signAlignKeywords;
 
             input = beautify(input, beautifierSettings);
 

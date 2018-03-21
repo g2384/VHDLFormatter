@@ -436,7 +436,9 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
         result[i].Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional && !settings.SignAlignAll) {
+    if (settings.SignAlignRegional && !settings.SignAlignAll
+        && settings.SignAlignKeyWords != null
+        && settings.SignAlignKeyWords.indexOf(mode) >= 0) {
         blockBodyStartIndex++;
         AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
     }
@@ -511,7 +513,7 @@ function getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex)
         let splitIndex = indexOfSemicolon < 0 ? input.length : indexOfSemicolon + 1;
         let stringBeforeSemicolon = input.substring(0, splitIndex);
         let stringAfterSemicolon = input.substring(splitIndex);
-        stringAfterSemicolon = stringAfterSemicolon.replace(/@@comment[0-9]+/, "");
+        stringAfterSemicolon = stringAfterSemicolon.replace(new RegExp(ILCommentPrefix + "[0-9]+"), "");
         openBracketsCount += stringBeforeSemicolon.count("(");
         closeBracketsCount += stringBeforeSemicolon.count(")");
         if (indexOfSemicolon < 0) {
@@ -519,7 +521,7 @@ function getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex)
         }
         if (openBracketsCount == closeBracketsCount) {
             endIndex = i;
-            if (stringAfterSemicolon.length > 0 && settings.NewLineSettings.newLineAfter.indexOf(";") >= 0) {
+            if (stringAfterSemicolon.trim().length > 0 && settings.NewLineSettings.newLineAfter.indexOf(";") >= 0) {
                 inputs[i] = stringBeforeSemicolon;
                 inputs.splice(i, 0, stringAfterSemicolon);
                 parentEndIndex++;
@@ -556,7 +558,8 @@ function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndI
 exports.beautifySemicolonBlock = beautifySemicolonBlock;
 function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
     let i;
-    let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w](?!.+[^\w]IS([^\w]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;
+    let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE)[^\w](?!.+[^\w]IS([^\w]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;
+    let regexFunctionMultiLineBlockKeyWords = new RegExp(/(FUNCTION|IMPURE FUNCTION)[^\w](?=.+[^\w]IS([^\w]|$))/); //match FUNCTION .. IS; but not FUNCTION
     let blockMidKeyWords = ["BEGIN"];
     let blockStartsKeyWords = [
         "IF",
@@ -567,8 +570,6 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         "PROCESS",
         "POSTPONED PROCESS",
         "PROCESS",
-        "FUNCTION",
-        "IMPURE FUNCTION",
         "(.*\\s*PROTECTED)",
         "(COMPONENT)",
         "(ENTITY(?!.+;))",
@@ -638,6 +639,22 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "GENERIC");
             continue;
         }
+        if (input.regexStartsWith(/[\w\s:]*PROCEDURE[\s\w]+\($/)) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PROCEDURE");
+            continue;
+        }
+        if (input.regexStartsWith(/FUNCTION[^\w]/)
+            && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "FUNCTION");
+            i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            continue;
+        }
+        if (input.regexStartsWith(/IMPURE FUNCTION[^\w]/)
+            && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "IMPURE FUNCTION");
+            i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            continue;
+        }
         result.push(new FormattedLine(input, indent));
         if (startIndex != 0
             && (input.regexStartsWith(regexBlockMidKeyWords)
@@ -653,7 +670,8 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         if (input.regexStartsWith(regexOneLineBlockKeyWords)) {
             continue;
         }
-        if (input.regexStartsWith(regexBlockStartsKeywords)) {
+        if (input.regexStartsWith(regexFunctionMultiLineBlockKeyWords)
+            || input.regexStartsWith(regexBlockStartsKeywords)) {
             i = beautify3(inputs, result, settings, i + 1, indent + 1);
         }
     }

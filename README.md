@@ -6,10 +6,13 @@ VHDL formatter web online written in javascript
 
 ## Release Notes
 
-### 2.1 [2018-03-20]
+### 2.1 [2018-03-21]
 
 - fix keywords case issues
 - anything in quotes will not be touched
+- correct format for comments after multi-line statement
+- options to align signs in parameter lists
+- fix function indentation
 
 ### 2.0 [2018-02-16]
 
