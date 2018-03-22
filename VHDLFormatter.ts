@@ -371,6 +371,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
+    input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1');//function(..\r\n)return type; -> function(..\r\n)return type;
     arr = input.split("\r\n");
     let result: (FormattedLine | FormattedLine[])[] = [];
     beautify3(arr, result, settings, 0, 0);
@@ -492,8 +493,8 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
         (<FormattedLine>result[i]).Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional && !settings.SignAlignAll 
-        && settings.SignAlignKeyWords != null 
+    if (settings.SignAlignRegional && !settings.SignAlignAll
+        && settings.SignAlignKeyWords != null
         && settings.SignAlignKeyWords.indexOf(mode) >= 0) {
         blockBodyStartIndex++;
         AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
@@ -512,8 +513,19 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
     let maxSymbolIndex: number = -1;
     let symbolIndices = {};
     let startLine = startIndex;
+    let labelAndKeywords: Array<string> = [
+        "([\\w\\s]*:(\\s)*PROCESS)",// with label
+        "([\\w\\s]*:(\\s)*POSTPONED PROCESS)",// with label
+        "([\\w\\s]*:\\s*$)"// with label
+    ];
+    let labelAndKeywordsStr: string = labelAndKeywords.join("|");
+    let labelAndKeywordsRegex = new RegExp("(" + labelAndKeywordsStr + ")([^\\w]|$)");
     for (let i = startIndex; i <= endIndex; i++) {
         let line = (<FormattedLine>result[i]).Line;
+        if (symbol == ":" && line.regexStartsWith(labelAndKeywordsRegex)) {
+            continue;
+        }
+
         let regex: RegExp = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
@@ -574,7 +586,7 @@ function getSemicolonBlockEndIndex(inputs: Array<string>, settings: BeautifierSe
         let splitIndex = indexOfSemicolon < 0 ? input.length : indexOfSemicolon + 1;
         let stringBeforeSemicolon = input.substring(0, splitIndex);
         let stringAfterSemicolon = input.substring(splitIndex);
-        stringAfterSemicolon = stringAfterSemicolon.replace(new RegExp(ILCommentPrefix+"[0-9]+"), "");
+        stringAfterSemicolon = stringAfterSemicolon.replace(new RegExp(ILCommentPrefix + "[0-9]+"), "");
         openBracketsCount += stringBeforeSemicolon.count("(");
         closeBracketsCount += stringBeforeSemicolon.count(")");
         if (indexOfSemicolon < 0) {
@@ -631,9 +643,8 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "ARCHITECTURE",
         "PROCEDURE",
         "PACKAGE",
-        "PROCESS",
-        "POSTPONED PROCESS",
-        "PROCESS",
+        "(([\\w\\s]*:)?(\\s)*PROCESS)",// with label
+        "(([\\w\\s]*:)?(\\s)*POSTPONED PROCESS)",// with label
         "(.*\\s*PROTECTED)",
         "(COMPONENT)",
         "(ENTITY(?!.+;))",
@@ -646,7 +657,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "BLOCK",
         "UNITS",
         "\\w+\\s+\\w+\\s+IS\\s+RECORD"];
-    let blockEndsKeyWords: Array<string> = ["END"];
+    let blockEndsKeyWords: Array<string> = ["END", ".*\\)\\s*RETURN\\s+[\\w]+;"];
     let blockEndsWithSemicolon: Array<string> = ["(WITH\\s+[\\w\\s\\\\]+SELECT)", "([\\w\\\\]+[\\s]*<=)", "([\\w\\\\]+[\\s]*:=)", "FOR\\s+[\\w\\s,]+:\\s*\\w+\\s+USE", "REPORT"];
 
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
@@ -710,13 +721,21 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         if (input.regexStartsWith(/FUNCTION[^\w]/)
             && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "FUNCTION");
-            i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            if (!inputs[i].regexStartsWith(regexBlockEndsKeyWords)) {
+                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            } else {
+                (<FormattedLine>result[i]).Indent++;
+            }
             continue;
         }
         if (input.regexStartsWith(/IMPURE FUNCTION[^\w]/)
             && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "IMPURE FUNCTION");
-            i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            if (!inputs[i].regexStartsWith(regexBlockEndsKeyWords)) {
+                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            } else {
+                (<FormattedLine>result[i]).Indent++;
+            }
             continue;
         }
         result.push(new FormattedLine(input, indent));

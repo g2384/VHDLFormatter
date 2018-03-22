@@ -702,7 +702,7 @@ function compareFormattedLine(expected: FormattedLine, actual: FormattedLine, me
 function assert(testName, expected: string, actual: string, message?) {
     var result = CompareString(actual, expected);
     if (result != true) {
-        console.log(testName + " failed: \n" + result);
+        console.log('"' + testName + "\" failed: \n" + result);
     }
     else {
         //console.log(testName + " pass");
@@ -910,6 +910,11 @@ function IntegrationTest() {
     IntegrationTest48();
     IntegrationTest49();
     IntegrationTest50();
+    IntegrationTest51();
+    IntegrationTest52();
+    IntegrationTest53();
+    IntegrationTest54();
+    IntegrationTest55();
 }
 
 function IntegrationTest23() {
@@ -1184,6 +1189,46 @@ function IntegrationTest50() {
     let input = 'PROCEDURE wait_until(\r\n    SIGNAL a : IN data_status;\r\n    b : data_status\r\n);';
     let actual = beautify(input, settings);
     assert("does not align sign in procedure", input, actual);
+}
+
+function IntegrationTest51() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = 'architecture behaviour of a is\r\nbegin\r\n    main : process\r\n        variable b : e := (others => DR_INIT);\r\n        variable c, d : positive := 8;\r\n    begin\r\n    end process main;\r\nend architecture behaviour;';
+    let expected = 'ARCHITECTURE behaviour OF a IS\r\nBEGIN\r\n    main : PROCESS\r\n        VARIABLE b    : e        := (OTHERS => DR_INIT);\r\n        VARIABLE c, d : POSITIVE := 8;\r\n    BEGIN\r\n    END PROCESS main;\r\nEND ARCHITECTURE behaviour;';
+    let actual = beautify(input, settings);
+    assert("process with name", expected, actual);
+}
+
+function IntegrationTest52() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    let input = 'function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nimpure function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nfunction a(\r\n    b : integer\r\n    c : integer\r\n) return integer;';
+    let actual = beautify(input, settings);
+    assert("function without sequential statements", input, actual);
+}
+
+function IntegrationTest53() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    let input = 'function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nimpure function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nfunction a(\r\n    b : integer\r\n    c : integer\r\n) return integer;';
+    let actual = beautify(input, settings);
+    assert("function without sequential statements, without new line", input, actual);
+}
+
+function IntegrationTest54() {
+    let settings = GetDefaultSettings();
+    let input = 'PACKAGE a IS\r\n    FUNCTION b(\r\n        c : INTEGER\r\n    ) RETURN INTEGER;\r\nEND PACKAGE;';
+    let actual = beautify(input, settings);
+    assert("package & function without sequential statements", input, actual);
+}
+
+function IntegrationTest55() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = 'main :\r\nPROCESS\r\n    VARIABLE b : a := (OTHERS => DR_INIT);\r\nBEGIN';
+    let actual = beautify(input, settings);
+    assert("package with label and align all symbols", input, actual);
 }
 
 function GetDefaultSettings() {
