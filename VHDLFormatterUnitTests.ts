@@ -915,6 +915,7 @@ function IntegrationTest() {
     IntegrationTest53();
     IntegrationTest54();
     IntegrationTest55();
+    IntegrationTest56();
 }
 
 function IntegrationTest23() {
@@ -1227,6 +1228,14 @@ function IntegrationTest55() {
     let settings = GetDefaultSettings();
     settings.SignAlignAll = true;
     let input = 'main :\r\nPROCESS\r\n    VARIABLE b : a := (OTHERS => DR_INIT);\r\nBEGIN';
+    let actual = beautify(input, settings);
+    assert("package with label and align all symbols", input, actual);
+}
+
+function IntegrationTest56() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = 'a  <= (2 => DR_ONE, 5 => DR_ZERO);\r\nbc <= (32 => DR_ONE);';
     let actual = beautify(input, settings);
     assert("package with label and align all symbols", input, actual);
 }

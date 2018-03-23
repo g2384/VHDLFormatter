@@ -837,6 +837,7 @@ function IntegrationTest() {
     IntegrationTest53();
     IntegrationTest54();
     IntegrationTest55();
+    IntegrationTest56();
 }
 function IntegrationTest23() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -1116,6 +1117,13 @@ function IntegrationTest55() {
     let settings = GetDefaultSettings();
     settings.SignAlignAll = true;
     let input = 'main :\r\nPROCESS\r\n    VARIABLE b : a := (OTHERS => DR_INIT);\r\nBEGIN';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("package with label and align all symbols", input, actual);
+}
+function IntegrationTest56() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = 'a  <= (2 => DR_ONE, 5 => DR_ZERO);\r\nbc <= (32 => DR_ONE);';
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("package with label and align all symbols", input, actual);
 }

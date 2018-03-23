@@ -59,6 +59,12 @@ function fetchHeader(url, wch) {
         return "";
     }
 }
+String.prototype.regexCount = function (pattern) {
+    if (pattern.flags.indexOf("g") < 0) {
+        pattern = new RegExp(pattern.source, pattern.flags + "g");
+    }
+    return (this.match(pattern) || []).length;
+};
 String.prototype.count = function (text) {
     return this.split(text).length - 1;
 };
@@ -88,29 +94,48 @@ function wordWrap() {
         d.className = "";
     }
 }
-function getHTMLInputElement(name) {
-    return document.getElementById(name);
+function getHTMLInputElement(id) {
+    return document.getElementById(id);
 }
 function noFormat() {
-    let elements = ["remove_comments",
+    let elements = [
+        "remove_comments",
         "remove_lines",
         "remove_report",
         "check_alias",
-        "sign_align",
+        "sign_align_in",
+        "sign_align_port",
+        "sign_align_generic",
+        "sign_align_function",
+        "sign_align_procedure",
         "sign_align_all",
-        "new_line_after_port",
-        "new_line",
+        "new_line_after",
         "use_space",
+        "customise_indentation",
         "compress",
-        "mix_letter"];
-    var t = !(getHTMLInputElement("remove_comments").disabled);
+        "mix_letter"
+    ];
+    var isDisabled = getHTMLInputElement("no_format").checked;
     elements.forEach(element => {
-        getHTMLInputElement(element).disabled = t;
+        var htmlElement = getHTMLInputElement(element + "_div");
+        try {
+            getHTMLInputElement(element).disabled = isDisabled;
+        }
+        catch (_a) { }
+        if (isDisabled) {
+            htmlElement.className += " disabled";
+        }
+        else {
+            htmlElement.className = htmlElement.className.replace(/\bdisabled\b/g, "");
+        }
     });
-    let keyword = document.getElementById("keyword");
-    for (let i = 0; i < keyword.elements.length; i++) {
-        keyword.elements[i].disabled = t;
+    let radioButtons = document.getElementsByTagName("input");
+    for (let i = 0; i < radioButtons.length; i++) {
+        if (radioButtons[i].type == "radio") {
+            radioButtons[i].disabled = isDisabled;
+        }
     }
+    getHTMLInputElement("cust_indent").disabled = isDisabled;
 }
 function indent_decode() {
     var custom_indent = getHTMLInputElement("cust_indent").value;
@@ -470,6 +495,9 @@ function AlignSign_(result, startIndex, endIndex, symbol) {
             continue;
         }
         let regex = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        if (line.regexCount(regex) > 1) {
+            continue;
+        }
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);

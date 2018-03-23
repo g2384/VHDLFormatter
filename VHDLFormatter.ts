@@ -71,7 +71,15 @@ declare global {
         reverse: () => string;
         regexStartsWith: (pattern: RegExp) => boolean;
         count: (text: string) => number;
+        regexCount: (pattern: RegExp) => number;
     }
+}
+
+String.prototype.regexCount = function (pattern): number {
+    if (pattern.flags.indexOf("g") < 0) {
+        pattern = new RegExp(pattern.source, pattern.flags + "g");
+    }
+    return (this.match(pattern) || []).length;
 }
 
 String.prototype.count = function (text): number {
@@ -108,30 +116,49 @@ function wordWrap() {
     }
 }
 
-function getHTMLInputElement(name: string): HTMLInputElement {
-    return <HTMLInputElement>document.getElementById(name);
+function getHTMLInputElement(id: string): HTMLInputElement {
+    return <HTMLInputElement>document.getElementById(id);
 }
 
 function noFormat() {
-    let elements: Array<string> = ["remove_comments",
+    let elements: Array<string> = [
+        "remove_comments",
         "remove_lines",
         "remove_report",
         "check_alias",
-        "sign_align",
+        "sign_align_in",
+        "sign_align_port",
+        "sign_align_generic",
+        "sign_align_function",
+        "sign_align_procedure",
         "sign_align_all",
-        "new_line_after_port",
-        "new_line",
+        "new_line_after",
         "use_space",
+        "customise_indentation",
         "compress",
-        "mix_letter"];
-    var t = !(getHTMLInputElement("remove_comments").disabled);
+        "mix_letter"
+    ];
+    var isDisabled = getHTMLInputElement("no_format").checked;
     elements.forEach(element => {
-        getHTMLInputElement(element).disabled = t;
+        var htmlElement = getHTMLInputElement(element + "_div");
+        try {
+            getHTMLInputElement(element).disabled = isDisabled;
+        }
+        catch{ }
+        if (isDisabled) {
+            htmlElement.className += " disabled";
+        }
+        else {
+            htmlElement.className = htmlElement.className.replace(/\bdisabled\b/g, "");
+        }
     });
-    let keyword = <HTMLFormElement>document.getElementById("keyword");
-    for (let i = 0; i < keyword.elements.length; i++) {
-        (<HTMLInputElement>keyword.elements[i]).disabled = t;
+    let radioButtons = <HTMLFormElement>document.getElementsByTagName("input");
+    for (let i = 0; i < radioButtons.length; i++) {
+        if ((<HTMLInputElement>radioButtons[i]).type == "radio") {
+            (<HTMLInputElement>radioButtons[i]).disabled = isDisabled;
+        }
     }
+    getHTMLInputElement("cust_indent").disabled = isDisabled;
 }
 
 function indent_decode() {
@@ -527,6 +554,9 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
         }
 
         let regex: RegExp = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        if (line.regexCount(regex) > 1) {
+            continue;
+        }
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);

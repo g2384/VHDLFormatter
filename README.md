@@ -14,6 +14,8 @@ VHDL formatter web online written in javascript
 - options to align signs in parameter lists
 - fix function indentation
 - fix "align symbols affects process label"
+- do not align multi-occurrence symbols in a line
+- better styles (checkbox, button, disabled)
 
 ### 2.0 [2018-02-16]
 

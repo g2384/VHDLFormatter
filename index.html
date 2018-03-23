@@ -27,21 +27,15 @@
             text-align: center;
             white-space: nowrap;
             border: 1px solid rgb(194, 194, 194);
+            background-color: #fff;
         }
         
         .btn:hover {
-            background-color: #afd9ee;
+            background-color: #eee;
         }
         
         .show {
             display: none;
-        }
-        
-        input[type="checkbox"]+label {
-            display: inline-block;
-            width: 19px;
-            height: 19px;
-            margin: -1px 4px 0 0;
         }
         
         .wordwrap {
@@ -85,6 +79,104 @@
             line-height: 1em;
             margin: 0.5em 0em;
         }
+        
+        .code {
+            font-family: 'Consolas', Courier, monospace;
+        }
+        
+        .inline {
+            display: inline-block;
+        }
+        
+        .disabled {
+            color: #ccc;
+            cursor: default;
+        }
+        
+        .disabled label:hover {
+            color: #ccc;
+            text-decoration: none;
+            cursor: default;
+        }
+        
+        .checkbox input[type="checkbox"] {
+            opacity: 0;
+            display: none;
+        }
+        
+        .checkbox label {
+            position: relative;
+            display: inline-block;
+            /*16px width of fake checkbox + 6px distance between fake checkbox and text*/
+            padding-left: 22px;
+        }
+        
+        .checkbox label::before,
+        .checkbox label::after {
+            position: absolute;
+            content: "";
+            /*Needed for the line-height to take effect*/
+            display: inline-block;
+        }
+        /*Outer box of the fake checkbox*/
+        
+        .checkbox label::before {
+            height: 16px;
+            width: 16px;
+            border: 1px solid #9A9A9A;
+            left: 0px;
+            /*(24px line-height - 16px height of fake checkbox) / 2 - 1px for the border to vertically center it.*/
+            top: 3px;
+        }
+        /*Checkmark of the fake checkbox*/
+        
+        .checkbox label::after {
+            height: 5px;
+            width: 9px;
+            border-left: 2px solid;
+            border-bottom: 2px solid;
+            transform: rotate(-45deg);
+            left: 4px;
+            top: 7px;
+            color: #333;
+        }
+        /*Hide the checkmark by default*/
+        
+        .checkbox input[type="checkbox"]+label::after {
+            content: none;
+        }
+        /*Unhide on the checked state*/
+        
+        .checkbox input[type="checkbox"]:checked+label::after {
+            content: "";
+        }
+        /*Adding focus styles on the outer-box of the fake checkbox*/
+        
+        .checkbox input[type="checkbox"]:hover+label::after {
+            border-color: #888;
+            outline: #ccc;
+        }
+        
+        .checkbox input[type="checkbox"]:hover+label::before {
+            outline: #888;
+            border-color: #888;
+            background-color: #eee;
+        }
+        
+        .checkbox input[type="checkbox"]:disabled+label::before {
+            outline: #ccc;
+            border-color: #ccc;
+            background-color: #fff;
+            color: #ccc;
+        }
+        
+        .checkbox input[type="checkbox"]:disabled+label::after {
+            color: #888;
+        }
+        
+        .checkbox input[type="checkbox"]:focus+label::before {
+            outline: #333 auto 5px;
+        }
     </style>
     <link href="highlight.css" rel="stylesheet" />
     <script src="highlight.js"></script>
@@ -126,95 +218,122 @@
         <label>
             <input type="radio" name="keywordcase" value="DefaultCase">Default</label>
     </form>
-    <label>
-        <input type="checkbox" id="no_format" onclick="noFormat()">Only highlight, don't format</label>
-    <br> New line after
-    <br>
-    <form id="new_line_after_then">
-        <span>THEN</span>
-        <label>
+    <div class="checkbox">
+        <input type="checkbox" id="no_format" onclick="noFormat()">
+        <label for="no_format">Only highlight, don't format</label>
+    </div>
+    <div id="new_line_after_div">
+        New line after
+        <br>
+        <form id="new_line_after_then">
+            <span>THEN</span>
+            <label>
             <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_thencase" value="None">None</label>
-    </form>
-    <form id="new_line_after_semicolon">
-        <span>semicolon ";"</span>
-        <label>
+        </form>
+        <form id="new_line_after_semicolon">
+            <span>semicolon ";"</span>
+            <label>
             <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
-    </form>
-    <form id="new_line_after_else">
-        <span>ELSE</span>
-        <label>
+        </form>
+        <form id="new_line_after_else">
+            <span>ELSE</span>
+            <label>
             <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
-    </form>
-    <form id="new_line_after_port">
-        <span>PORT or PORT MAP</span>
-        <label>
+        </form>
+        <form id="new_line_after_port">
+            <span>PORT or PORT MAP</span>
+            <label>
             <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
-    </form>
-    <form id="new_line_after_generic">
-        <span>GENERIC</span>
-        <label>
+        </form>
+        <form id="new_line_after_generic">
+            <span>GENERIC</span>
+            <label>
             <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
-    </form>
+        </form>
+    </div>
+    <div class="checkbox inline" id="remove_comments_div">
+        <input type="checkbox" id="remove_comments">
+        <label for="remove_comments">Remove commments</label> |
+    </div>
+    <div class="checkbox inline" id="remove_lines_div">
+        <input type="checkbox" id="remove_lines">
+        <label for="remove_lines">Remove blank lines</label> |
+    </div>
+    <div class="checkbox inline" id="remove_report_div">
+        <input type="checkbox" id="remove_report">
+        <label for="remove_report">Remove REPORT</label>
+    </div>
     <br>
-    <label>
-        <input type="checkbox" id="remove_comments">Remove commments</label> |
-    <label>
-        <input type="checkbox" id="remove_lines">Remove blank lines</label> |
-    <label>
-        <input type="checkbox" id="remove_report">Remove REPORT</label>
-    <br>
-    <label>
-        <input type="checkbox" id="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
-    <br> Align signs in
-    <label>
-        <input type="checkbox" id="sign_align_port">PORT()</label>
-    <label>
-        <input type="checkbox" id="sign_align_generic">GENERIC()</label>
-    <label>
-        <input type="checkbox" id="sign_align_procedure">PROCEDURE()</label>
-    <label>
-        <input type="checkbox" id="sign_align_function">FUNCTION()</label>
-    <br>
-    <label>
-        <input type="checkbox" id="sign_align_all">Align signs in all places</label>
-    <br>
-    <label>
-        <input type="checkbox" id="use_space">Customise Indentation (tab is \t): </label>
-    <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
-    <span id="indent_s">four blankspaces</span>)
-    <br>
-    <label>
-        <input type="checkbox" id="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
-    <br>
-    <label>
-        <input type="checkbox" id="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
-    <br>
+    <div class="checkbox" id="check_alias_div">
+        <input type="checkbox" id="check_alias">
+        <label for="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
+    </div>
+    <div id="sign_align_in_div">
+        Align signs in
+        <div class="checkbox inline" id="sign_align_port_div">
+            <input type="checkbox" id="sign_align_port">
+            <label for="sign_align_port" class="code">PORT()</label>
+        </div>
+        <div class="checkbox inline" id="sign_align_generic_div">
+            <input type="checkbox" id="sign_align_generic">
+            <label for="sign_align_generic" class="code">GENERIC()</label></div>
+        <div class="checkbox inline" id="sign_align_procedure_div">
+            <input type="checkbox" id="sign_align_procedure">
+            <label for="sign_align_procedure" class="code">PROCEDURE()</label>
+        </div>
+        <div class="checkbox inline" id="sign_align_function_div">
+            <input type="checkbox" id="sign_align_function">
+            <label for="sign_align_function">FUNCTION()</label>
+        </div>
+    </div>
+    <div class="checkbox" id="sign_align_all_div">
+        <input type="checkbox" id="sign_align_all">
+        <label for="sign_align_all">Align signs in all places</label>
+    </div>
+    <div id="customise_indentation_div">
+        <div class="checkbox inline" id="use_space_div">
+            <input type="checkbox" id="use_space">
+            <label for="use_space">Customise Indentation: </label>
+        </div>(tab is \t)
+        <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
+        <span id="indent_s">four blankspaces</span>)
+    </div>
+    <div class="checkbox" id="compress_div">
+        <input type="checkbox" id="compress">
+        <label for="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
+    </div>
+    <div class="checkbox" id="mix_letter_div">
+        <input type="checkbox" id="mix_letter">
+        <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
+    </div>
     <input type="button" class="btn" onclick="f()" value="start" />
     <span class="show">
         <input type="button" class="btn " id="selectAll" value="Select All" onclick="selectText(document.getElementById('vhdl'))"
         />
-        <label>
-            <input type="checkbox" onclick="wordWrap()" id="">Word wrap</label>
+        <div class="checkbox inline">
+            <input type="checkbox" onclick="wordWrap()" id="word_wrap">
+            <label for="word_wrap">Word wrap</label>
+        </div>
     </span>
     <br>
     <pre id="result"><code class="vhdl" id="vhdl">
