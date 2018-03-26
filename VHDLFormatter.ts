@@ -1,6 +1,7 @@
 let isTesting = false;
 const ILCommentPrefix = "@@comments";
 const ILQuotesPrefix = "@@quotes";
+const ILSingleQuotesPrefix = "@@singlequotes";
 
 enum FormatMode {
     Default,
@@ -30,10 +31,10 @@ export class NewLineSettings {
 
     push(keyword: string, addNewLine: string) {
         let str = addNewLine.toLowerCase();
-        if (str.indexOf("none") >= 0) {
+        if (str == "none") {
             return;
         }
-        else if (str.indexOf("no") < 0) {
+        else if (!str.startsWith("no")) {
             this.newLineAfterPush(keyword);
         }
         else {
@@ -305,6 +306,9 @@ export function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSe
         newLineSettings.newLineAfter.forEach(symbol => {
             let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n@])", "g");
             text = text.replace(regex, '$1\r\n$2');
+            if(symbol.toUpperCase() == "PORT"){
+                text = text.replace(/PORT\s+MAP/, "PORT MAP");
+            }
         });
     }
     if (newLineSettings.noNewLineAfter != null) {
@@ -366,6 +370,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
 
     arr = input.split("\r\n");
     let quotes = EscapeQuotes(arr);
+    let singleQuotes = EscapeSingleQuotes(arr);
     input = arr.join("\r\n");
     input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
 
@@ -375,6 +380,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
     }
     ReserveSemicolonInKeywords(arr);
     input = arr.join("\r\n");
+    input = input.replace(/(PORT|GENERIC)\s+MAP/g, '$1 MAP');
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
     input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
 
@@ -412,6 +418,10 @@ export function beautify(input: string, settings: BeautifierSettings) {
 
     for (var k = 0; k < quotes.length; k++) {
         input = input.replace(ILQuotesPrefix + k, quotes[k]);
+    }
+
+    for (var k = 0; k < singleQuotes.length; k++) {
+        input = input.replace(ILSingleQuotesPrefix + k, singleQuotes[k]);
     }
 
     for (var k = 0; k < commentsIndex; k++) {
@@ -541,9 +551,10 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
     let symbolIndices = {};
     let startLine = startIndex;
     let labelAndKeywords: Array<string> = [
-        "([\\w\\s]*:(\\s)*PROCESS)",// with label
-        "([\\w\\s]*:(\\s)*POSTPONED PROCESS)",// with label
-        "([\\w\\s]*:\\s*$)"// with label
+        "([\\w\\s]*:(\\s)*PROCESS)",
+        "([\\w\\s]*:(\\s)*POSTPONED PROCESS)",
+        "([\\w\\s]*:\\s*$)",
+        "([\\w\\s]*:.*\\s+GENERATE)"
     ];
     let labelAndKeywordsStr: string = labelAndKeywords.join("|");
     let labelAndKeywordsRegex = new RegExp("(" + labelAndKeywordsStr + ")([^\\w]|$)");
@@ -746,6 +757,9 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         }
         if (input.regexStartsWith(/[\w\s:]*PROCEDURE[\s\w]+\($/)) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PROCEDURE");
+            if (inputs[i].regexStartsWith(/.*\)[\s]*IS/)) {
+                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            }
             continue;
         }
         if (input.regexStartsWith(/FUNCTION[^\w]/)
@@ -847,6 +861,21 @@ function EscapeQuotes(arr: Array<string>): Array<string> {
         if (quote != null) {
             for (var j = 0; j < quote.length; j++) {
                 arr[i] = arr[i].replace(quote[j], ILQuotesPrefix + quotesIndex);
+                quotes[quotesIndex++] = quote[j];
+            }
+        }
+    }
+    return quotes;
+}
+
+function EscapeSingleQuotes(arr: Array<string>): Array<string> {
+    let quotes: Array<string> = [];
+    let quotesIndex = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let quote = arr[i].match(/'[^']'/g);
+        if (quote != null) {
+            for (var j = 0; j < quote.length; j++) {
+                arr[i] = arr[i].replace(quote[j], ILSingleQuotesPrefix + quotesIndex);
                 quotes[quotesIndex++] = quote[j];
             }
         }

@@ -15,6 +15,10 @@
             font-family: Consolas, Courier;
         }
         
+        .subtitle {
+            font-weight: normal;
+        }
+        
         .btn {
             margin: 10px 10px;
             padding: 5px 8px;
@@ -69,10 +73,15 @@
         a {
             color: #4b9aff;
             text-decoration: none;
+            background: #f0f8ff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8em;
         }
         
         a:hover {
-            text-decoration: underline;
+            text-decoration: none;
+            background: #d6e8ff;
         }
         
         p {
@@ -202,11 +211,13 @@
 
 <body>
     <h2>VHDL Beautifier, Formatter</h2>
-    <h4>Beautify and format your VHDL code online</h4>
+    <h4 class="subtitle">Beautify and format your VHDL code online</h4>
     <p>Proper formatting makes code easier to read and understand.</p>
     <p>Please make a backup before you replace your code!</p>
     <p style="color:#888">
-        [<a href="https://github.com/g2384/VHDLFormatter#readme">Release notes</a>] [<a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>] [<a href="https://github.com/g2384/VHDLFormatter">Source code</a>]
+        <a href="https://github.com/g2384/VHDLFormatter#readme">Release notes</a>
+        <a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>
+        <a href="https://github.com/g2384/VHDLFormatter">Source code</a>
     </p>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
@@ -226,7 +237,7 @@
         New line after
         <br>
         <form id="new_line_after_then">
-            <span>THEN</span>
+            <span class="code">THEN</span>
             <label>
             <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
             <label>
@@ -235,7 +246,7 @@
             <input type="radio" name="new_line_after_thencase" value="None">None</label>
         </form>
         <form id="new_line_after_semicolon">
-            <span>semicolon ";"</span>
+            <span class="code">semicolon ";"</span>
             <label>
             <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
             <label>
@@ -244,7 +255,7 @@
             <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
         </form>
         <form id="new_line_after_else">
-            <span>ELSE</span>
+            <span class="code">ELSE</span>
             <label>
             <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
             <label>
@@ -253,7 +264,7 @@
             <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
         </form>
         <form id="new_line_after_port">
-            <span>PORT or PORT MAP</span>
+            <span class="code">PORT | PORT MAP</span>
             <label>
             <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
             <label>
@@ -262,7 +273,7 @@
             <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
         </form>
         <form id="new_line_after_generic">
-            <span>GENERIC</span>
+            <span class="code">GENERIC</span>
             <label>
             <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
             <label>

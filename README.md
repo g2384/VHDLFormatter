@@ -16,6 +16,8 @@ VHDL formatter web online written in javascript
 - fix "align symbols affects process label"
 - do not align multi-occurrence symbols in a line
 - better styles (checkbox, button, disabled)
+- support package bodies
+- fix "newline after PORT affects PORT MAP"
 
 ### 2.0 [2018-02-16]
 

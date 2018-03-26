@@ -916,6 +916,15 @@ function IntegrationTest() {
     IntegrationTest54();
     IntegrationTest55();
     IntegrationTest56();
+    IntegrationTest57();
+    IntegrationTest58();
+    IntegrationTest59();
+    IntegrationTest60();
+    IntegrationTest61();
+    IntegrationTest62();
+    IntegrationTest63();
+    IntegrationTest64();
+    IntegrationTest65();
 }
 
 function IntegrationTest23() {
@@ -1238,6 +1247,80 @@ function IntegrationTest56() {
     let input = 'a  <= (2 => DR_ONE, 5 => DR_ZERO);\r\nbc <= (32 => DR_ONE);';
     let actual = beautify(input, settings);
     assert("package with label and align all symbols", input, actual);
+}
+
+function IntegrationTest57() {
+    let settings = GetDefaultSettings();
+    let input = 'result := (\'-\', \'1\');';
+    let actual = beautify(input, settings);
+    assert("- in quotes", input, actual);
+}
+
+function IntegrationTest58() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    let input = 'package body a is\r\n    procedure b(\r\n        signal a : in boolean;\r\n        b : boolean\r\n    ) is\r\n    begin\r\n        a = 1\r\n    end procedure b;\r\nend a;';
+    let actual = beautify(input, settings);
+    assert("package body", input, actual);
+}
+
+function IntegrationTest59() {
+    let settings = GetDefaultSettings();
+    settings.KeywordCase = "lowercase";
+    let input = 'package body a is\r\n    procedure b(\r\n        signal a : in boolean;\r\n        b : boolean) is\r\n    begin\r\n        a = 1\r\n    end procedure b;\r\nend a;';
+    let actual = beautify(input, settings);
+    assert("package body 2", input, actual);
+}
+
+function IntegrationTest60() {
+    let settings = GetDefaultSettings();
+    let input = 'abcde : FOR i IN 0 TO b - 1 GENERATE\r\n    b : A_REG_MOD\r\nEND GENERATE aaa;';
+    let actual = beautify(input, settings);
+    assert("generate with label", input, actual);
+}
+
+function IntegrationTest61() {
+    let settings = GetDefaultSettings();
+    settings.NewLineSettings.newLineAfter.push("port map")
+    let input = 'port\r\nmap(\r\na => a(i)\r\n);';
+    let expected = 'PORT MAP\r\n(\r\n    a => a(i)\r\n);';
+    let actual = beautify(input, settings);
+    assert("port new line map", expected, actual);
+}
+
+function IntegrationTest62() {
+    let settings = GetDefaultSettings();
+    settings.NewLineSettings.newLineAfter.push("port map")
+    let input = 'port map(\r\na => a(i)\r\n);';
+    let expected = 'PORT MAP\r\n(\r\n    a => a(i)\r\n);';
+    let actual = beautify(input, settings);
+    assert("port map new line", expected, actual);
+}
+
+function IntegrationTest63() {
+    let settings = GetDefaultSettings();
+    settings.NewLineSettings.newLineAfter.push("port", "port map");
+    let input = 'reg : a PORT\r\nMAP(\r\nb => c(i)\r\n);';
+    let expected = 'reg : a PORT MAP\r\n(\r\n    b => c(i)\r\n);';
+    let actual = beautify(input, settings);
+    assert("port map new line 2", expected, actual);
+}
+
+function IntegrationTest64() {
+    let settings = GetDefaultSettings();
+    let input = 'reg : a PORT\r\nMAP(\r\nb => c(i)\r\n);';
+    let expected = 'reg : a PORT MAP(\r\n    b => c(i)\r\n);';
+    let actual = beautify(input, settings);
+    assert("port map no new line", expected, actual);
+}
+
+function IntegrationTest65() {
+    let settings = GetDefaultSettings();
+    settings.NewLineSettings.noNewLineAfter.push("port", "port map");
+    let input = 'reg : a PORT\r\nMAP\r\n(\r\nb => c(i)\r\n);';
+    let expected = 'reg : a PORT MAP(\r\n    b => c(i)\r\n);';
+    let actual = beautify(input, settings);
+    assert("port map no new line 2", expected, actual);
 }
 
 function GetDefaultSettings() {
