@@ -15,6 +15,21 @@
             font-family: Consolas, Courier;
         }
         
+        fieldset {
+            width: fit-content;
+            border: 1px solid #9a9a9a;
+            margin: 25px 0 5px 0;
+            padding-left: 0;
+        }
+        
+        legend {
+            padding: 2px 5px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+            margin: -27px 0 0 -1px;
+            position: absolute;
+        }
+        
         .subtitle {
             font-weight: normal;
         }
@@ -215,12 +230,16 @@
     <p>Proper formatting makes code easier to read and understand.</p>
     <p>Please make a backup before you replace your code!</p>
     <p style="color:#888">
-        <a href="https://github.com/g2384/VHDLFormatter#readme">Release notes</a>
+        <a href="https://github.com/g2384/VHDLFormatter#release-notes">Release notes</a>
         <a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>
         <a href="https://github.com/g2384/VHDLFormatter">Source code</a>
     </p>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
+    <div class="checkbox">
+        <input type="checkbox" id="no_format" onclick="noFormat()">
+        <label for="no_format">Only highlight, don't format</label>
+    </div>
     <form id="keyword">Keyword Case:
         <label>
             <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label> |
@@ -229,13 +248,8 @@
         <label>
             <input type="radio" name="keywordcase" value="DefaultCase">Default</label>
     </form>
-    <div class="checkbox">
-        <input type="checkbox" id="no_format" onclick="noFormat()">
-        <label for="no_format">Only highlight, don't format</label>
-    </div>
-    <div id="new_line_after_div">
-        New line after
-        <br>
+    <fieldset id="new_line_after_div">
+        <legend>New line after</legend>
         <form id="new_line_after_then">
             <span class="code">THEN</span>
             <label>
@@ -281,7 +295,7 @@
             <label>
             <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
         </form>
-    </div>
+    </fieldset>
     <div class="checkbox inline" id="remove_comments_div">
         <input type="checkbox" id="remove_comments">
         <label for="remove_comments">Remove commments</label> |
