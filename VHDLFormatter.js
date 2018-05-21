@@ -580,7 +580,7 @@ function getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex)
     }
     return [endIndex, parentEndIndex];
 }
-function beautifyComponentBlock(inputs, result, settings, startIndex, indent) {
+function beautifyComponentBlock(inputs, result, settings, startIndex, parentEndIndex, indent) {
     let endIndex = startIndex;
     for (let i = startIndex; i < inputs.length; i++) {
         if (inputs[i].regexStartsWith(/END(\s|$)/)) {
@@ -590,9 +590,12 @@ function beautifyComponentBlock(inputs, result, settings, startIndex, indent) {
     }
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (endIndex != startIndex) {
-        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let actualEndIndex = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let incremental = actualEndIndex - endIndex;
+        endIndex += incremental;
+        parentEndIndex += incremental;
     }
-    return endIndex;
+    return [endIndex, parentEndIndex];
 }
 exports.beautifyComponentBlock = beautifyComponentBlock;
 function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndIndex, indent) {
@@ -654,7 +657,7 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         if (input.regexStartsWith(/COMPONENT\s/)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
-            i = beautifyComponentBlock(inputs, result, settings, i, indent);
+            [i, endIndex] = beautifyComponentBlock(inputs, result, settings, i, endIndex, indent);
             Mode = modeCache;
             continue;
         }

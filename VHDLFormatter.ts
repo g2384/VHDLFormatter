@@ -306,7 +306,7 @@ export function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSe
         newLineSettings.newLineAfter.forEach(symbol => {
             let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n@])", "g");
             text = text.replace(regex, '$1\r\n$2');
-            if(symbol.toUpperCase() == "PORT"){
+            if (symbol.toUpperCase() == "PORT") {
                 text = text.replace(/PORT\s+MAP/, "PORT MAP");
             }
         });
@@ -646,7 +646,7 @@ function getSemicolonBlockEndIndex(inputs: Array<string>, settings: BeautifierSe
     return [endIndex, parentEndIndex];
 }
 
-export function beautifyComponentBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number): number {
+export function beautifyComponentBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
     let endIndex = startIndex;
     for (let i = startIndex; i < inputs.length; i++) {
         if (inputs[i].regexStartsWith(/END(\s|$)/)) {
@@ -656,10 +656,13 @@ export function beautifyComponentBlock(inputs: Array<string>, result: (Formatted
     }
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (endIndex != startIndex) {
-        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let actualEndIndex = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let incremental = actualEndIndex - endIndex;
+        endIndex += incremental;
+        parentEndIndex += incremental;
     }
 
-    return endIndex;
+    return [endIndex, parentEndIndex];
 }
 
 export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
@@ -722,7 +725,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         if (input.regexStartsWith(/COMPONENT\s/)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
-            i = beautifyComponentBlock(inputs, result, settings, i, indent);
+            [i, endIndex] = beautifyComponentBlock(inputs, result, settings, i, endIndex, indent);
             Mode = modeCache;
             continue;
         }

@@ -847,6 +847,7 @@ function IntegrationTest() {
     IntegrationTest63();
     IntegrationTest64();
     IntegrationTest65();
+    IntegrationTest66();
 }
 function IntegrationTest23() {
     let new_line_after_symbols = new VHDLFormatter_3.NewLineSettings();
@@ -1198,6 +1199,14 @@ function IntegrationTest65() {
     settings.NewLineSettings.noNewLineAfter.push("port", "port map");
     let input = 'reg : a PORT\r\nMAP\r\n(\r\nb => c(i)\r\n);';
     let expected = 'reg : a PORT MAP(\r\n    b => c(i)\r\n);';
+    let actual = VHDLFormatter_1.beautify(input, settings);
+    assert("port map no new line 2", expected, actual);
+}
+function IntegrationTest66() {
+    let settings = GetDefaultSettings();
+    settings.NewLineSettings.noNewLineAfter.push("port", "port map");
+    let input = 'component a is\r\n      generic (b\r\n         );\r\n      port (\r\n          c\r\n	 );\r\n    end component;\r\n-- anything1\r\n-- anything2';
+    let expected = 'COMPONENT a IS\r\n    GENERIC (\r\n        b\r\n    );\r\n    PORT (\r\n        c\r\n    );\r\nEND COMPONENT;\r\n-- anything1\r\n-- anything2';
     let actual = VHDLFormatter_1.beautify(input, settings);
     assert("port map no new line 2", expected, actual);
 }
