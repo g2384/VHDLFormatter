@@ -360,7 +360,17 @@ function beautify(input, settings) {
     //input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
-    input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1'); //function(..\r\n)return type; -> function(..\r\n)return type;
+    //function(..)\r\nreturn type; -> function(..\r\n)return type; but also
+    //function(..)@@comments12\r\nreturn type; -> function(.. @@comments12\r\n)return type;
+    input = input.replace(/\s*\)\s+(@@comments[0-9]+)?\s+RETURN\s+([\w]+;)/g,
+        (_, p1, p2) =>
+        {
+            if(p1)
+                return ` ${p1}\r\n) RETURN ${p2}`;
+            else
+                return `\r\n) RETURN ${p2}`;
+        }
+    )
     arr = input.split("\r\n");
     let result = [];
     beautify3(arr, result, settings, 0, 0);
@@ -381,6 +391,8 @@ function beautify(input, settings) {
     }
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
+    // Add newline at end of file
+    input = input + "\r\n";
     // Use system end-of-line characters (\n on Unix, \r\n on Windows)
     input = input.replace(/\r\n/g, endOfLine);
     return input;
@@ -494,6 +506,7 @@ function AlignSigns(result, startIndex, endIndex) {
     AlignSign_(result, startIndex, endIndex, ":=");
     AlignSign_(result, startIndex, endIndex, "=>");
     AlignSign_(result, startIndex, endIndex, "<=");
+    AlignSign_(result, startIndex, endIndex, "@@comments");
 }
 exports.AlignSigns = AlignSigns;
 function AlignSign_(result, startIndex, endIndex, symbol) {
