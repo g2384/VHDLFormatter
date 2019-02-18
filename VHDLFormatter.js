@@ -340,6 +340,8 @@ function beautify(input, settings) {
     //new
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
+    // Fix reals in expoential format broken by previous step
+    input = input.replace(/([+\-]?[ ]?)([0-9]+\.[0-9]+e)[ ]+([+\-]?)[ ]+([0-9]+)/g, '$1$2$3$4');
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
     input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
     input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
