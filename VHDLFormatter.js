@@ -4,6 +4,7 @@ let isTesting = false;
 const endOfLine = require('os').EOL;
 const ILCommentPrefix = "@@comments";
 const ILQuotesPrefix = "@@quotes";
+const ILBackslashesPrefix = "@@backslashes";
 const ILSingleQuotesPrefix = "@@singlequotes";
 var FormatMode;
 (function (FormatMode) {
@@ -210,19 +211,16 @@ function MixLetters(input) {
 function EscapeComments(arr, comments, commentIndex) {
     for (var i = 0; i < arr.length; i++) {
         let line = arr[i];
-        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|\\]/);
-        var commentStartIndex = line.indexOf("--");
-        if (firstCharIndex < commentStartIndex && firstCharIndex >= 0) {
-            comments.push(line.substr(commentStartIndex));
-            arr[i] = line.substr(firstCharIndex, commentStartIndex - firstCharIndex) + ILCommentPrefix + (commentIndex++);
+        line = line.replace(/^\s+/, "");
+        const commentStartIndex = line.indexOf("--");
+        if(commentStartIndex >= 0)
+        {
+            comments.push(line.substring(commentStartIndex));
+            arr[i] = line.substring(0, commentStartIndex) + ILCommentPrefix + (commentIndex++);
         }
-        else if ((firstCharIndex > commentStartIndex && commentStartIndex >= 0) || (firstCharIndex < 0 && commentStartIndex >= 0)) {
-            comments.push(line.substr(commentStartIndex));
-            arr[i] = ILCommentPrefix + (commentIndex++);
-        }
-        else {
-            firstCharIndex = firstCharIndex < 0 ? 0 : firstCharIndex;
-            arr[i] = line.substr(firstCharIndex);
+        else
+        {
+            arr[i] = line;
         }
     }
     return commentIndex;
@@ -324,6 +322,7 @@ function beautify(input, settings) {
     arr = input.split("\r\n");
     let quotes = EscapeQuotes(arr);
     let singleQuotes = EscapeSingleQuotes(arr);
+    let backslashes = EscapeBackslashes(arr);
     input = arr.join("\r\n");
     input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
     arr = input.split("\r\n");
@@ -342,7 +341,7 @@ function beautify(input, settings) {
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
     // Do not add space around unary minus or plus
-    input = input.replace(/(, |= |\(|\bRANGE\b |\bRETURN\b |\bIF\b |\bWHILE\b |\bCASE\b |\bIN\b |\bTO\b |\bDOWNTO\b )[ ]*([\-+])[ ]*(\S)/g, '$1$2$3');
+    input = input.replace(/(, |= |\(|\bRANGE\b |\bRETURN\b |\bIF\b |\bELSE\b |\bWHILE\b |\bCASE\b |\bWHEN\b |\bIN\b |\bTO\b |\bDOWNTO\b )[ ]*([\-+])[ ]*(\S)/g, '$1$2$3');
     // Fix reals in expoential format broken by previous step
     input = input.replace(/([+\-]?[ ]?)([0-9]+\.[0-9]+e)[ ]+([+\-]?)[ ]+([0-9]+)/g, '$1$2$3$4');
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
@@ -385,6 +384,9 @@ function beautify(input, settings) {
     }
     for (var k = 0; k < singleQuotes.length; k++) {
         input = input.replace(ILSingleQuotesPrefix + k, singleQuotes[k]);
+    }
+    for (var k = 0; k < backslashes.length; k++) {
+        input = input.replace(ILBackslashesPrefix + k, backslashes[k]);
     }
     for (var k = 0; k < commentsIndex; k++) {
         input = input.replace(ILCommentPrefix + k, comments[k]);
@@ -811,6 +813,20 @@ function RemoveAsserts(arr) {
     }
 }
 exports.RemoveAsserts = RemoveAsserts;
+function EscapeBackslashes(arr) {
+    let sequences = [];
+    let sequenceIndex = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let sequence = arr[i].match(/\\[^\\]+\\/g);
+        if(sequence != null) {
+            for (var j = 0; j < sequence.length; j++) {
+                arr[i] = arr[i].replace(sequence[j], ILBackslashesPrefix + sequenceIndex);
+                sequences[sequenceIndex++] = sequence[j];
+            }
+        }
+    }
+    return sequences;
+}
 function EscapeQuotes(arr) {
     let quotes = [];
     let quotesIndex = 0;
