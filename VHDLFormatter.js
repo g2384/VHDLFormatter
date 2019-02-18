@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 let isTesting = false;
+const endOfLine = require('os').EOL;
 const ILCommentPrefix = "@@comments";
 const ILQuotesPrefix = "@@quotes";
 const ILSingleQuotesPrefix = "@@singlequotes";
@@ -340,6 +341,8 @@ function beautify(input, settings) {
     //new
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
+    // Do not add space around unary minus or plus
+    input = input.replace(/(, |= |\(|\bRANGE\b |\bRETURN\b |\bIF\b |\bWHILE\b |\bCASE\b |\bIN\b |\bTO\b |\bDOWNTO\b )[ ]*([\-+])[ ]*(\S)/g, '$1$2$3');
     // Fix reals in expoential format broken by previous step
     input = input.replace(/([+\-]?[ ]?)([0-9]+\.[0-9]+e)[ ]+([+\-]?)[ ]+([0-9]+)/g, '$1$2$3$4');
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
@@ -349,6 +352,8 @@ function beautify(input, settings) {
     input = input.replace(/([\(\)])[ ]?(THEN)/gi, '$1 $2');
     input = input.replace(/(^|[\(\)])[ ]?(AND|OR|XOR|XNOR)[ ]*([\(])/g, '$1 $2 $3');
     input = input.replace(/ ([\-\*\/=+<>])[ ]*([\-\*\/=+<>]) /g, " $1$2 ");
+    // Unary minus or plus should not be grouped with other operator
+    input = input.replace(/ ([\-\*\/=+<>])([\-+])([ ]+)/g, " $1$3$2");
     //input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
     input = input.replace(/[ ]+/g, ' ');
     input = input.replace(/[ \t]+\r\n/g, "\r\n");
@@ -376,6 +381,8 @@ function beautify(input, settings) {
     }
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
+    // Use system end-of-line characters (\n on Unix, \r\n on Windows)
+    input = input.replace(/\r\n/g, endOfLine);
     return input;
 }
 exports.beautify = beautify;
