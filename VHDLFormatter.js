@@ -316,7 +316,7 @@ function beautify(input, settings) {
         input = input.replace(/@@comments[0-9]+/g, '');
         commentsIndex = 0;
     }
-    input = RemoveExtraNewLines(input);
+    //input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
     input = input.replace(/[ ]+;/g, ';');
@@ -357,7 +357,7 @@ function beautify(input, settings) {
     //input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
     input = input.replace(/[ ]+/g, ' ');
     input = input.replace(/[ \t]+\r\n/g, "\r\n");
-    input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
+    //input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
     input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1'); //function(..\r\n)return type; -> function(..\r\n)return type;
