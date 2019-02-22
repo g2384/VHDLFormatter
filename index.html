@@ -7,14 +7,33 @@
             margin: 0 auto;
             max-width: 960px;
             tab-size: 4;
-            font-family: Helvetica, arial;
+            font-family: arial, sans-serif;
         }
-
+        
         textarea {
             width: 100%;
             font-family: Consolas, Courier;
         }
-
+        
+        fieldset {
+            width: fit-content;
+            border: 1px solid #9a9a9a;
+            margin: 25px 0 5px 0;
+            padding-left: 0;
+        }
+        
+        legend {
+            padding: 2px 5px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+            margin: -27px 0 0 -1px;
+            position: absolute;
+        }
+        
+        .subtitle {
+            font-weight: normal;
+        }
+        
         .btn {
             margin: 10px 10px;
             padding: 5px 8px;
@@ -27,23 +46,17 @@
             text-align: center;
             white-space: nowrap;
             border: 1px solid rgb(194, 194, 194);
+            background-color: #fff;
         }
-
+        
         .btn:hover {
-            background-color: #afd9ee;
+            background-color: #eee;
         }
-
+        
         .show {
             display: none;
         }
-
-        input[type="checkbox"]+label {
-            display: inline-block;
-            width: 19px;
-            height: 19px;
-            margin: -1px 4px 0 0;
-        }
-
+        
         .wordwrap {
             white-space: pre-wrap;
             white-space: -moz-pre-wrap;
@@ -51,34 +64,142 @@
             white-space: -o-pre-wrap;
             word-wrap: break-word;
         }
-
+        
         label {
             cursor: pointer;
             line-height: 1.5em;
         }
-
+        
         label:hover {
             color: #555;
             text-decoration: underline;
         }
-
+        
         form {
             margin-bottom: 0px;
         }
-
+        
         form span {
             width: 170px;
             display: inline-block;
             text-align: right;
         }
-
+        
         a {
             color: #4b9aff;
             text-decoration: none;
+            background: #f0f8ff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8em;
         }
-
+        
         a:hover {
-            text-decoration: underline;
+            text-decoration: none;
+            background: #d6e8ff;
+        }
+        
+        p {
+            line-height: 1em;
+            margin: 0.5em 0em;
+        }
+        
+        .code {
+            font-family: 'Consolas', Courier, monospace;
+        }
+        
+        .inline {
+            display: inline-block;
+        }
+        
+        .disabled {
+            color: #ccc;
+            cursor: default;
+        }
+        
+        .disabled label:hover {
+            color: #ccc;
+            text-decoration: none;
+            cursor: default;
+        }
+        
+        .checkbox input[type="checkbox"] {
+            opacity: 0;
+            display: none;
+        }
+        
+        .checkbox label {
+            position: relative;
+            display: inline-block;
+            /*16px width of fake checkbox + 6px distance between fake checkbox and text*/
+            padding-left: 22px;
+        }
+        
+        .checkbox label::before,
+        .checkbox label::after {
+            position: absolute;
+            content: "";
+            /*Needed for the line-height to take effect*/
+            display: inline-block;
+        }
+        /*Outer box of the fake checkbox*/
+        
+        .checkbox label::before {
+            height: 16px;
+            width: 16px;
+            border: 1px solid #9A9A9A;
+            left: 0px;
+            /*(24px line-height - 16px height of fake checkbox) / 2 - 1px for the border to vertically center it.*/
+            top: 3px;
+        }
+        /*Checkmark of the fake checkbox*/
+        
+        .checkbox label::after {
+            height: 5px;
+            width: 9px;
+            border-left: 2px solid;
+            border-bottom: 2px solid;
+            transform: rotate(-45deg);
+            left: 4px;
+            top: 7px;
+            color: #333;
+        }
+        /*Hide the checkmark by default*/
+        
+        .checkbox input[type="checkbox"]+label::after {
+            content: none;
+        }
+        /*Unhide on the checked state*/
+        
+        .checkbox input[type="checkbox"]:checked+label::after {
+            content: "";
+        }
+        /*Adding focus styles on the outer-box of the fake checkbox*/
+        
+        .checkbox input[type="checkbox"]:hover+label::after {
+            border-color: #888;
+            outline: #ccc;
+        }
+        
+        .checkbox input[type="checkbox"]:hover+label::before {
+            outline: #888;
+            border-color: #888;
+            background-color: #eee;
+        }
+        
+        .checkbox input[type="checkbox"]:disabled+label::before {
+            outline: #ccc;
+            border-color: #ccc;
+            background-color: #fff;
+            color: #ccc;
+        }
+        
+        .checkbox input[type="checkbox"]:disabled+label::after {
+            color: #888;
+        }
+        
+        .checkbox input[type="checkbox"]:focus+label::before {
+            outline: #333 auto 5px;
         }
     </style>
     <link href="highlight.css" rel="stylesheet" />
@@ -105,111 +226,139 @@
 
 <body>
     <h2>VHDL Beautifier, Formatter</h2>
-    <h4>Beautify and format your VHDL code online</h4>
-    <p>
-        Proper formatting makes code easier to read and understand.
-        <br> Please make a backup before you replace your code!
-        <br>
-        <a href="https://github.com/g2384/g2384.github.io/issues" target="_blank">Report bugs if your code is not properly formatted, please provide sample code which causes the failure</a>
+    <h4 class="subtitle">Beautify and format your VHDL code online</h4>
+    <p>Proper formatting makes code easier to read and understand.</p>
+    <p>Please make a backup before you replace your code!</p>
+    <p style="color:#888">
+        <a href="https://github.com/g2384/VHDLFormatter#release-notes">Release notes</a>
+        <a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>
+        <a href="https://github.com/g2384/VHDLFormatter">Source code</a>
     </p>
-    <div id="lastModified"></div>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
+    <div class="checkbox">
+        <input type="checkbox" id="no_format" onclick="noFormat()">
+        <label for="no_format">Only highlight, don't format</label>
+    </div>
     <form id="keyword">Keyword Case:
         <label>
-            <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label>
-        |
+            <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label> |
         <label>
-            <input type="radio" name="keywordcase" value="LowerCase">lowercase</label>
-        |
+            <input type="radio" name="keywordcase" value="LowerCase">lowercase</label> |
         <label>
             <input type="radio" name="keywordcase" value="DefaultCase">Default</label>
     </form>
-    <label>
-        <input type="checkbox" id="no_format" onclick="noFormat()">Only highlight, don't format</label>
-    <br> New line after
-    <br>
-    <form id="new_line_after_then">
-        <span>THEN</span>
-        <label>
+    <fieldset id="new_line_after_div">
+        <legend>New line after</legend>
+        <form id="new_line_after_then">
+            <span class="code">THEN</span>
+            <label>
             <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_thencase" value="None">None</label>
-    </form>
-    <form id="new_line_after_semicolon">
-        <span>semicolon ";"</span>
-        <label>
+        </form>
+        <form id="new_line_after_semicolon">
+            <span class="code">semicolon ";"</span>
+            <label>
             <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
-    </form>
-    <form id="new_line_after_else">
-        <span>ELSE</span>
-        <label>
-            <input type="radio" name="new_line_after_elsecase" value="NewLine" checked="checked">New Line</label>
-        <label>
+        </form>
+        <form id="new_line_after_else">
+            <span class="code">ELSE</span>
+            <label>
+            <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
+            <label>
             <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
-        <label>
-            <input type="radio" name="new_line_after_elsecase" value="None">None</label>
-    </form>
-    <form id="new_line_after_port">
-        <span>PORT or PORT MAP</span>
-        <label>
+            <label>
+            <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
+        </form>
+        <form id="new_line_after_port">
+            <span class="code">PORT | PORT MAP</span>
+            <label>
             <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
-    </form>
-    <form id="new_line_after_generic">
-        <span>GENERIC</span>
-        <label>
+        </form>
+        <form id="new_line_after_generic">
+            <span class="code">GENERIC</span>
+            <label>
             <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
-        <label>
+            <label>
             <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
-    </form>
+        </form>
+    </fieldset>
+    <div class="checkbox inline" id="remove_comments_div">
+        <input type="checkbox" id="remove_comments">
+        <label for="remove_comments">Remove commments</label> |
+    </div>
+    <div class="checkbox inline" id="remove_lines_div">
+        <input type="checkbox" id="remove_lines">
+        <label for="remove_lines">Remove blank lines</label> |
+    </div>
+    <div class="checkbox inline" id="remove_report_div">
+        <input type="checkbox" id="remove_report">
+        <label for="remove_report">Remove REPORT</label>
+    </div>
     <br>
-    <label>
-        <input type="checkbox" id="remove_comments">Remove commments</label>
-    |
-    <label>
-        <input type="checkbox" id="remove_lines">Remove blank lines</label>
-    |
-    <label>
-        <input type="checkbox" id="remove_report">Remove REPORT</label>
-    <br>
-    <label>
-        <input type="checkbox" id="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
-    <br>
-    <label>
-        <input type="checkbox" id="sign_align">Align signs in PORT() GENERIC()</label>
-    <br>
-    <label>
-        <input type="checkbox" id="sign_align_all">Align signs in all places</label>
-    <br>
-    <label>
-        <input type="checkbox" id="use_space">Customise Indentation (tab is \t): </label>
-    <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
-    <span id="indent_s">four blankspace</span>)
-    <br>
-    <label>
-        <input type="checkbox" id="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
-    <br>
-    <label>
-        <input type="checkbox" id="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
-    <br>
+    <div class="checkbox" id="check_alias_div">
+        <input type="checkbox" id="check_alias">
+        <label for="check_alias">Check ALIAS (every long name is replaced with ALIAS)</label>
+    </div>
+    <div id="sign_align_in_div">
+        Align signs in
+        <div class="checkbox inline" id="sign_align_port_div">
+            <input type="checkbox" id="sign_align_port">
+            <label for="sign_align_port" class="code">PORT()</label>
+        </div>
+        <div class="checkbox inline" id="sign_align_generic_div">
+            <input type="checkbox" id="sign_align_generic">
+            <label for="sign_align_generic" class="code">GENERIC()</label></div>
+        <div class="checkbox inline" id="sign_align_procedure_div">
+            <input type="checkbox" id="sign_align_procedure">
+            <label for="sign_align_procedure" class="code">PROCEDURE()</label>
+        </div>
+        <div class="checkbox inline" id="sign_align_function_div">
+            <input type="checkbox" id="sign_align_function">
+            <label for="sign_align_function">FUNCTION()</label>
+        </div>
+    </div>
+    <div class="checkbox" id="sign_align_all_div">
+        <input type="checkbox" id="sign_align_all">
+        <label for="sign_align_all">Align signs in all places</label>
+    </div>
+    <div id="customise_indentation_div">
+        <div class="checkbox inline" id="use_space_div">
+            <input type="checkbox" id="use_space">
+            <label for="use_space">Customise Indentation: </label>
+        </div>(tab is \t)
+        <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
+        <span id="indent_s">four blankspaces</span>)
+    </div>
+    <div class="checkbox" id="compress_div">
+        <input type="checkbox" id="compress">
+        <label for="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
+    </div>
+    <div class="checkbox" id="mix_letter_div">
+        <input type="checkbox" id="mix_letter">
+        <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
+    </div>
     <input type="button" class="btn" onclick="f()" value="start" />
     <span class="show">
         <input type="button" class="btn " id="selectAll" value="Select All" onclick="selectText(document.getElementById('vhdl'))"
         />
-        <label>
-            <input type="checkbox" onclick="wordWrap()" id="">Word wrap</label>
+        <div class="checkbox inline">
+            <input type="checkbox" onclick="wordWrap()" id="word_wrap">
+            <label for="word_wrap">Word wrap</label>
+        </div>
     </span>
     <br>
     <pre id="result"><code class="vhdl" id="vhdl">
@@ -266,12 +415,8 @@
         var exports = {};
     </script>
     <script src="VHDLFormatter.js"></script>
+    <script src="descriptiveCounter.js"></script>
     <script>
-        let lastModifiedDate = fetchHeader(location.href, 'Last-Modified');
-        if (lastModifiedDate != "") {
-            document.getElementById("lastModified").innerHTML = "<p>Last modified: " + lastModifiedDate + "</p>";
-        }
-
         function f() {
             var input = document.getElementById("in").value;
             var no_format = document.getElementById("no_format").checked;
@@ -285,7 +430,10 @@
             var remove_lines = document.getElementById("remove_lines").checked;
             var remove_report = document.getElementById("remove_report").checked;
             var check_alias = document.getElementById("check_alias").checked;
-            var sign_align = document.getElementById("sign_align").checked;
+            var sign_align_port = document.getElementById("sign_align_port").checked;
+            var sign_align_function = document.getElementById("sign_align_function").checked;
+            var sign_align_procedure = document.getElementById("sign_align_procedure").checked;
+            var sign_align_generic = document.getElementById("sign_align_generic").checked;
             var sign_align_all = document.getElementById("sign_align_all").checked;
             var new_line_after_port = document.getElementById("new_line_after_port").elements.namedItem("new_line_after_portcase").value;
             var new_line_after_then = document.getElementById("new_line_after_then").elements.namedItem("new_line_after_thencase").value;
@@ -316,10 +464,26 @@
             newLineSettingsDict["then"] = new_line_after_then;
             newLineSettingsDict["else"] = new_line_after_else;
             newLineSettings = ConstructNewLineSettings(newLineSettingsDict);
+            var signAlignKeywords = [];
+            if (sign_align_function) {
+                signAlignKeywords.push("FUNCTION");
+                signAlignKeywords.push("IMPURE FUNCTION");
+            }
+            if (sign_align_generic) {
+                signAlignKeywords.push("GENERIC");
+            }
+            if (sign_align_port) {
+                signAlignKeywords.push("PORT");
+            }
+            if (sign_align_procedure) {
+                signAlignKeywords.push("PROCEDURE");
+            }
+            sign_align = signAlignKeywords.length > 0;
 
             beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias, sign_align,
                 sign_align_all,
                 keywordcase, indentation, newLineSettings);
+            beautifierSettings.SignAlignKeyWords = signAlignKeywords;
 
             input = beautify(input, beautifierSettings);
 

@@ -1,6 +1,17 @@
 let isTesting = false;
 const ILCommentPrefix = "@@comments";
 const ILQuotesPrefix = "@@quotes";
+const ILSingleQuotesPrefix = "@@singlequotes";
+
+enum FormatMode {
+    Default,
+    EndsWithSemicolon,
+    CaseWhen,
+    IfElse,
+    PortGeneric,
+}
+
+let Mode: FormatMode = FormatMode.Default;
 
 export class NewLineSettings {
     newLineAfter: Array<string>;
@@ -20,10 +31,10 @@ export class NewLineSettings {
 
     push(keyword: string, addNewLine: string) {
         let str = addNewLine.toLowerCase();
-        if (str.indexOf("none") >= 0) {
+        if (str == "none") {
             return;
         }
-        else if (str.indexOf("no") < 0) {
+        else if (!str.startsWith("no")) {
             this.newLineAfterPush(keyword);
         }
         else {
@@ -40,19 +51,6 @@ function ConstructNewLineSettings(dict): NewLineSettings {
     return settings;
 }
 
-function fetchHeader(url, wch) {
-    try {
-        var req = new XMLHttpRequest();
-        req.open("HEAD", url, false);
-        req.send(null);
-        if (req.status == 200) {
-            return req.getResponseHeader(wch);
-        }
-        else return false;
-    } catch (e) {
-        return "";
-    }
-}
 
 declare global {
     interface String {
@@ -61,7 +59,19 @@ declare global {
         reverse: () => string;
         regexStartsWith: (pattern: RegExp) => boolean;
         count: (text: string) => number;
+        regexCount: (pattern: RegExp) => number;
+        convertToRegexBlockWords: () => RegExp;
     }
+    interface Array<T>{
+        convertToRegexBlockWords: () => RegExp;
+    }
+}
+
+String.prototype.regexCount = function (pattern): number {
+    if (pattern.flags.indexOf("g") < 0) {
+        pattern = new RegExp(pattern.source, pattern.flags + "g");
+    }
+    return (this.match(pattern) || []).length;
 }
 
 String.prototype.count = function (text): number {
@@ -89,6 +99,17 @@ String.prototype.reverse = function () {
     return this.split('').reverse().join('');
 }
 
+String.prototype.convertToRegexBlockWords = function (): RegExp {
+    let result: RegExp = new RegExp("(" + this + ")([^\\w]|$)");
+    return result;
+}
+
+Array.prototype.convertToRegexBlockWords = function (): RegExp {
+    let wordsStr: string = this.join("|");
+    let result: RegExp = new RegExp("(" + wordsStr + ")([^\\w]|$)");
+    return result;
+}
+
 function wordWrap() {
     var d = document.getElementById("result");
     if (d.className == "") {
@@ -98,76 +119,49 @@ function wordWrap() {
     }
 }
 
-function getHTMLInputElement(name: string): HTMLInputElement {
-    return <HTMLInputElement>document.getElementById(name);
+function getHTMLInputElement(id: string): HTMLInputElement {
+    return <HTMLInputElement>document.getElementById(id);
 }
 
 function noFormat() {
-    let elements: Array<string> = ["remove_comments",
+    let elements: Array<string> = [
+        "remove_comments",
         "remove_lines",
         "remove_report",
         "check_alias",
-        "sign_align",
+        "sign_align_in",
+        "sign_align_port",
+        "sign_align_generic",
+        "sign_align_function",
+        "sign_align_procedure",
         "sign_align_all",
-        "new_line_after_port",
-        "new_line",
+        "new_line_after",
         "use_space",
+        "customise_indentation",
         "compress",
-        "mix_letter"];
-    var t = !(getHTMLInputElement("remove_comments").disabled);
+        "mix_letter"
+    ];
+    var isDisabled = getHTMLInputElement("no_format").checked;
     elements.forEach(element => {
-        getHTMLInputElement(element).disabled = t;
+        var htmlElement = getHTMLInputElement(element + "_div");
+        try {
+            getHTMLInputElement(element).disabled = isDisabled;
+        }
+        catch{ }
+        if (isDisabled) {
+            htmlElement.className += " disabled";
+        }
+        else {
+            htmlElement.className = htmlElement.className.replace(/\bdisabled\b/g, "");
+        }
     });
-    let keyword = <HTMLFormElement>document.getElementById("keyword");
-    for (let i = 0; i < keyword.elements.length; i++) {
-        (<HTMLInputElement>keyword.elements[i]).disabled = t;
-    }
-}
-
-function indent_decode() {
-    var custom_indent: string = getHTMLInputElement("cust_indent").value;
-    var result: string = indentDecode(custom_indent);
-    document.getElementById("indent_s").innerHTML = result;
-}
-
-export function indentDecode(input: string): string {
-    input = input.replace(/\\t/g, "	");
-    var count = [" & one ", " & two ", " & three ", " & four ", " & five ", " & six ", " & seven ", " & eight ", " & many "];
-    var tokens: Array<string> = input.split("");
-    var result = "";
-    var repeatedCharCount = 0;
-    for (var i = 0; i < tokens.length; i++) {
-        var char = input.substr(i, 1);
-        if (char == input.substr(i + 1, 1)) {
-            repeatedCharCount++;
-        } else {
-            switch (char) {
-                case " ":
-                    char = "blankspace";
-                    break;
-                case "\t":
-                    char = "tab";
-            }
-            repeatedCharCount = repeatedCharCount > 8 ? 8 : repeatedCharCount;
-            result += count[repeatedCharCount] + char;
-            repeatedCharCount = 0;
+    let radioButtons = <HTMLCollectionOf<HTMLInputElement>>document.getElementsByTagName("input");
+    for (let i = 0; i < radioButtons.length; i++) {
+        if ((<HTMLInputElement>radioButtons[i]).type == "radio") {
+            (<HTMLInputElement>radioButtons[i]).disabled = isDisabled;
         }
     }
-
-    if (result.length < 0) {
-        switch (char) {
-            case " ":
-                char = "blankspace";
-                break;
-            case "\t":
-                char = "tab";
-        }
-        repeatedCharCount = repeatedCharCount > 8 ? 8 : repeatedCharCount;
-        result = count[repeatedCharCount] + char;
-    }
-
-    result = result.replace(/^ & /, "")
-    return result;
+    getHTMLInputElement("cust_indent").disabled = isDisabled;
 }
 
 function Compress(input: string) {
@@ -192,7 +186,7 @@ function MixLetters(input: string) {
 function EscapeComments(arr: Array<string>, comments: Array<string>, commentIndex: number): number {
     for (var i = 0; i < arr.length; i++) {
         let line: string = arr[i];
-        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|]/);
+        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|\\]/);
         var commentStartIndex = line.indexOf("--");
         if (firstCharIndex < commentStartIndex && firstCharIndex >= 0) {
             comments.push(line.substr(commentStartIndex));
@@ -214,6 +208,12 @@ function ToLowerCases(arr: Array<string>) {
     }
 }
 
+function ToUpperCases(arr: Array<string>) {
+    for (var i = 0; i < arr.length; i++) {
+        arr[i] = arr[i].toUpperCase();
+    }
+}
+
 function ToCamelCases(arr: Array<string>) {
     for (var i = 0; i < arr.length; i++) {
         arr[i] = arr[i].charAt(0) + arr[i].slice(1).toLowerCase();
@@ -227,19 +227,24 @@ function ReplaceKeyWords(text: string, keywords: Array<string>): string {
     return text;
 }
 
-function SetKeywordCase(input: string, keywordcase: string, keywords, typenames) {
+function SetKeywordCase(input: string, keywordcase: string, keywords: string[], typenames: string[]): string {
     let inputcase: string = keywordcase.toLowerCase();
-    if (inputcase == "lowercase") {
-        ToLowerCases(keywords);
-        ToLowerCases(typenames);
-    } else if (inputcase == "defaultcase") {
-        ToCamelCases(keywords);
-        ToCamelCases(typenames);
+    switch (keywordcase.toLowerCase()) {
+        case "lowercase":
+            ToLowerCases(keywords);
+            ToLowerCases(typenames);
+            break;
+        case "defaultcase":
+            ToCamelCases(keywords);
+            ToCamelCases(typenames);
+            break;
+        case "uppercase":
+            ToUpperCases(keywords);
+            ToUpperCases(typenames);
     }
-    if (inputcase != "uppercase") {
-        input = ReplaceKeyWords(input, keywords);
-        input = ReplaceKeyWords(input, typenames);
-    }
+
+    input = ReplaceKeyWords(input, keywords);
+    input = ReplaceKeyWords(input, typenames);
     return input;
 }
 
@@ -251,6 +256,9 @@ export function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSe
         newLineSettings.newLineAfter.forEach(symbol => {
             let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n@])", "g");
             text = text.replace(regex, '$1\r\n$2');
+            if (symbol.toUpperCase() == "PORT") {
+                text = text.replace(/PORT\s+MAP/, "PORT MAP");
+            }
         });
     }
     if (newLineSettings.noNewLineAfter != null) {
@@ -268,6 +276,7 @@ export class BeautifierSettings {
     CheckAlias: boolean;
     SignAlignRegional: boolean;
     SignAlignAll: boolean;
+    SignAlignKeyWords: Array<string>;
     KeywordCase: string;
     Indentation: string;
     NewLineSettings: NewLineSettings
@@ -308,23 +317,26 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/\([\t ]+/g, '\(');
     input = input.replace(/[ ]+;/g, ';');
     input = input.replace(/:[ ]*(PROCESS|ENTITY)/gi, ':$1');
-    input = ReplaceKeyWords(input, KeyWords);
-    input = ReplaceKeyWords(input, TypeNames);
 
     arr = input.split("\r\n");
-    ReserveSemicolonInKeywords(arr);
-    input = arr.join("\r\n");
-    input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
-    input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
-    arr = input.split("\r\n");
     let quotes = EscapeQuotes(arr);
+    let singleQuotes = EscapeSingleQuotes(arr);
+    input = arr.join("\r\n");
+    input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
+
+    arr = input.split("\r\n");
     if (settings.RemoveAsserts) {
         RemoveAsserts(arr);//RemoveAsserts must be after EscapeQuotes
     }
+    ReserveSemicolonInKeywords(arr);
+    input = arr.join("\r\n");
+    input = input.replace(/(PORT|GENERIC)\s+MAP/g, '$1 MAP');
+    input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
+    input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
 
+    arr = input.split("\r\n");
     ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
     input = arr.join("\r\n");
-    //input = beautify2(input, settings);
 
     //new
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
@@ -342,14 +354,24 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
+    input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1');//function(..\r\n)return type; -> function(..\r\n)return type;
     arr = input.split("\r\n");
     let result: (FormattedLine | FormattedLine[])[] = [];
     beautify3(arr, result, settings, 0, 0);
+    if (settings.SignAlignAll) {
+        AlignSigns(result, 0, result.length - 1);
+    }
+
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
+    input = SetKeywordCase(input, settings.KeywordCase, KeyWords, TypeNames);
 
     for (var k = 0; k < quotes.length; k++) {
         input = input.replace(ILQuotesPrefix + k, quotes[k]);
+    }
+
+    for (var k = 0; k < singleQuotes.length; k++) {
+        input = input.replace(ILSingleQuotesPrefix + k, singleQuotes[k]);
     }
 
     for (var k = 0; k < commentsIndex; k++) {
@@ -406,16 +428,16 @@ function GetCloseparentheseEndIndex(inputs: Array<string>, startIndex: number): 
     return startIndex;
 }
 
-export function beautifyPortGenericBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, mode: string): number {
+export function beautifyPortGenericBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number, mode: string): [number, number] {
     let firstLine: string = inputs[startIndex];
     let regex: RegExp = new RegExp("[\\w\\s:]*(" + mode + ")([\\s]|$)");
     if (!firstLine.regexStartsWith(regex)) {
-        return startIndex;
+        return [startIndex, parentEndIndex];
     }
     let firstLineHasParenthese: boolean = firstLine.indexOf("(") >= 0;
     let hasParenthese: boolean = firstLineHasParenthese;
     let blockBodyStartIndex = startIndex;
-    let secondLineHasParenthese: boolean = inputs[startIndex + 1].startsWith("(");
+    let secondLineHasParenthese: boolean = startIndex + 1 < inputs.length && inputs[startIndex + 1].startsWith("(");
     if (secondLineHasParenthese) {
         hasParenthese = true;
         blockBodyStartIndex++;
@@ -428,15 +450,17 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
             inputs[startIndex] = newInputs[0];
             inputs.splice(startIndex + 1, 0, newInputs[1]);
             endIndex++;
+            parentEndIndex++;
         }
     }
-    else if (endIndex != startIndex && secondLineHasParenthese) {
+    else if (endIndex > startIndex + 1 && secondLineHasParenthese) {
         inputs[startIndex + 1] = inputs[startIndex + 1].replace(/\(([\w\(\) ]+)/, '(\r\n$1');
         let newInputs = inputs[startIndex + 1].split("\r\n");
         if (newInputs.length == 2) {
             inputs[startIndex + 1] = newInputs[0];
             inputs.splice(startIndex + 2, 0, newInputs[1]);
             endIndex++;
+            parentEndIndex++;
         }
     }
     if (firstLineHasParenthese && inputs[startIndex].indexOf("MAP") > 0) {
@@ -444,7 +468,11 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
     }
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (secondLineHasParenthese) {
-        result.push(new FormattedLine(inputs[startIndex + 1], indent));
+        let secondLineIndent = indent;
+        if (endIndex == startIndex + 1) {
+            secondLineIndent++;
+        }
+        result.push(new FormattedLine(inputs[startIndex + 1], secondLineIndent));
     }
     let blockBodyEndIndex = endIndex;
     let i = beautify3(inputs, result, settings, blockBodyStartIndex + 1, indent + 1, endIndex);
@@ -452,38 +480,72 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
         (<FormattedLine>result[i]).Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional) {
+    if (settings.SignAlignRegional && !settings.SignAlignAll
+        && settings.SignAlignKeyWords != null
+        && settings.SignAlignKeyWords.indexOf(mode) >= 0) {
         blockBodyStartIndex++;
-        SignsAlignRegional(result, blockBodyStartIndex, blockBodyEndIndex);
+        AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
     }
-    return i;
+    return [i, parentEndIndex];
 }
 
-export function SignsAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
-    SignAlignRegional(result, startIndex, endIndex, ":");
-    SignAlignRegional(result, startIndex, endIndex, ":=");
-    SignAlignRegional(result, startIndex, endIndex, "=>");
+export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
+    AlignSign_(result, startIndex, endIndex, ":");
+    AlignSign_(result, startIndex, endIndex, ":=");
+    AlignSign_(result, startIndex, endIndex, "=>");
+    AlignSign_(result, startIndex, endIndex, "<=");
 }
 
-export function SignAlignRegional(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string) {
+function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string) {
     let maxSymbolIndex: number = -1;
-    let allSymbolIndex = {};
+    let symbolIndices = {};
+    let startLine = startIndex;
+    let labelAndKeywords: Array<string> = [
+        "([\\w\\s]*:(\\s)*PROCESS)",
+        "([\\w\\s]*:(\\s)*POSTPONED PROCESS)",
+        "([\\w\\s]*:\\s*$)",
+        "([\\w\\s]*:.*\\s+GENERATE)"
+    ];
+    let labelAndKeywordsStr: string = labelAndKeywords.join("|");
+    let labelAndKeywordsRegex = new RegExp("(" + labelAndKeywordsStr + ")([^\\w]|$)");
     for (let i = startIndex; i <= endIndex; i++) {
         let line = (<FormattedLine>result[i]).Line;
-        let regex: RegExp = new RegExp("([\\s\\w]|^)" + symbol + "([\\s\\w]|$)");
+        if (symbol == ":" && line.regexStartsWith(labelAndKeywordsRegex)) {
+            continue;
+        }
+
+        let regex: RegExp = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        if (line.regexCount(regex) > 1) {
+            continue;
+        }
         let colonIndex = line.regexIndexOf(regex);
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
-            allSymbolIndex[i] = colonIndex;
+            symbolIndices[i] = colonIndex;
+        }
+        else if (!line.startsWith(ILCommentPrefix) && line.length != 0) {
+            if (startLine < i - 1) // if cannot find the symbol, a block of symbols ends
+            {
+                AlignSign(result, startLine, i - 1, symbol, maxSymbolIndex, symbolIndices);
+            }
+            maxSymbolIndex = -1;
+            symbolIndices = {};
+            startLine = i;
         }
     }
+    if (startLine < endIndex) // if cannot find the symbol, a block of symbols ends
+    {
+        AlignSign(result, startLine, endIndex, symbol, maxSymbolIndex, symbolIndices);
+    }
+}
 
+export function AlignSign(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string, maxSymbolIndex: number = -1, symbolIndices = {}) {
     if (maxSymbolIndex < 0) {
         return;
     }
 
-    for (let lineIndex in allSymbolIndex) {
-        let symbolIndex = allSymbolIndex[lineIndex];
+    for (let lineIndex in symbolIndices) {
+        let symbolIndex = symbolIndices[lineIndex];
         if (symbolIndex == maxSymbolIndex) {
             continue;
         }
@@ -505,52 +567,186 @@ export function beautifyCaseBlock(inputs: Array<string>, result: (FormattedLine 
     return i;
 }
 
+function getSemicolonBlockEndIndex(inputs: Array<string>, settings: BeautifierSettings, startIndex: number, parentEndIndex: number): [number, number] {
+    let endIndex = 0;
+    let openBracketsCount = 0;
+    let closeBracketsCount = 0;
+    for (let i = startIndex; i < inputs.length; i++) {
+        let input = inputs[i];
+        let indexOfSemicolon = input.indexOf(";");
+        let splitIndex = indexOfSemicolon < 0 ? input.length : indexOfSemicolon + 1;
+        let stringBeforeSemicolon = input.substring(0, splitIndex);
+        let stringAfterSemicolon = input.substring(splitIndex);
+        stringAfterSemicolon = stringAfterSemicolon.replace(new RegExp(ILCommentPrefix + "[0-9]+"), "");
+        openBracketsCount += stringBeforeSemicolon.count("(");
+        closeBracketsCount += stringBeforeSemicolon.count(")");
+        if (indexOfSemicolon < 0) {
+            continue;
+        }
+        if (openBracketsCount == closeBracketsCount) {
+            endIndex = i;
+            if (stringAfterSemicolon.trim().length > 0 && settings.NewLineSettings.newLineAfter.indexOf(";") >= 0) {
+                inputs[i] = stringBeforeSemicolon;
+                inputs.splice(i, 0, stringAfterSemicolon);
+                parentEndIndex++;
+            }
+            break;
+        }
+    }
+    return [endIndex, parentEndIndex];
+}
+
+export function beautifyComponentBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+    let endIndex = startIndex;
+    for (let i = startIndex; i < inputs.length; i++) {
+        if (inputs[i].regexStartsWith(/END(\s|$)/)) {
+            endIndex = i;
+            break;
+        }
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let actualEndIndex = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let incremental = actualEndIndex - endIndex;
+        endIndex += incremental;
+        parentEndIndex += incremental;
+    }
+
+    return [endIndex, parentEndIndex];
+}
+
+export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+    let endIndex = startIndex;
+    [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+    }
+
+    return [endIndex, parentEndIndex];
+}
+
 export function beautify3(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, endIndex?: number): number {
     let i: number;
-    let regexOneLineBlockKeyWords: RegExp = new RegExp(/(PROCEDURE|FUNCTION|IMPURE FUNCTION)[^\w](?!.+[^\w]IS([^\w]|$))/);//match PROCEDURE..; but not PROCEDURE .. IS;
-    let blockMidKeyWords: Array<string> = ["ELSE", "ELSIF", "WHEN", "BEGIN"];
+    let regexOneLineBlockKeyWords: RegExp = new RegExp(/(PROCEDURE)[^\w](?!.+[^\w]IS([^\w]|$))/);//match PROCEDURE..; but not PROCEDURE .. IS;
+    let regexFunctionMultiLineBlockKeyWords: RegExp = new RegExp(/(FUNCTION|IMPURE FUNCTION)[^\w](?=.+[^\w]IS([^\w]|$))/);//match FUNCTION .. IS; but not FUNCTION
+    let blockMidKeyWords: Array<string> = ["BEGIN"];
     let blockStartsKeyWords: Array<string> = [
         "IF",
         "CASE",
         "ARCHITECTURE",
         "PROCEDURE",
         "PACKAGE",
-        "PROCESS",
-        "POSTPONED PROCESS",
-        "([\\w\\s]+:\\s*PROCESS)",
-        "FUNCTION",
-        "IMPURE FUNCTION",
-        "(.+\\sPROTECTED)",
-        "COMPONENT",
-        "ENTITY"];
-    let blockEndsKeyWords: Array<string> = ["END"];
+        "(([\\w\\s]*:)?(\\s)*PROCESS)",// with label
+        "(([\\w\\s]*:)?(\\s)*POSTPONED PROCESS)",// with label
+        "(.*\\s*PROTECTED)",
+        "(COMPONENT)",
+        "(ENTITY(?!.+;))",
+        "FOR",
+        "WHILE",
+        "LOOP",
+        "(.*\\s*GENERATE)",
+        "(CONTEXT[\\w\\s\\\\]+IS)",
+        "(CONFIGURATION(?!.+;))",
+        "BLOCK",
+        "UNITS",
+        "\\w+\\s+\\w+\\s+IS\\s+RECORD"];
+    let blockEndsKeyWords: Array<string> = ["END", ".*\\)\\s*RETURN\\s+[\\w]+;"];
+    let blockEndsWithSemicolon: Array<string> = [
+        "(WITH\\s+[\\w\\s\\\\]+SELECT)",
+        "([\\w\\\\]+[\\s]*<=)",
+        "([\\w\\\\]+[\\s]*:=)",
+        "FOR\\s+[\\w\\s,]+:\\s*\\w+\\s+USE",
+        "REPORT"
+    ];
 
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
-    let blockEndKeyWordsStr: string = blockEndsKeyWords.join("|");
-    let blockMidKeyWordsStr: string = blockMidKeyWords.join("|");
-    let regexBlockMidKeyWords: RegExp = new RegExp("(" + blockMidKeyWordsStr + ")([^\\w]|$)")
-    let regexBlockStartsKeywords: RegExp = new RegExp("(" + newLineAfterKeyWordsStr + ")([^\\w]|$)")
-    let regexBlockEndsKeyWords: RegExp = new RegExp("(" + blockEndKeyWordsStr + ")([^\\w]|$)")
+    let regexBlockMidKeyWords: RegExp = blockMidKeyWords.convertToRegexBlockWords();
+    let regexBlockStartsKeywords: RegExp = new RegExp("([\\w]+\\s*:\\s*)?(" + newLineAfterKeyWordsStr + ")([^\\w]|$)")
+    let regexBlockEndsKeyWords: RegExp = blockEndsKeyWords.convertToRegexBlockWords()
+    let regexblockEndsWithSemicolon: RegExp = blockEndsWithSemicolon.convertToRegexBlockWords();
+    let regexMidKeyWhen: RegExp = "WHEN".convertToRegexBlockWords();
+    let regexMidKeyElse: RegExp = "ELSE|ELSIF".convertToRegexBlockWords();
     if (endIndex == null) {
         endIndex = inputs.length - 1;
     }
     for (i = startIndex; i <= endIndex; i++) {
+        if (indent < 0) {
+            indent = 0;
+        }
         let input: string = inputs[i].trim();
+        if (input.regexStartsWith(/COMPONENT\s/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifyComponentBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
+        if (input.regexStartsWith(/\w+\s*:\s*ENTITY/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
+        if (Mode != FormatMode.EndsWithSemicolon && input.regexStartsWith(regexblockEndsWithSemicolon)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
         if (input.regexStartsWith(/(.+:\s*)?(CASE)([\s]|$)/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.CaseWhen;
             i = beautifyCaseBlock(inputs, result, settings, i, indent);
+            Mode = modeCache;
             continue;
         }
         if (input.regexStartsWith(/[\w\s:]*PORT([\s]|$)/)) {
-            i = beautifyPortGenericBlock(inputs, result, settings, i, indent, "PORT");
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PORT");
+            continue;
+        }
+        if (input.regexStartsWith(/TYPE\s+\w+\s+IS\s+\(/)) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "IS");
             continue;
         }
         if (input.regexStartsWith(/[\w\s:]*GENERIC([\s]|$)/)) {
-            i = beautifyPortGenericBlock(inputs, result, settings, i, indent, "GENERIC");
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "GENERIC");
+            continue;
+        }
+        if (input.regexStartsWith(/[\w\s:]*PROCEDURE[\s\w]+\($/)) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PROCEDURE");
+            if (inputs[i].regexStartsWith(/.*\)[\s]*IS/)) {
+                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            }
+            continue;
+        }
+        if (input.regexStartsWith(/FUNCTION[^\w]/)
+            && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "FUNCTION");
+            if (!inputs[i].regexStartsWith(regexBlockEndsKeyWords)) {
+                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            } else {
+                (<FormattedLine>result[i]).Indent++;
+            }
+            continue;
+        }
+        if (input.regexStartsWith(/IMPURE FUNCTION[^\w]/)
+            && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "IMPURE FUNCTION");
+            if (!inputs[i].regexStartsWith(regexBlockEndsKeyWords)) {
+                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+            } else {
+                (<FormattedLine>result[i]).Indent++;
+            }
             continue;
         }
         result.push(new FormattedLine(input, indent));
         if (startIndex != 0
-            && (input.regexStartsWith(regexBlockMidKeyWords))) {
+            && (input.regexStartsWith(regexBlockMidKeyWords)
+                || (Mode != FormatMode.EndsWithSemicolon && input.regexStartsWith(regexMidKeyElse))
+                || (Mode == FormatMode.CaseWhen && input.regexStartsWith(regexMidKeyWhen)))) {
             (<FormattedLine>result[i]).Indent--;
         }
         else if (startIndex != 0
@@ -561,510 +757,14 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         if (input.regexStartsWith(regexOneLineBlockKeyWords)) {
             continue;
         }
-        if (input.regexStartsWith(regexBlockStartsKeywords)) {
+        if (input.regexStartsWith(regexFunctionMultiLineBlockKeyWords)
+            || input.regexStartsWith(regexBlockStartsKeywords)) {
             i = beautify3(inputs, result, settings, i + 1, indent + 1);
         }
     }
     i--;
     return i;
 }
-
-function beautify2(input, settings: BeautifierSettings): string {
-    let arr = input.split("\r\n");
-    let quotes = EscapeQuotes(arr);
-    if (settings.RemoveAsserts) {
-        RemoveAsserts(arr);//RemoveAsserts must be after EscapeQuotes
-    }
-
-    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
-
-    var align = [],
-        align_max = [],
-        align_i1 = 0,
-        align_i = 0;
-    var str = "",
-        str1 = "";
-    var p = 0;
-    var n = 0,
-        j = 0;
-    var tab_n = 0,
-        str_len = 0,
-        port_s = "";
-    var back_tab = false,
-        forward_tab = false,
-        semi_pos = 0,
-        begin_b = true,
-        port_b = false;
-    var before_begin = true;
-    var l = arr.length;
-
-    for (i = 0; i < l; i++) {
-        if (arr[i].indexOf("BEGIN") >= 0) {
-            before_begin = false;
-        }
-
-        if (port_s) {
-            port_s += arr[i];
-            var k_port = port_s.split("(").length;
-            if (k_port == port_s.split(")").length) {
-                arr[i] = arr[i] + "@@end";
-                port_s = "";
-                port_b = false;
-            }
-        }
-        if ((!port_b && arr[i].regexIndexOf(/(\s|\(|^)(PORT|GENERIC|PROCESS|PROCEDURE)(\s|\(|$)/) >= 0)
-            || (arr[i].regexIndexOf(/:[ ]?=[ ]?\(/) >= 0 && before_begin)) {
-            port_b = true;
-            port_s = arr[i];
-            var k_port = port_s.split("(").length;
-            if (k_port == 1) {
-                port_b = false;
-                port_s = "";
-            } else if (k_port == port_s.split(")").length) {
-                port_s = "";
-                port_b = false;
-                arr[i] = arr[i] + "@@singleend";
-            } else {
-                arr[i] = arr[i].replace(/(PORT|GENERIC|PROCEDURE)([a-z0-9A-Z_ ]+)\(([a-zA-Z0-9_\(\) ]+)/, '$1$2(\r\n$3');
-            }
-        }
-    }
-    input = arr.join("\r\n");
-    input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
-    input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
-    input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
-    input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
-    input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
-    input = input.replace(/(IF)[ ]?([\(\)])/g, '$1 $2');
-    input = input.replace(/([\(\)])[ ]?(THEN)/gi, '$1 $2');
-    input = input.replace(/(^|[\(\)])[ ]?(AND|OR|XOR|XNOR)[ ]*([\(])/g, '$1 $2 $3');
-    input = input.replace(/ ([\-\*\/=+<>])[ ]*([\-\*\/=+<>]) /g, " $1$2 ");
-    input = input.replace(/\r\n[ \t]+--\r\n/g, "\r\n");
-    input = input.replace(/[ ]+/g, ' ');
-    input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
-    input = input.replace(/[\r\n\s]+$/g, '');
-    input = input.replace(/[ \t]+\)/g, ')');
-
-    var matches = input.match(/'([a-zA-Z]+)\s/g);
-    if (matches != null) {
-        for (var k2 = 0; k2 < matches.length; k2++) {
-            input = input.replace(matches[k2], matches[k2].toUpperCase());
-        }
-    }
-    input = input.replace(/(MAP)[ \r\n]+\(/g, '$1(');
-    //input = input.replace(/(;|THEN)[ ]?(@@comments[0-9]+)([a-zA-Z])/g, '$1 $2\r\n$3');
-    input = input.replace(/[\r\n ]+RETURN/g, ' RETURN');
-    input = input.replace(/BEGIN[\r\n ]+/g, 'BEGIN\r\n');
-    input = input.replace(/ (PORT|GENERIC) /g, '\r\n$1 ');
-    if (settings.CheckAlias) {
-        var alias = [],
-            subarr = [],
-            o = 0,
-            p = 0,
-            p2 = 0,
-            l2 = 0,
-            i2 = 0;
-        arr = input.split("ARCHITECTURE ");
-        l = arr.length;
-        for (i = 0; i < l; i++) {
-            subarr = arr[i].split("ALIAS ");
-            l2 = subarr.length;
-            if (l2 > 1) {
-                o = 0;
-                for (i2 = 1; i2 < l2; i2++) {
-                    o = subarr[i2].indexOf(";", n);
-                    str = subarr[i2].substring(0, o);
-                    alias[p2++] = str.split(" IS ");
-                }
-                i2--;
-                var str2 = subarr[i2].substr(o);
-                for (p = 0; p < p2; p++) {
-                    var reg = new RegExp(alias[p][1], 'gi');
-                    str2 = str2.replace(reg, alias[p][0]);
-                }
-                subarr[i2] = subarr[i2].substring(0, o) + str2;
-            }
-            arr[i] = subarr.join("ALIAS ");
-        }
-        input = arr.join("ARCHITECTURE ");
-    }
-    arr = input.split("\r\n");
-    l = arr.length;
-    var signAlignPos = "";
-    var if_b = 0,
-        white_space = "",
-        case_b = false,
-        case_n = 0,
-        procfun_b = false,
-        semi_b = false,
-        set_false = false,
-        entity_b = false,
-        then_b = false,
-        conditional_b = false,
-        generic_map_b = false,
-        architecture_begin_b = false,
-        process_begin_b = false,
-        case_indent = [0, 0, 0, 0, 0, 0, 0];
-    var align_groups = [],
-        align_groups_max = [],
-        lastAlignedSign = "",
-        current_align_group = 0,
-        aligned_group_starts = 0;
-    var indent_start = [];
-    for (i = 0; i < l; i++) {
-        str = arr[i];
-        str_len = str.length;
-        if (str.replace(/[ \-\t]*/, "").length > 0) {
-            var first_word = str.split(/[^\w]/)[0];
-            var indent_start_last = indent_start.length == 0 ? 0 : indent_start[indent_start.length - 1];
-            if (then_b) {
-                arr[i] = " " + arr[i];
-                if (str.indexOf(" THEN") >= 0) {
-                    then_b = false;
-                    back_tab = true;
-                }
-            }
-            arr[i] = white_space + arr[i];
-            if (first_word == "ELSIF") {
-                tab_n = indent_start_last - 1;
-                indent_start.pop();
-                back_tab = true;
-            } else if (str.indexOf("END CASE") == 0) {
-                indent_start.pop();
-                case_n--;
-                tab_n = indent_start[indent_start.length - 1];
-            } else if (first_word == "END") {
-                tab_n = indent_start_last - 1;
-                indent_start.pop();
-                if (str.indexOf("END IF") == 0) {
-                    if_b--;
-                }
-                if (i == l - 1) {
-                    tab_n = 1;
-                }
-            } else if (first_word == "ELSE" && if_b) {
-                tab_n = indent_start_last - 1;
-                indent_start.pop();
-                back_tab = true;
-            } else if (case_n) {
-                if (first_word == "WHEN") {
-                    tab_n = case_indent[case_n - 1];
-                    //back_tab = true;
-                }
-            } else if (first_word == "BEGIN") {
-                if (begin_b) {
-                    if (architecture_begin_b) {
-                        tab_n = indent_start_last - 1;
-                        architecture_begin_b = false;
-                    } else if (process_begin_b) {
-                        tab_n = indent_start_last - 1;
-                        process_begin_b = false;
-                    } else {
-                        tab_n = indent_start_last;
-                        indent_start.push(tab_n + 1);
-                    }
-                    //indent_start.pop();
-                    back_tab = true;
-                    begin_b = false;
-                    if (procfun_b) {
-                        tab_n++;
-                        indent_start.push(tab_n);
-                        begin_b = true;
-                    }
-                } else {
-                    back_tab = true;
-                }
-            } else if (first_word == "PROCESS") {
-                begin_b = true;
-            } else if (str.indexOf(": PROCESS") >= 0) {
-                back_tab = true;
-                begin_b = true;
-                process_begin_b = true;
-            } else if (str.indexOf(": ENTITY") >= 0) {
-                back_tab = true;
-                entity_b = true;
-            } else if (str.indexOf("PROCEDURE ") >= 0) {
-                back_tab = true;
-                begin_b = true;
-            }
-            if (port_b && str.indexOf("@@") < 0) {
-                if (i + 1 <= arr.length - 1 && arr[i + 1].indexOf("@@") < 0) {
-                    if (signAlignPos == ":") {
-                        if (str.indexOf(';') < 0) {
-                            arr[i] += arr[i + 1];
-                            arr[i + 1] = '@@removeline';
-                        }
-                    } else if (signAlignPos == "=>") {
-                        if (str.indexOf(',') < 0) {
-                            arr[i] += arr[i + 1];
-                            arr[i + 1] = '@@removeline';
-                        }
-                    }
-                }
-            }
-            if (str.indexOf("PORT MAP") >= 0) {
-                back_tab = true;
-                port_b = true;
-                if (str.indexOf(");") < 0) {
-                    align_i1 = align_i;
-                    var t = str.indexOf("=>");
-                    if (t >= 0) {
-                        signAlignPos = "=>";
-                    } else {
-                        if (i + 1 < arr.length) {
-                            t = arr[i + 1].indexOf("=>");
-                            if (t >= 0) {
-                                signAlignPos = "=>";
-                            }
-                        }
-                    }
-                } else {
-                    signAlignPos = "";
-                }
-            } else if (str.indexOf("GENERIC MAP") >= 0) {
-                tab_n++;
-                indent_start.push(tab_n);
-                generic_map_b = true;
-                if (!begin_b) {
-                    back_tab = false;
-                }
-            } else if (str.indexOf("PORT (") >= 0 && begin_b) {
-                back_tab = true;
-                port_b = true;
-                t = str.indexOf(":");
-                if (str.indexOf(");") < 0) {
-                    align_i1 = align_i;
-                    if (t >= 0) {
-                        signAlignPos = ":";
-                    } else {
-                        t = arr[i + 1].indexOf(":");
-                        if (t >= 0) {
-                            signAlignPos = ":";
-                        }
-                    }
-                } else {
-                    signAlignPos = "";
-                }
-            }
-            if (set_false) {
-                procfun_b = false;
-                set_false = false;
-            }
-            if (str.indexOf("(") >= 0) {
-                if (str.indexOf("PROCEDURE") >= 0 || str.indexOf("FUNCTION") >= 0) {
-                    procfun_b = true;
-                    back_tab = true;
-                }
-                if ((str.indexOf("GENERIC") >= 0 || str.indexOf(":= (") >= 0 || str.regexIndexOf(/PROCEDURE[a-zA-Z0-9_ ]+\(/) >= 0) && begin_b) {
-                    port_b = true;
-                    back_tab = true;
-                }
-            } else if (first_word == "FUNCTION") {
-                back_tab = true;
-                begin_b = true;
-            }
-            if (str.indexOf("@@singleend") >= 0) {
-                back_tab = false;
-                port_b = false;
-                if (!begin_b) {
-                    forward_tab = true;
-                }
-            } else if (str.indexOf("@@end") >= 0 && port_b) {
-                port_b = false;
-                indent_start.pop();
-                tab_n = indent_start[indent_start.length - 1];
-                if (entity_b) {
-                    forward_tab = true;
-                }
-                if (generic_map_b) {
-                    forward_tab = true;
-                    generic_map_b = false;
-                }
-            }
-            if (settings.SignAlignAll) {
-                var alignedSigns = [":", "<=", "=>"];
-                for (var currentSign = 0; currentSign < alignedSigns.length; currentSign++) {
-                    if (str.indexOf(alignedSigns[currentSign]) > 0) {
-                        var char_before_sign = str.split(alignedSigns[currentSign])[0];
-                        var char_before_sign_length = char_before_sign.length;
-                        align_groups.push(char_before_sign_length);
-                        align_groups_max.push(char_before_sign_length);
-                        if (alignedSigns[currentSign] == lastAlignedSign) {
-                            if (align_groups_max[current_align_group - 1] < char_before_sign_length) {
-                                for (var k3 = aligned_group_starts; k3 <= current_align_group; k3++) {
-                                    align_groups_max[k3] = char_before_sign_length;
-                                }
-                            } else {
-                                align_groups_max[current_align_group] = align_groups_max[current_align_group - 1];
-                            }
-                        } else {
-                            aligned_group_starts = current_align_group;
-                        }
-                        arr[i] = char_before_sign + "@@alignall" + (current_align_group++) + str.substring(char_before_sign.length, arr[i].length);
-                        lastAlignedSign = alignedSigns[currentSign];
-                        break;
-                    }
-                }
-                if (currentSign == alignedSigns.length) {
-                    lastAlignedSign = "";
-                }
-            } else if (settings.SignAlignRegional) {
-                if (port_b && signAlignPos != "") {
-                    if (str.indexOf(signAlignPos) >= 0) {
-                        var a1 = arr[i].split(signAlignPos);
-                        var l1 = a1[0].length;
-                        if (align_i >= 0 && align_i > align_i1) {
-                            align_max[align_i] = align_max[align_i - 1];
-                        } else {
-                            align_max[align_i] = l1;
-                        }
-                        if (align_i > align_i1 && align_max[align_i] < l1) {
-                            for (var k3 = align_i1; k3 <= align_i; k3++) {
-                                align_max[k3] = l1;
-                            }
-                        }
-                        align[align_i] = l1;
-                        arr[i] = a1[0] + "@@align" + (align_i++) + signAlignPos + arr[i].substring(l1 + signAlignPos.length, arr[i].length);
-                    }
-                }
-            }
-            tab_n = tab_n < 1 ? 1 : tab_n;
-            if (str_len) {
-                if (isTesting) {
-                    console.log(tab_n, arr[i], indent_start);
-                }
-                arr[i] = (Array(tab_n).join(settings.Indentation)) + arr[i]; //indent
-                if (settings.NewLineSettings.newLineAfter.indexOf("port")) {
-                    if (str.indexOf('@@singleend') < 0) {
-                        arr[i] = arr[i].replace(/(PORT)([ \r\n\w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(settings.Indentation)) + "(");
-                    }
-                }
-                if (settings.NewLineSettings.newLineAfter.indexOf("generic")) {
-                    if (str.indexOf('@@singleend') < 0) {
-                        arr[i] = arr[i].replace(/(GENERIC)([ \r\n\w]*)\(/, "$1$2\r\n" + (Array(tab_n).join(settings.Indentation)) + "(");
-                    }
-                }
-            }
-            if (back_tab) {
-                tab_n++;
-                indent_start.push(tab_n);
-                back_tab = false;
-            }
-            if (forward_tab) {
-                tab_n = indent_start_last;
-                indent_start.pop();
-                forward_tab = false;
-            }
-
-            if (conditional_b && str.indexOf(";") >= 0) {
-                conditional_b = false;
-                white_space = "";
-            } else if (str.indexOf(";") >= 0 && semi_b) {
-                semi_b = false;
-                tab_n = indent_start_last;
-                indent_start.pop();
-            } else if (!semi_b && str.indexOf(";") < 0 && !port_b) {
-                if (!conditional_b) {
-                    if (str.indexOf("WHEN") > 3 && str.indexOf("<=") > 1) {
-                        conditional_b = true;
-                        white_space = (Array(str.indexOf("= ") + 3).join(" "));
-                    } else if (first_word == "WHEN" && i + 1 < arr.length && arr[i + 1].indexOf("WHEN") < 0) {
-                        tab_n = indent_start_last + 1;
-                    } else if (str.indexOf("=>") < 0 && ((str.indexOf(ILQuotesPrefix) >= 0 && str.indexOf("= " + ILQuotesPrefix) < 0 && str.indexOf("IF") < 0) || (str.indexOf("<=") > 0 && str.indexOf("IF") < 0 && str.indexOf("THEN") < 0))) {
-                        tab_n++;
-                        indent_start.push(tab_n);
-                        semi_b = true;
-                    }
-                }
-            }
-
-            if (first_word == "ENTITY") {
-                tab_n++;
-                indent_start.push(tab_n);
-            } else if (",RECORD,PACKAGE,FOR,COMPONENT,CONFIGURATION,".indexOf("," + first_word + ",") >= 0) {
-                tab_n++;
-                indent_start.push(tab_n);
-            } else if (str.indexOf(": FOR ") >= 0) {
-                tab_n++;
-                indent_start.push(tab_n);
-            } else if (first_word == "CASE" || str.indexOf(": CASE") >= 0) {
-                tab_n++;
-                indent_start.push(tab_n);
-                case_indent[case_n] = tab_n;
-                case_n++;
-            } else if (first_word == "ARCHITECTURE") {
-                tab_n++;
-                indent_start.push(tab_n);
-                begin_b = true;
-                architecture_begin_b = true;
-            } else if (first_word == "IF") {
-                if_b++;
-                tab_n++;
-                indent_start.push(tab_n);
-                if (str.indexOf(" THEN") < 0) {
-                    then_b = true;
-                    tab_n = indent_start_last;
-                    //indent_start.pop();
-                }
-            }
-            if (procfun_b) {
-                if (str.regexIndexOf(/(\))|(RETURN [A-Za-z0-9 ]+)[\r\n ]+IS/) >= 0) {
-                    tab_n = indent_start_last;
-                    indent_start.pop();
-                    set_false = true;
-                }
-            }
-        }
-    }
-
-    input = arr.join("\r\n");
-    input = input.replace(/[\t]*@@removeline\r\n/g, '');
-
-    p = input.indexOf('PROCESS');
-    while (p >= 0) {
-        let nextBracket = input.indexOf('(', p);
-        let nextNewLine = input.indexOf('\r\n', p);
-        let nextCloseBracket = input.indexOf(')', nextBracket);
-        if (nextBracket < nextNewLine && nextCloseBracket > nextNewLine) {
-            let processArray = input.substring(p, nextCloseBracket).split('\r\n');
-            if (settings.Indentation.replace(/[ ]+/g, '').length == 0) {
-                for (var i = 1; i < processArray.length; i++) {
-                    processArray[i] = (Array(nextBracket - p + 2).join(' ')) + processArray[i];
-                }
-            } else {
-                for (var i = 1; i < processArray.length; i++) {
-                    processArray[i] = settings.Indentation + processArray[i];
-                }
-            }
-            input = input.substring(0, p) + processArray.join('\r\n') + input.substring(nextCloseBracket, input.length);
-            p = input.regexIndexOf('PROCESS[ ]+\\(', nextCloseBracket);
-        } else {
-            p = input.indexOf('PROCESS[ ]+\\(', p + 7);
-        }
-    }
-
-    input = SetKeywordCase(input, settings.KeywordCase, KeyWords, TypeNames);
-
-    if (settings.SignAlignAll) {
-        for (var k = 0; k < current_align_group; k++) {
-            input = input.replace("@@alignall" + k, Array((align_groups_max[k] - align_groups[k] + 1)).join(" "));
-        }
-    }
-
-    if (settings.SignAlignRegional) {
-        for (var k = 0; k < align_i; k++) {
-            input = input.replace("@@align" + k, Array((align_max[k] - align[k] + 2)).join(" "));
-        }
-    }
-
-    for (var k = 0; k < quotes.length; k++) {
-        input = input.replace(ILQuotesPrefix + k, quotes[k]);
-    }
-
-    input = input.replace(/@@singleline[ \r\n]*/, " ");
-    return input;
-}
-
 
 function ReserveSemicolonInKeywords(arr: Array<string>) {
     for (let i = 0; i < arr.length; i++) {
@@ -1121,6 +821,21 @@ function EscapeQuotes(arr: Array<string>): Array<string> {
         if (quote != null) {
             for (var j = 0; j < quote.length; j++) {
                 arr[i] = arr[i].replace(quote[j], ILQuotesPrefix + quotesIndex);
+                quotes[quotesIndex++] = quote[j];
+            }
+        }
+    }
+    return quotes;
+}
+
+function EscapeSingleQuotes(arr: Array<string>): Array<string> {
+    let quotes: Array<string> = [];
+    let quotesIndex = 0;
+    for (let i = 0; i < arr.length; i++) {
+        let quote = arr[i].match(/'[^']'/g);
+        if (quote != null) {
+            for (var j = 0; j < quote.length; j++) {
+                arr[i] = arr[i].replace(quote[j], ILSingleQuotesPrefix + quotesIndex);
                 quotes[quotesIndex++] = quote[j];
             }
         }

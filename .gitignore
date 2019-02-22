@@ -1,2 +1,3 @@
 *.map
 /.vscode/*
+/tests/*.js

@@ -6,8 +6,11 @@
     "sourceMap": true
   },
   "files": [
+    "descriptiveCounter.ts",
     "VHDLFormatter.ts",
-    "VHDLFormatterUnitTests.ts"
+    "tests/VHDLFormatterUnitTests.ts",
+    "tests/descriptiveCounterTests.ts",
+    "tests/assert.ts",
   ],
   "exclude": [
     "node_modules",
