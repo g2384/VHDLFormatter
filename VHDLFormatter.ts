@@ -1,7 +1,9 @@
 let isTesting = false;
-const ILCommentPrefix = "@@comments";
-const ILQuotesPrefix = "@@quotes";
-const ILSingleQuotesPrefix = "@@singlequotes";
+const ILEscape = "@@";
+const ILCommentPrefix = ILEscape + "comments";
+const ILQuotesPrefix = ILEscape + "quotes";
+const ILSingleQuotesPrefix = ILEscape + "singlequotes";
+const ILBackslashesPrefix = ILEscape + "backslash";
 
 enum FormatMode {
     Default,
@@ -183,17 +185,19 @@ function MixLetters(input: string) {
     return arr.join("");
 }
 
-function EscapeComments(arr: Array<string>, comments: Array<string>, commentIndex: number): number {
+function EscapeComments(arr: Array<string>): Array<string> {
+    var comments = [];
+    var count = 0;
     for (var i = 0; i < arr.length; i++) {
-        let line: string = arr[i];
+        var line: string = arr[i];
         var commentStartIndex = line.indexOf("--");
         if (commentStartIndex >= 0) {
             comments.push(line.substr(commentStartIndex));
-            arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + commentIndex;
-            commentIndex++
+            arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + count;
+            count++;
         }
     }
-    return commentIndex
+    return comments
 }
 
 function ToLowerCases(arr: Array<string>) {
@@ -295,16 +299,15 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/\r\n/g, "\n");
     input = input.replace(/\n/g, "\r\n");
     var arr = input.split("\r\n");
-    var comments = [],
-        commentsIndex = 0;
-    commentsIndex = EscapeComments(arr, comments, commentsIndex);
+    var comments = EscapeComments(arr);
+    var backslashes = escapeBackslashes(arr);
     RemoveLeadingWhitespaces(arr);
 
     input = arr.join("\r\n");
     if (settings.RemoveComments) {
         input = input.replace(/\r\n[ \t]*@@comments[0-9]+[ \t]*\r\n/g, '\r\n');
         input = input.replace(/@@comments[0-9]+/g, '');
-        commentsIndex = 0;
+        comments = [];
     }
 
     input = RemoveExtraNewLines(input);
@@ -333,9 +336,9 @@ export function beautify(input: string, settings: BeautifierSettings) {
     ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
     input = arr.join("\r\n");
 
-    //new
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
+    input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3');// Fix exponential notation format broken by previous step
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
     input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
     input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
@@ -361,21 +364,36 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = arr.join("\r\n");
     input = SetKeywordCase(input, settings.KeywordCase, KeyWords, TypeNames);
 
-    for (var k = 0; k < quotes.length; k++) {
-        input = input.replace(ILQuotesPrefix + k, quotes[k]);
-    }
-
-    for (var k = 0; k < singleQuotes.length; k++) {
-        input = input.replace(ILSingleQuotesPrefix + k, singleQuotes[k]);
-    }
-
-    for (var k = 0; k < commentsIndex; k++) {
-        input = input.replace(ILCommentPrefix + k, comments[k]);
-    }
+    input = replaceEscapedWords(input, quotes, ILQuotesPrefix);
+    input = replaceEscapedWords(input, singleQuotes, ILSingleQuotesPrefix);
+    input = replaceEscapedWords(input, comments, ILCommentPrefix);
+    input = replaceEscapedWords(input, backslashes, ILBackslashesPrefix);
 
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
     return input;
+}
+
+function replaceEscapedWords(input: string, arr: Array<string>, prefix: string): string {
+    for (var i = 0; i < arr.length; i++) {
+        input = input.replace(prefix + i, arr[i]);
+    }
+    return input;
+}
+
+function escapeBackslashes(arr: Array<string>) {
+    var escaped = [];
+    var count = 0;
+    for (var i = 0; i < arr.length; i++) {
+        var sequence = arr[i].match(/\\[^\\]+\\/g);
+        if (sequence != null) {
+            for (var j = 0; j < sequence.length; j++) {
+                arr[i] = arr[i].replace(sequence[j], ILBackslashesPrefix + count);
+                escaped[count++] = sequence[j];
+            }
+        }
+    }
+    return escaped;
 }
 
 function RemoveLeadingWhitespaces(arr: Array<string>) {

@@ -10,6 +10,8 @@ VHDL formatter web online written in javascript
 
 - bugfix "remove non-comment code by mistake"
 - add `tests` folder, improve the project management
+- support extended identifier (backslash names)
+- fix exponential notation
 
 ### 2.2 [2018-10-16]
 

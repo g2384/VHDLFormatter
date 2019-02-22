@@ -909,6 +909,8 @@ function IntegrationTest() {
     IntegrationTest68();
     IntegrationTest69();
     IntegrationTest70();
+    IntegrationTest71();
+    IntegrationTest72();
 }
 
 function IntegrationTest23() {
@@ -1313,7 +1315,7 @@ function IntegrationTest66() {
     let input = 'component a is\r\n      generic (b\r\n         );\r\n      port (\r\n          c\r\n	 );\r\n    end component;\r\n-- anything1\r\n-- anything2';
     let expected = 'COMPONENT a IS\r\n    GENERIC (\r\n        b\r\n    );\r\n    PORT (\r\n        c\r\n    );\r\nEND COMPONENT;\r\n-- anything1\r\n-- anything2';
     let actual = beautify(input, settings);
-    assertAndCountTest("port map no new line 2", expected, actual);
+    assertAndCountTest("component generic", expected, actual);
 }
 
 function IntegrationTest67() {
@@ -1346,6 +1348,22 @@ function IntegrationTest70() {
     let expected = 'test\r\n:= test';
     let actual = beautify(input, settings);
     assertAndCountTest("multiline assignment", expected, actual);
+}
+
+function IntegrationTest71() {
+    let settings = GetDefaultSettings();
+    let input = 'VARIABLE \\#$)!?\\ : INTEGER;\r\nVARIABLE \\try this in verilog\\ : BIT;\r\nVARIABLE \\Buffer\\ : BIT;';
+    let expected = 'VARIABLE \\#$)!?\\ : INTEGER;\r\nVARIABLE \\try this in verilog\\ : BIT;\r\nVARIABLE \\Buffer\\ : BIT;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("backslash, extended indentifier", expected, actual);
+}
+
+function IntegrationTest72() {
+    let settings = GetDefaultSettings();
+    let input = 'test := 12e+6';
+    let expected = 'test := 12e+6';
+    let actual = beautify(input, settings);
+    assertAndCountTest("scientific notation", expected, actual);
 }
 
 function GetDefaultSettings() {
