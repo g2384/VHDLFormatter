@@ -153,19 +153,11 @@ function MixLetters(input) {
 function EscapeComments(arr, comments, commentIndex) {
     for (var i = 0; i < arr.length; i++) {
         let line = arr[i];
-        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|\\]/);
         var commentStartIndex = line.indexOf("--");
-        if (firstCharIndex < commentStartIndex && firstCharIndex >= 0) {
+        if (commentStartIndex >= 0) {
             comments.push(line.substr(commentStartIndex));
-            arr[i] = line.substr(firstCharIndex, commentStartIndex - firstCharIndex) + ILCommentPrefix + (commentIndex++);
-        }
-        else if ((firstCharIndex > commentStartIndex && commentStartIndex >= 0) || (firstCharIndex < 0 && commentStartIndex >= 0)) {
-            comments.push(line.substr(commentStartIndex));
-            arr[i] = ILCommentPrefix + (commentIndex++);
-        }
-        else {
-            firstCharIndex = firstCharIndex < 0 ? 0 : firstCharIndex;
-            arr[i] = line.substr(firstCharIndex);
+            arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + commentIndex;
+            commentIndex++;
         }
     }
     return commentIndex;
@@ -253,6 +245,7 @@ function beautify(input, settings) {
     var arr = input.split("\r\n");
     var comments = [], commentsIndex = 0;
     commentsIndex = EscapeComments(arr, comments, commentsIndex);
+    RemoveLeadingWhitespaces(arr);
     input = arr.join("\r\n");
     if (settings.RemoveComments) {
         input = input.replace(/\r\n[ \t]*@@comments[0-9]+[ \t]*\r\n/g, '\r\n');
@@ -321,6 +314,11 @@ function beautify(input, settings) {
     return input;
 }
 exports.beautify = beautify;
+function RemoveLeadingWhitespaces(arr) {
+    for (var i = 0; i < arr.length; i++) {
+        arr[i] = arr[i].replace(/^\s+/, "");
+    }
+}
 class FormattedLine {
     constructor(line, indent) {
         this.Line = line;

@@ -6,6 +6,11 @@ VHDL formatter web online written in javascript
 
 ## Release Notes
 
+### 2.3 [2018-02-22]
+
+- bugfix "remove non-comment code by mistake"
+- add `tests` folder, improve the project management
+
 ### 2.2 [2018-10-16]
 
 - support enumerated types

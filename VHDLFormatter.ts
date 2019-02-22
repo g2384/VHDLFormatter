@@ -62,7 +62,7 @@ declare global {
         regexCount: (pattern: RegExp) => number;
         convertToRegexBlockWords: () => RegExp;
     }
-    interface Array<T>{
+    interface Array<T> {
         convertToRegexBlockWords: () => RegExp;
     }
 }
@@ -186,17 +186,11 @@ function MixLetters(input: string) {
 function EscapeComments(arr: Array<string>, comments: Array<string>, commentIndex: number): number {
     for (var i = 0; i < arr.length; i++) {
         let line: string = arr[i];
-        var firstCharIndex = line.regexIndexOf(/[a-zA-Z0-9\(\&\)%_\+'"|\\]/);
         var commentStartIndex = line.indexOf("--");
-        if (firstCharIndex < commentStartIndex && firstCharIndex >= 0) {
+        if (commentStartIndex >= 0) {
             comments.push(line.substr(commentStartIndex));
-            arr[i] = line.substr(firstCharIndex, commentStartIndex - firstCharIndex) + ILCommentPrefix + (commentIndex++);
-        } else if ((firstCharIndex > commentStartIndex && commentStartIndex >= 0) || (firstCharIndex < 0 && commentStartIndex >= 0)) {
-            comments.push(line.substr(commentStartIndex));
-            arr[i] = ILCommentPrefix + (commentIndex++);
-        } else {
-            firstCharIndex = firstCharIndex < 0 ? 0 : firstCharIndex;
-            arr[i] = line.substr(firstCharIndex);
+            arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + commentIndex;
+            commentIndex++
         }
     }
     return commentIndex
@@ -304,6 +298,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
     var comments = [],
         commentsIndex = 0;
     commentsIndex = EscapeComments(arr, comments, commentsIndex);
+    RemoveLeadingWhitespaces(arr);
 
     input = arr.join("\r\n");
     if (settings.RemoveComments) {
@@ -381,6 +376,12 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
     return input;
+}
+
+function RemoveLeadingWhitespaces(arr: Array<string>) {
+    for (var i = 0; i < arr.length; i++) {
+        arr[i] = arr[i].replace(/^\s+/, "");
+    }
 }
 
 export class FormattedLine {

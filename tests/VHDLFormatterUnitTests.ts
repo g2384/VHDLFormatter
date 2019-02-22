@@ -908,6 +908,7 @@ function IntegrationTest() {
     IntegrationTest67();
     IntegrationTest68();
     IntegrationTest69();
+    IntegrationTest70();
 }
 
 function IntegrationTest23() {
@@ -1337,6 +1338,14 @@ function IntegrationTest69() {
     let expected = 'TYPE STATE_TYPE IS (\r\n    A,\r\n    B,\r\n    C\r\n);\r\nA';
     let actual = beautify(input, settings);
     assertAndCountTest("multiline enumerated type is", expected, actual);
+}
+
+function IntegrationTest70() {
+    let settings = GetDefaultSettings();
+    let input = 'test\r\n        := test';
+    let expected = 'test\r\n:= test';
+    let actual = beautify(input, settings);
+    assertAndCountTest("multiline assignment", expected, actual);
 }
 
 function GetDefaultSettings() {
