@@ -253,47 +253,47 @@
         <form id="new_line_after_then">
             <span class="code">THEN</span>
             <label>
-            <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
+                <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
             <label>
-            <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
+                <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
             <label>
-            <input type="radio" name="new_line_after_thencase" value="None">None</label>
+                <input type="radio" name="new_line_after_thencase" value="None">None</label>
         </form>
         <form id="new_line_after_semicolon">
             <span class="code">semicolon ";"</span>
             <label>
-            <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
+                <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
             <label>
-            <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
+                <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
             <label>
-            <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
+                <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
         </form>
         <form id="new_line_after_else">
             <span class="code">ELSE</span>
             <label>
-            <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
+                <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
             <label>
-            <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
+                <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
             <label>
-            <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
+                <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
         </form>
         <form id="new_line_after_port">
             <span class="code">PORT | PORT MAP</span>
             <label>
-            <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
+                <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
             <label>
-            <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
+                <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
             <label>
-            <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
+                <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
         </form>
         <form id="new_line_after_generic">
             <span class="code">GENERIC</span>
             <label>
-            <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
+                <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
             <label>
-            <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
+                <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
             <label>
-            <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
+                <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
         </form>
     </fieldset>
     <div class="checkbox inline" id="remove_comments_div">
@@ -340,7 +340,7 @@
             <input type="checkbox" id="use_space">
             <label for="use_space">Customise Indentation: </label>
         </div>(tab is \t)
-        <input type="text" id="cust_indent" size="8" onKeyUp="indent_decode()" value="    " /> (
+        <input type="text" id="cust_indent" size="8" onKeyUp="counterDecode('cust_indent', 'indent_s')" value="    " /> (
         <span id="indent_s">four blankspaces</span>)
     </div>
     <div class="checkbox" id="compress_div">
@@ -351,10 +351,14 @@
         <input type="checkbox" id="mix_letter">
         <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
     </div>
+    <div>
+        End of line:
+        <input type="text" id="cust_eol" size="8" onKeyUp="counterDecode('cust_eol', 'eol_s')" value="\r\n" /> (
+        <span id="eol_s">one \r & one \n</span>)
+    </div>
     <input type="button" class="btn" onclick="f()" value="start" />
     <span class="show">
-        <input type="button" class="btn " id="selectAll" value="Select All" onclick="selectText(document.getElementById('vhdl'))"
-        />
+        <input type="button" class="btn " id="selectAll" value="Select All" onclick="selectText(document.getElementById('vhdl'))" />
         <div class="checkbox inline">
             <input type="checkbox" onclick="wordWrap()" id="word_wrap">
             <label for="word_wrap">Word wrap</label>
@@ -417,6 +421,9 @@
     <script src="VHDLFormatter.js"></script>
     <script src="descriptiveCounter.js"></script>
     <script>
+        let global_endOfLine = navigator.platform === 'Win32' ? '\\r\\n' : '\\n';
+        document.getElementById("cust_eol").value = global_endOfLine;
+        
         function f() {
             var input = document.getElementById("in").value;
             var no_format = document.getElementById("no_format").checked;
@@ -445,6 +452,9 @@
             var cust_indent = document.getElementById("cust_indent").value;
             var keywordcase = document.getElementById("keyword").elements.namedItem("keywordcase").value;
             var mix_letter = document.getElementById("mix_letter").checked;
+            var endOfLine = document.getElementById("cust_eol").value;
+            endOfLine = endOfLine.replace(/\\r/g, "\r");
+            endOfLine = endOfLine.replace(/\\n/g, "\n");
             if (compress) {
                 remove_comments = true;
             }
@@ -482,7 +492,10 @@
 
             beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias, sign_align,
                 sign_align_all,
-                keywordcase, indentation, newLineSettings);
+                keywordcase,
+                indentation,
+                newLineSettings,
+                endOfLine);
             beautifierSettings.SignAlignKeyWords = signAlignKeywords;
 
             input = beautify(input, beautifierSettings);

@@ -277,10 +277,11 @@ export class BeautifierSettings {
     SignAlignKeyWords: Array<string>;
     KeywordCase: string;
     Indentation: string;
-    NewLineSettings: NewLineSettings
+    NewLineSettings: NewLineSettings;
+    EndOfLine: string;
     constructor(removeComments: boolean, removeReport: boolean, checkAlias: boolean,
         signAlign: boolean, signAlignAll: boolean, keywordCase: string, indentation: string,
-        newLineSettings: NewLineSettings) {
+        newLineSettings: NewLineSettings, endOfLine: string) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
@@ -289,6 +290,7 @@ export class BeautifierSettings {
         this.KeywordCase = keywordCase;
         this.Indentation = indentation;
         this.NewLineSettings = newLineSettings;
+        this.EndOfLine = endOfLine;
     }
 }
 
@@ -371,6 +373,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
 
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
+    input = input.replace(/\r\n/g, settings.EndOfLine);
     return input;
 }
 

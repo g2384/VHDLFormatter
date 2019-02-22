@@ -229,7 +229,7 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
 }
 exports.SetNewLinesAfterSymbols = SetNewLinesAfterSymbols;
 class BeautifierSettings {
-    constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, indentation, newLineSettings) {
+    constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, indentation, newLineSettings, endOfLine) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
@@ -238,6 +238,7 @@ class BeautifierSettings {
         this.KeywordCase = keywordCase;
         this.Indentation = indentation;
         this.NewLineSettings = newLineSettings;
+        this.EndOfLine = endOfLine;
     }
 }
 exports.BeautifierSettings = BeautifierSettings;
@@ -280,8 +281,7 @@ function beautify(input, settings) {
     input = arr.join("\r\n");
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
-    // Fix reals in expoential format broken by previous step
-    input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3');
+    input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3'); // Fix exponential notation format broken by previous step
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
     input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
     input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
@@ -311,6 +311,7 @@ function beautify(input, settings) {
     input = replaceEscapedWords(input, backslashes, ILBackslashesPrefix);
     input = input.replace(/@@semicolon/g, ";");
     input = input.replace(/@@[a-z]+/g, "");
+    input = input.replace(/\r\n/g, settings.EndOfLine);
     return input;
 }
 exports.beautify = beautify;

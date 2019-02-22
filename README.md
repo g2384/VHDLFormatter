@@ -12,6 +12,9 @@ VHDL formatter web online written in javascript
 - add `tests` folder, improve the project management
 - support extended identifier (backslash names)
 - fix exponential notation
+- user can choose EOL symbols (or use system's by default)
+
+Many thanks to @MihaiBabiac
 
 ### 2.2 [2018-10-16]
 

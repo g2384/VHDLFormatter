@@ -9,7 +9,7 @@ import { FormattedLine } from "../VHDLFormatter";
 import { FormattedLineToString } from "../VHDLFormatter";
 import { CompareString } from "./assert";
 import { assert } from "./assert";
-import {testDescriptiveCounter} from "./descriptiveCounterTests";
+import { testDescriptiveCounter } from "./descriptiveCounterTests";
 
 let testCount: number = 0;
 
@@ -82,7 +82,7 @@ function Beautify3Case1() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = ["a;", "b;"];
     let expected: (FormattedLine | FormattedLine[])[] = [new FormattedLine("a;", 0), new FormattedLine("b;", 0)];
     UnitTest6(beautify3, "General", settings, inputs, expected, 0, 1, 0);
@@ -92,7 +92,7 @@ function Beautify3Case2() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = ["IF x = '1' THEN", "RETURN 1;", "END IF;"];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("IF x = '1' THEN", 0),
@@ -106,7 +106,7 @@ function Beautify3Case3() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "IF x = '1' THEN",
         "RETURN 1;",
@@ -131,7 +131,7 @@ function Beautify3Case4() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = ["END"];
     let expected: (FormattedLine | FormattedLine[])[] = [new FormattedLine("END", 0)];
     UnitTest6(beautify3, "one line END", settings, inputs, expected, 0, 0, 0);
@@ -141,7 +141,7 @@ function Beautify3Case5() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "CASE b",
         "WHEN 1 =>",
@@ -165,7 +165,7 @@ function Beautify3Case6() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "CASE b",
         "WHEN 1 =>",
@@ -201,7 +201,7 @@ function Beautify3Case7() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "ARCHITECTURE a OF one IS",
         "SIGNAL x : INTEGER;",
@@ -223,7 +223,7 @@ function Beautify3Case8() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "ARCHITECTURE a OF one IS",
         "SIGNAL x : INTEGER;",
@@ -255,7 +255,7 @@ function Beautify3Case9() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER) IS",
         "VARIABLE i : INTEGER;",
@@ -277,7 +277,7 @@ function Beautify3Case10() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "PACKAGE three IS",
         "SIGNAL s : INTEGER;",
@@ -297,7 +297,7 @@ function Beautify3Case11() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "PACKAGE p IS",
         "PROCEDURE foo(x : IN INTEGER; y : OUT INTEGER);",
@@ -349,7 +349,7 @@ function Beautify3Case12() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "ARCHITECTURE a OF b IS",
         "SIGNAL x : INTEGER := 0;",
@@ -401,7 +401,7 @@ function Beautify3Case13() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "TYPE SharedCounter IS PROTECTED",
         "PROCEDURE increment (N : INTEGER := 1);",
@@ -421,7 +421,7 @@ function Beautify3Case14() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "PACKAGE p IS",
         "TYPE SharedCounter IS PROTECTED",
@@ -445,7 +445,7 @@ function Beautify3Case15() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "constant a : integer := 2#1101#",
         "constant b : integer := 3#20#;",
@@ -463,7 +463,7 @@ function Beautify3Case16() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "x <= 1 WHEN foo",
         "ELSE 2 WHEN bar",
@@ -483,7 +483,7 @@ function Beautify3Case17() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "WITH y SELECT x <=",
         "1 WHEN a,",
@@ -505,7 +505,7 @@ function Beautify3Case18() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "CONFIGURATION conf OF ent IS",
         "USE work.foo;",
@@ -535,7 +535,7 @@ function Beautify3Case19() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "FUNCTION \" + \"(x, y : integer) return integer IS",
         "BEGIN",
@@ -555,7 +555,7 @@ function Beautify3Case20() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "m <= ((1, 2, 3, 4)",
         "(5, 6, 7, 8));",
@@ -573,7 +573,7 @@ function Beautify3Case21() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let inputs: Array<string> = [
         "g: ENTITY work.foo",
         "GENERIC MAP( X => 1 )",
@@ -758,7 +758,7 @@ function IntegrationTest() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let input = "architecture TB of TB_CPU is\r\n    component CPU_IF\r\n    port   -- port list\r\n    end component;\r\n    signal CPU_DATA_VALID: std_ulogic;\r\n    signal CLK, RESET: std_ulogic := '0';\r\n    constant PERIOD : time := 10 ns;\r\n    constant MAX_SIM: time := 50 * PERIOD;\r\n    begin\r\n    -- concurrent statements\r\n    end TB;"
     let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT -- port list\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\n    -- concurrent statements\r\nEND TB;";
     let actual = beautify(input, settings);
@@ -911,173 +911,124 @@ function IntegrationTest() {
     IntegrationTest70();
     IntegrationTest71();
     IntegrationTest72();
+    IntegrationTest73();
+    IntegrationTest74();
 }
 
 function IntegrationTest23() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "\t", new_line_after_symbols);
+    let settings = GetDefaultSettings("\t");
     let input = "PACKAGE p IS\r\n	TYPE int_array IS ARRAY (INTEGER RANGE <>) OF INTEGER;\r\n	TYPE ten_ints IS ARRAY (1 TO 10) OF INTEGER;\r\n	TYPE chars IS (A, B, C);\r\n	TYPE char_counts IS ARRAY (chars) OF INTEGER;\r\n	TYPE two_d IS ARRAY (1 TO 3, 4 TO 6) OF INTEGER;\r\n	TYPE ab_chars IS ARRAY (chars RANGE A TO B) OF INTEGER;\r\nEND PACKAGE;";
     let actual = beautify(input, settings);
     assertAndCountTest("Type array", input, actual);
 }
 
 function IntegrationTest24() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = GetDefaultSettings();
     let input = "ARCHITECTURE a OF e IS\r\n    ATTRIBUTE foo : INTEGER;\r\n    ATTRIBUTE foo OF x : SIGNAL IS 5;\r\n    ATTRIBUTE foo OF x : COMPONENT IS 5;\r\n    ATTRIBUTE foo OF x : LABEL IS 6;\r\n    ATTRIBUTE foo OF x : TYPE IS 4;\r\nBEGIN\r\n    ASSERT x'foo(5);\r\nEND ARCHITECTURE;";
     let actual = beautify(input, settings);
     assertAndCountTest("attribute", input, actual);
 }
 
 function IntegrationTest25() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = GetDefaultSettings();
     let input = 'PACKAGE bitstring IS\r\n    CONSTANT x : t := X"1234";\r\n    CONSTANT y : t := O"1234";\r\n    CONSTANT z : t := X"ab";\r\n    CONSTANT b : t := B"101";\r\n    CONSTANT c : t := x"f";\r\n    CONSTANT d : t := X"a_b";\r\nEND PACKAGE;\r\nPACKAGE bitstring_error IS\r\n    CONSTANT e1 : t := O"9"; -- Error\r\nEND PACKAGE;';
     let actual = beautify(input, settings);
     assertAndCountTest("bitstring", input, actual);
 }
 
 function IntegrationTest26() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = GetDefaultSettings();
     let input = 'ARCHITECTURE a OF e IS\r\nBEGIN\r\n    b : BLOCK IS\r\n    BEGIN\r\n    END BLOCK;\r\n    c : BLOCK IS\r\n        SIGNAL x : INTEGER;\r\n        SIGNAL y : real;\r\n    BEGIN\r\n        x <= y;\r\n    END BLOCK;\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("block", input, actual);
 }
 
 function IntegrationTest27() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'CONTEXT widget_context IS\r\n	LIBRARY ieee;\r\n	USE ieee.std_logic_1164.ALL, ieee.numeric_std.ALL;\r\n	USE widget_lib.widget_defs.ALL;\r\n	USE widget_lib.widget_comps.ALL;\r\nEND CONTEXT;\r\n\r\nCONTEXT dongle_context IS\r\n	LIBRARY widget_lib;\r\n	CONTEXT widget_lib.widget_context;\r\nEND CONTEXT;\r\n\r\nLIBRARY foo;\r\nUSE foo.moo;\r\n\r\nCONTEXT bad IS -- Error\r\nEND CONTEXT;';
     let actual = beautify(input, settings);
     assertAndCountTest("context", input, actual);
 }
 
 function IntegrationTest28() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE foo OF bar IS\r\n	SIGNAL \\foo bar\\ : INTEGER;\r\n	SIGNAL \\a\\\\b\\ : INTEGER;\r\n	SIGNAL \\Thing!!! \\ : INTEGER;\r\n	SIGNAL \\name\\ : INTEGER;\r\n	SIGNAL name : INTEGER;\r\nBEGIN\r\n	\\foo.bar.baz\\ <= \\hello\\;\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("extended \\ 28", input, actual);
 }
 
 function IntegrationTest29() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'PACKAGE func IS\r\n	FUNCTION add(x, y : INTEGER; y : IN INTEGER) RETURN INTEGER;\r\n	IMPURE FUNCTION naughty RETURN INTEGER;\r\n	FUNCTION "+"(x, y : INTEGER) RETURN INTEGER;\r\nEND PACKAGE;';
     let actual = beautify(input, settings);
     assertAndCountTest("extended \\ 29", input, actual);
 }
 
 function IntegrationTest30() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE a OF g IS\r\nBEGIN\r\n\r\n	g1 : IF foo GENERATE\r\n		SIGNAL x : INTEGER;\r\n	BEGIN\r\n		x <= 5;\r\n	END GENERATE;\r\n\r\n	g2 : IF bar GENERATE\r\n		g2a : IF x < 5 GENERATE\r\n			g <= 7;\r\n		END GENERATE;\r\n	END GENERATE;\r\n\r\n	g3 : FOR i IN 1 TO 40 GENERATE\r\n		SIGNAL x : INTEGER;\r\n	BEGIN\r\n		f <= h;\r\n	END GENERATE;\r\n\r\n	g4 : FOR i IN x\'RANGE GENERATE\r\n	END GENERATE;\r\n\r\n	g5 : FOR i IN x\'RANGE GENERATE\r\n	BEGIN\r\n	END GENERATE;\r\n\r\n	g6 : FOR i IN 1 TO 3 GENERATE\r\n		COMPONENT sub_ent IS\r\n			PORT (val : OUT NATURAL);\r\n		END COMPONENT sub_ent; -- OK\r\n	BEGIN\r\n	END GENERATE;\r\n\r\n	g7 : IF true GENERATE\r\n		PROCEDURE doit IS -- OK\r\n		BEGIN\r\n			write(OUTPUT, "OK." & LF);\r\n		END PROCEDURE doit;\r\n	BEGIN\r\n	END GENERATE g7;\r\n\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("generate", input, actual);
 }
 
 function IntegrationTest31() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ENTITY ent IS\r\nEND ENTITY;\r\n\r\nARCHITECTURE a OF ent IS\r\nBEGIN\r\n	main : PROCESS\r\n	BEGIN\r\n		REPORT """""";\r\n		WAIT;\r\n	END PROCESS;\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("report \"\"", input, actual);
 }
 
 function IntegrationTest32() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'PACKAGE p IS\r\n\r\n	TYPE SharedCounter IS PROTECTED\r\n		PROCEDURE increment (N : INTEGER := 1);\r\n		PROCEDURE decrement (N : INTEGER := 1);\r\n		IMPURE FUNCTION value RETURN INTEGER;\r\n	END PROTECTED SharedCounter;\r\n\r\n	TYPE SharedCounter IS PROTECTED BODY\r\n		VARIABLE counter : INTEGER := 0;\r\n\r\n		PROCEDURE increment (N : INTEGER := 1) IS\r\n		BEGIN\r\n			counter := counter + N;\r\n		END PROCEDURE increment;\r\n\r\n		PROCEDURE decrement (N : INTEGER := 1) IS\r\n		BEGIN\r\n			counter := counter - N;\r\n		END PROCEDURE decrement;\r\n\r\n		IMPURE FUNCTION value RETURN INTEGER IS\r\n		BEGIN\r\n			RETURN counter;\r\n		END FUNCTION value;\r\n	END PROTECTED BODY;\r\n\r\nEND PACKAGE;';
     let actual = beautify(input, settings);
     assertAndCountTest("protected", input, actual);
 }
 
 function IntegrationTest33() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE a OF b IS\r\nBEGIN\r\n\r\n	-- Wait statements\r\n	PROCESS IS\r\n	BEGIN\r\n		WAIT FOR 1 ns;\r\n		block_forever : WAIT;\r\n		WAIT ON x;\r\n		WAIT ON x, y, z(1 DOWNTO 0);\r\n		WAIT ON w(1) FOR 2 ns;\r\n		WAIT UNTIL x = 3;\r\n		WAIT UNTIL y = x FOR 5 ns;\r\n		WAIT ON x UNTIL x = 2 FOR 1 ns;\r\n	END PROCESS;\r\n\r\n	-- Blocking assignment\r\n	PROCESS IS\r\n		VARIABLE a : INTEGER;\r\n	BEGIN\r\n		a := 2;\r\n		a := a + (a * 3);\r\n	END PROCESS;\r\n\r\n	-- Assert and report\r\n	PROCESS IS\r\n	BEGIN\r\n		ASSERT true;\r\n		ASSERT false SEVERITY note;\r\n		ASSERT 1 > 2 REPORT "oh no" SEVERITY failure;\r\n		REPORT "hello";\r\n		REPORT "boo" SEVERITY error;\r\n	END PROCESS;\r\n\r\n	-- Function calls\r\n	PROCESS IS\r\n	BEGIN\r\n		x := foo(1, 2, 3);\r\n		a := "ABS"(b);\r\n	END PROCESS;\r\n\r\n	-- If\r\n	PROCESS IS\r\n	BEGIN\r\n		IF true THEN\r\n			x := 1;\r\n		END IF;\r\n		test : IF true THEN\r\n			x := y;\r\n		END IF test;\r\n		IF x > 2 THEN\r\n			x := 5;\r\n		ELSE\r\n			y := 2;\r\n		END IF;\r\n		IF x > 3 THEN\r\n			NULL;\r\n		ELSIF x > 5 THEN\r\n			NULL;\r\n		ELSIF true THEN\r\n			NULL;\r\n		ELSE\r\n			x := 2;\r\n		END IF;\r\n	END PROCESS;\r\n\r\n	-- Null\r\n	PROCESS IS\r\n	BEGIN\r\n		NULL;\r\n	END PROCESS;\r\n\r\n	-- Return\r\n	PROCESS IS\r\n	BEGIN\r\n		RETURN 4 * 4;\r\n	END PROCESS;\r\n\r\n	-- While\r\n	PROCESS IS\r\n	BEGIN\r\n		WHILE n > 0 LOOP\r\n			n := n - 1;\r\n		END LOOP;\r\n		LOOP\r\n			NULL;\r\n		END LOOP;\r\n	END PROCESS;\r\n\r\n	-- Delayed assignment\r\n	PROCESS IS\r\n	BEGIN\r\n		x <= 4 AFTER 5 ns;\r\n		x <= 5 AFTER 1 ns, 7 AFTER 8 ns;\r\n		x <= 5, 7 AFTER 8 ns;\r\n		x <= INERTIAL 5;\r\n		x <= TRANSPORT 4 AFTER 2 ns;\r\n		x <= REJECT 4 ns INERTIAL 6 AFTER 10 ns;\r\n	END PROCESS;\r\n\r\n	-- For\r\n	PROCESS IS\r\n	BEGIN\r\n		FOR i IN 0 TO 10 LOOP\r\n			NULL;\r\n		END LOOP;\r\n		FOR i IN foo\'RANGE LOOP\r\n			NULL;\r\n		END LOOP;\r\n	END PROCESS;\r\n\r\n	-- Exit\r\n	PROCESS IS\r\n	BEGIN\r\n		EXIT;\r\n		EXIT WHEN x = 1;\r\n	END PROCESS;\r\n\r\n	-- Procedure call\r\n	PROCESS IS\r\n	BEGIN\r\n		foo(x, y, 1);\r\n		bar;\r\n		foo(a => 1, b => 2, 3);\r\n	END PROCESS;\r\n\r\n	-- Case\r\n	PROCESS IS\r\n	BEGIN\r\n		CASE x IS\r\n			WHEN 1 =>\r\n				NULL;\r\n			WHEN 2 =>\r\n				NULL;\r\n			WHEN 3 | 4 =>\r\n				NULL;\r\n			WHEN OTHERS =>\r\n				NULL;\r\n		END CASE;\r\n	END PROCESS;\r\n\r\n	-- Next\r\n	PROCESS IS\r\n	BEGIN\r\n		NEXT;\r\n		NEXT WHEN foo = 5;\r\n	END PROCESS;\r\n\r\n	-- Signal assignment to aggregate\r\n	PROCESS IS\r\n	BEGIN\r\n		(x, y, z) <= foo;\r\n	END PROCESS;\r\n\r\n	-- Case statement range bug\r\n	PROCESS IS\r\n	BEGIN\r\n		CASE f IS\r\n			WHEN 1 =>\r\n				FOR i IN x\'RANGE LOOP\r\n				END LOOP;\r\n		END CASE;\r\n	END PROCESS;\r\n\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("sequence", input, actual);
 }
 
 function IntegrationTest34() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE a OF b IS\r\n	FOR x : y USE ENTITY work.foo;\r\n	FOR x1, x2 : y USE ENTITY work.foo;\r\n	FOR x : y USE ENTITY work.foo(bar);\r\n	FOR x : y USE ENTITY work.foo(bar)\r\n		GENERIC MAP(a => 1)\r\n		PORT MAP(b => g);\r\n	FOR ALL : y USE CONFIGURATION yah;\r\n	FOR OTHERS : y USE OPEN;\r\nBEGIN\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("spec", input, actual);
 }
 
 function IntegrationTest35() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE a OF b IS\r\n	TYPE my_int IS RANGE 0 TO 100;\r\n	SIGNAL x : my_int := 2;\r\n\r\n	TYPE resistance IS RANGE 0 TO 10000000\r\n	UNITS\r\n		ohm;\r\n		kohm = 1000 ohm;\r\n		Mohm = 1000 kohm;\r\n	END UNITS;\r\n	SIGNAL r : resistance := 100 ohm;\r\n\r\n	SUBTYPE big_r IS resistance RANGE 1000 TO 2000;\r\n\r\n	SUBTYPE my_small_int IS my_int RANGE 0 TO 5;\r\n\r\n	SUBTYPE foo IS my_int RANGE 2 TO my_int\'high;\r\n\r\n	SUBTYPE rint IS resolved my_int;\r\n\r\n	TYPE p IS ACCESS my_int;\r\n\r\n	TYPE f IS FILE OF my_int;\r\n\r\n	FILE f1 : f OPEN READ_MODE IS "foo";\r\n\r\n	FILE f2 : f IS "bar";\r\n\r\n	FILE f3 : f;\r\n\r\n	TYPE r1 IS RECORD\r\n		a : INTEGER;\r\n		b : INTEGER;\r\n		c : foo(1 TO 5);\r\n	END RECORD;\r\n\r\n	FILE f4 : f IS OUT "bar"; -- VHDL-87 compat\r\n\r\n	FILE f5 : f IS IN "bar"; -- VHDL-87 compat\r\n\r\n	TYPE r2 IS RECORD\r\n		x : INTEGER;\r\n	END RECORD r2;\r\n\r\nBEGIN\r\n\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("types", input, actual);
 }
 
 function IntegrationTest36() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE test OF bufr_test IS\r\nBEGIN\r\n\r\n	BUF_DATA_CLK : BUFR\r\n	GENERIC MAP(\r\n		BUFR_DIVIDE => "BYPASS",\r\n		SIM_DEVICE => "7SERIES")\r\n	PORT MAP(\r\n		O => amu_adc_dco,\r\n		CE => \'1\',\r\n		CLR => \'0\',\r\n		I => amu_adc_dco_i);\r\n\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("new line after (", input, actual);
 }
 
 function IntegrationTest37() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ENTITY nest1 IS\r\nEND ENTITY;\r\nARCHITECTURE test OF nest1 IS\r\nBEGIN\r\n	PROCESS IS\r\n		VARIABLE x : INTEGER := 2;\r\n		VARIABLE y : bit_vector(7 DOWNTO 0);\r\n		IMPURE FUNCTION add_to_x(y : INTEGER) RETURN INTEGER IS\r\n			IMPURE FUNCTION do_it RETURN INTEGER IS\r\n			BEGIN\r\n				RETURN x + y;\r\n			END FUNCTION;\r\n		BEGIN\r\n			RETURN do_it;\r\n		END FUNCTION;\r\n	BEGIN\r\n		ASSERT add_to_x(5) = 7;\r\n		WAIT;\r\n	END PROCESS;\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("nested functions", input, actual);
 }
 
 function IntegrationTest38() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'REPORT INTEGER\'image(a) & " " & INTEGER\'image(b) & " "\r\n	& INTEGER\'image(c) & " " & INTEGER\'image(d) & " "\r\n	& INTEGER\'image(e) & " " & INTEGER\'image(f);\r\nWAIT;';
     let actual = beautify(input, settings);
     assertAndCountTest("report severl lines", input, actual);
 }
 
 function IntegrationTest39() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'assert v /  = ( X  "01", X  "02" )  ;';
     let expected = 'ASSERT v /= (X "01", X "02");';
     let actual = beautify(input, settings);
@@ -1085,50 +1036,35 @@ function IntegrationTest39() {
 }
 
 function IntegrationTest40() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = GetDefaultSettings();
     let input = 'PORT MAP\r\n    (we => NOT cpu_rw, spo => ram_dout);\r\nPORT MAP(we => NOT cpu_rw, spo => ram_dout);\r\nPORT MAP\r\n(\r\n    we => NOT cpu_rw, spo => ram_dout\r\n);';
     let actual = beautify(input, settings);
     assertAndCountTest("port map in newline", input, actual);
 }
 
 function IntegrationTest41() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE test3 OF test IS\r\n	COMPONENT comp IS PORT (a : BOOLEAN);\r\n	END COMPONENT;\r\n	SIGNAL s_ok : BOOLEAN;\r\nBEGIN\r\n	comp PORT MAP(a => s_ok); -- unlabeled component instantiation\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("end component", input, actual);
 }
 
 function IntegrationTest42() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ENTITY bar IS\r\nEND ENTITY bar;\r\nENTITY \\foo\\ IS\r\n	PORT (test : IN BIT);\r\nEND ENTITY \\foo\\;\r\nARCHITECTURE structural OF \\foo\\ IS\r\nBEGIN -- architecture structural\r\nEND ARCHITECTURE structural;\r\nARCHITECTURE structural OF bar IS\r\n	SIGNAL test : BIT;\r\nBEGIN -- architecture structural\r\n	foo_1 : ENTITY work.\\foo\\\r\n		PORT MAP(test => test);\r\nEND ARCHITECTURE structural;';
     let actual = beautify(input, settings);
     assertAndCountTest("end component", input, actual);
 }
 
 function IntegrationTest43() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'ARCHITECTURE test OF issue122 IS\r\n	IMPURE FUNCTION func(x : INTEGER) RETURN INTEGER IS\r\n		IMPURE FUNCTION nested RETURN INTEGER IS\r\n		BEGIN\r\n			RETURN x;\r\n		END FUNCTION;\r\n		VARIABLE v : INTEGER := nested;\r\n	BEGIN\r\n		RETURN v;\r\n	END FUNCTION;\r\nBEGIN\r\nEND ARCHITECTURE;';
     let actual = beautify(input, settings);
     assertAndCountTest("end component", input, actual);
 }
 
 function IntegrationTest44() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "	", new_line_after_symbols);
+    let settings = GetDefaultSettings("	");
     let input = 'REPORT\n"A_ARITH_MOD_tester.main Tester is now ready. A total of " &\nINTEGER\'image(totalTests) & " tests have been detected.";';
     let expected = 'REPORT\r\n	"A_ARITH_MOD_tester.main Tester is now ready. A total of " &\r\n	INTEGER\'image(totalTests) & " tests have been detected.";';
     let actual = beautify(input, settings);
@@ -1366,19 +1302,37 @@ function IntegrationTest72() {
     assertAndCountTest("scientific notation", expected, actual);
 }
 
-function GetDefaultSettings() {
+function IntegrationTest73() {
+    let settings = GetDefaultSettings();
+    settings.EndOfLine = "\n";
+    let input = 'test := test;\ntest := test;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("end of line", input, actual);
+}
+
+function IntegrationTest74() {
+    let settings = GetDefaultSettings();
+    settings.EndOfLine = " EOF ";
+    let input = 'test := test;\ntest := test;';
+    let expected = 'test := test; EOF test := test;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("end of line 2", expected, actual);
+}
+
+function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
     let new_line_after_symbols = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols, indentation);
     return settings;
 }
 
+function getDefaultBeautifierSettings(newLineSettings: NewLineSettings, indentation: string = "    "): BeautifierSettings {
+    return new BeautifierSettings(false, false, false, false, false, "uppercase", indentation, newLineSettings, "\r\n");
+}
+
 function IntegrationTest20() {
-    let new_line_after_symbols = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = GetDefaultSettings();
     let input = "process xyx (vf,fr,\r\nde -- comment\r\n)";
     let expected = "PROCESS xyx (vf, fr, \r\n             de -- comment\r\n             )";
     let actual = beautify(input, settings);
@@ -1386,10 +1340,7 @@ function IntegrationTest20() {
 }
 
 function IntegrationTest5() {
-    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = GetDefaultSettings();
     settings.SignAlignRegional = true;
     settings.SignAlignKeyWords = ["PORT"];
     let input = "port map(\r\ninput_1 => input_1_sig,\r\ninput_2 => input_2_sig,\r\noutput => output_sig\r\n);";
@@ -1402,7 +1353,7 @@ function IntegrationTest6() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";", "port map"];
     new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     settings.SignAlignRegional = true;
     settings.SignAlignKeyWords = ["PORT"];
     let input = "port map(\r\ninput_1 => input_1_sig,\r\ninput_2 => input_2_sig,\r\noutput => output_sig\r\n);";
@@ -1414,7 +1365,7 @@ function IntegrationTest6() {
 function IntegrationTest7() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     settings.SignAlignRegional = true;
     settings.SignAlignKeyWords = ["PORT", "GENERIC"];
     let input = "entity p is\r\n  generic\r\n  (\r\n    -- INCLK\r\n    INCLK0_INPUT_FREQUENCY  : natural;\r\n\r\n    -- CLK1\r\n    CLK1_DIVIDE_BY          : natural := 1;\r\n    CLK1_MULTIPLY_BY        : unnatural:= 1;\r\n    CLK1_PHASE_SHIFT        : string := \"0\"\r\n  );\r\n	port\r\n	(\r\n		inclk0	: in std_logic  := '0';\r\n		c0		    : out std_logic ;\r\n		c1		    : out std_logic \r\n	);\r\nEND pll;";
@@ -1427,7 +1378,7 @@ function IntegrationTest2() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings: BeautifierSettings = new BeautifierSettings(false, false, false, false, false, "uppercase", "    ", new_line_after_symbols);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     settings.RemoveComments = true;
     let input = "architecture TB of TB_CPU is\r\n    component CPU_IF\r\n    port   -- port list\r\n    end component;\r\n    signal CPU_DATA_VALID: std_ulogic;\r\n    signal CLK, RESET: std_ulogic := '0';\r\n    constant PERIOD : time := 10 ns;\r\n    constant MAX_SIM: time := 50 * PERIOD;\r\n    begin\r\n    -- concurrent statements\r\n    end TB;"
     let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";

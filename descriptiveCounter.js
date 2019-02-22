@@ -1,12 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-function indent_decode() {
-    var custom_indent = document.getElementById("cust_indent").value;
+function counterDecode(inputId, outputId) {
+    var custom_indent = document.getElementById(inputId).value;
     var result = descriptiveCounter(custom_indent);
-    document.getElementById("indent_s").innerHTML = result;
+    document.getElementById(outputId).innerHTML = result;
 }
 function descriptiveCounter(input) {
     input = input.replace(/\\t/g, "	");
+    input = input.replace(/\\r/g, "\r");
+    input = input.replace(/\\n/g, "\n");
     var tokens = input.split("");
     var result = "";
     var repeatedCharCount = 0;
@@ -22,6 +24,12 @@ function descriptiveCounter(input) {
                     break;
                 case "\t":
                     char = "tab";
+                    break;
+                case "\n":
+                    char = "\\n";
+                    break;
+                case "\r":
+                    char = "\\r";
                     break;
                 default:
                     char = "'" + char + "'";
