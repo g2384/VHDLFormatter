@@ -328,7 +328,7 @@
         </div>
         <div class="checkbox inline" id="sign_align_function_div">
             <input type="checkbox" id="sign_align_function">
-            <label for="sign_align_function">FUNCTION()</label>
+            <label for="sign_align_function" class="code">FUNCTION()</label>
         </div>
     </div>
     <div class="checkbox" id="sign_align_all_div">
@@ -340,8 +340,13 @@
             <input type="checkbox" id="use_space">
             <label for="use_space">Customise Indentation: </label>
         </div>(tab is \t)
-        <input type="text" id="cust_indent" size="8" onKeyUp="counterDecode('cust_indent', 'indent_s')" value="    " /> (
+        <input type="text" id="customise_indentation" size="8" onKeyUp="counterDecode('customise_indentation', 'indent_s')" value="    " /> (
         <span id="indent_s">four blankspaces</span>)
+    </div>
+    <div id="cust_eol_div">
+        End of line:
+        <input type="text" id="cust_eol" size="8" onKeyUp="counterDecode('cust_eol', 'eol_s')" value="\r\n" /> (
+        <span id="eol_s">one \r & one \n</span>)
     </div>
     <div class="checkbox" id="compress_div">
         <input type="checkbox" id="compress">
@@ -350,11 +355,6 @@
     <div class="checkbox" id="mix_letter_div">
         <input type="checkbox" id="mix_letter">
         <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
-    </div>
-    <div>
-        End of line:
-        <input type="text" id="cust_eol" size="8" onKeyUp="counterDecode('cust_eol', 'eol_s')" value="\r\n" /> (
-        <span id="eol_s">one \r & one \n</span>)
     </div>
     <input type="button" class="btn" onclick="f()" value="start" />
     <span class="show">
@@ -421,12 +421,74 @@
     <script src="VHDLFormatter.js"></script>
     <script src="descriptiveCounter.js"></script>
     <script>
-        let global_endOfLine = navigator.platform === 'Win32' ? '\\r\\n' : '\\n';
-        document.getElementById("cust_eol").value = global_endOfLine;
+        const localStorageSettingKey = "settings";
+        const localStorageNoFormatKey = "noFormat";
+
+        function onLoad() {
+            let global_endOfLine = navigator.platform === 'Win32' ? '\\r\\n' : '\\n';
+            document.getElementById("cust_eol").value = global_endOfLine;
+            var setting = loadSetting();
+            if (setting == null) {
+                return;
+            }
+
+            var beautifierSettings = setting.setting;
+            document.getElementById("remove_comments").checked = beautifierSettings.RemoveComments;
+            document.getElementById("remove_lines").checked = setting.removeLines;
+            document.getElementById("remove_report").checked = beautifierSettings.RemoveAsserts;
+            document.getElementById("check_alias").checked = beautifierSettings.CheckAlias;
+            var signAlignKeywords = beautifierSettings.SignAlignKeyWords;
+            if (signAlignKeywords != null && signAlignKeywords.length > 0) {
+                document.getElementById("sign_align_port").checked = signAlignKeywords.indexOf("PORT") >= 0;
+                document.getElementById("sign_align_function").checked = signAlignKeywords.indexOf("FUNCTION") >= 0;
+                document.getElementById("sign_align_procedure").checked = signAlignKeywords.indexOf("PROCEDURE") >= 0;
+                document.getElementById("sign_align_generic").checked = signAlignKeywords.indexOf("GENERIC") >= 0;
+            }
+            document.getElementById("sign_align_all").checked = beautifierSettings.SignAlignAll;
+            var newLineSettings = beautifierSettings.NewLineSettings;
+            var newLineAfter = newLineSettings.newLineAfter;
+            var noNewLineAfter = newLineSettings.noNewLineAfter;
+            document.getElementById("new_line_after_port").elements.namedItem("new_line_after_portcase").value = decodeNewLineSetting(newLineAfter, noNewLineAfter, "port");
+            document.getElementById("new_line_after_then").elements.namedItem("new_line_after_thencase").value = decodeNewLineSetting(newLineAfter, noNewLineAfter, "then");
+            document.getElementById("new_line_after_semicolon").elements.namedItem("new_line_after_semicoloncase").value = decodeNewLineSetting(newLineAfter, noNewLineAfter, ";");
+            document.getElementById("new_line_after_else").elements.namedItem("new_line_after_elsecase").value = decodeNewLineSetting(newLineAfter, noNewLineAfter, "else");
+            document.getElementById("new_line_after_generic").elements.namedItem("new_line_after_genericcase").value = decodeNewLineSetting(newLineAfter, noNewLineAfter, "generic");
+            document.getElementById("compress").checked = setting.compress;
+            var indentation = beautifierSettings.Indentation;
+            document.getElementById("use_space").checked = indentation != "\t";
+            document.getElementById("customise_indentation").value = indentation;
+            document.getElementById("keyword").elements.namedItem("keywordcase").value = beautifierSettings.KeywordCase;
+            document.getElementById("mix_letter").checked = setting.mixLetter;
+            var eof = beautifierSettings.EndOfLine
+            eof = eof.replace(/\r/g, "\\r");
+            eof = eof.replace(/\n/g, "\\n");
+            eof = eof.replace(/\t/g, "\\t");
+            document.getElementById("cust_eol").value = eof;
+            var noFormatBool = loadNoFormatSetting();
+            if (noFormatBool) {
+                document.getElementById("no_format").checked = true;
+                noFormat();
+            }
+            counterDecode('customise_indentation', 'indent_s');
+            counterDecode('cust_eol', 'eol_s');
+        }
+
+        function decodeNewLineSetting(hasNewLine, noNewLine, str) {
+            if (hasNewLine.indexOf(str) >= 0) {
+                return "NewLine";
+            }
+            if (noNewLine.indexOf(str) >= 0) {
+                return "NoNewLine";
+            }
+            return "None";
+        }
+
+        onLoad();
         
         function f() {
             var input = document.getElementById("in").value;
             var no_format = document.getElementById("no_format").checked;
+            saveNoFormatSetting(no_format);
             if (no_format) {
                 document.getElementById("vhdl").innerHTML = input;
                 document.querySelector(".show").style.display = "inline-block";
@@ -449,7 +511,7 @@
             var new_line_after_generic = document.getElementById("new_line_after_generic").elements.namedItem("new_line_after_genericcase").value;
             var use_space = document.getElementById("use_space").checked;
             var compress = document.getElementById("compress").checked;
-            var cust_indent = document.getElementById("cust_indent").value;
+            var cust_indent = document.getElementById("customise_indentation").value;
             var keywordcase = document.getElementById("keyword").elements.namedItem("keywordcase").value;
             var mix_letter = document.getElementById("mix_letter").checked;
             var endOfLine = document.getElementById("cust_eol").value;
@@ -498,6 +560,9 @@
                 endOfLine);
             beautifierSettings.SignAlignKeyWords = signAlignKeywords;
 
+            vhdlSettings = new VhdlSettings(beautifierSettings, remove_lines, compress, mix_letter);
+            saveSetting(vhdlSettings);
+
             input = beautify(input, beautifierSettings);
 
             if (remove_lines) {
@@ -515,6 +580,39 @@
             document.getElementById("vhdl").innerHTML = input;
             document.querySelector(".show").style.display = "inline-block";
             hljs.highlightBlock(document.getElementById("vhdl"));
+        }
+
+        function saveSetting(setting) {
+            var json = JSON.stringify(setting);
+            json = json.replace(/\r/g, "\\r");
+            json = json.replace(/\n/g, "\\n");
+            json = json.replace(/\t/g, "\\t");
+            localStorage.setItem(localStorageSettingKey, json);
+        }
+        
+        function loadSetting() {
+            var json = localStorage.getItem(localStorageSettingKey);
+            if (json == null) {
+                return null;
+            }
+            return JSON.parse(json);
+        }
+
+        function saveNoFormatSetting(no_format) {
+            localStorage.setItem(localStorageNoFormatKey, no_format);
+        }
+        
+        function loadNoFormatSetting() {
+            return JSON.parse(localStorage.getItem(localStorageNoFormatKey));
+        }
+
+        class VhdlSettings {
+            constructor(setting, removeLines, compress, mixLetter) {
+                this.setting = setting;
+                this.removeLines = removeLines;
+                this.compress = compress;
+                this.mixLetter = mixLetter;
+            }
         }
     </script>
 </body>

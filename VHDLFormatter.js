@@ -110,7 +110,8 @@ function noFormat() {
         "use_space",
         "customise_indentation",
         "compress",
-        "mix_letter"
+        "mix_letter",
+        "cust_eol"
     ];
     var isDisabled = getHTMLInputElement("no_format").checked;
     elements.forEach(element => {
@@ -132,7 +133,6 @@ function noFormat() {
             radioButtons[i].disabled = isDisabled;
         }
     }
-    getHTMLInputElement("cust_indent").disabled = isDisabled;
 }
 function Compress(input) {
     input = input.replace(/\r\n/g, '');

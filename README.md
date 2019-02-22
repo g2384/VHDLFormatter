@@ -6,6 +6,10 @@ VHDL formatter web online written in javascript
 
 ## Release Notes
 
+### 2.4 [2018-02-23]
+
+- use local storage to store settings
+
 ### 2.3 [2018-02-22]
 
 - bugfix "remove non-comment code by mistake"
@@ -14,7 +18,7 @@ VHDL formatter web online written in javascript
 - fix exponential notation
 - user can choose EOL symbols (or use system's by default)
 
-Many thanks to @MihaiBabiac
+Many thanks to [@MihaiBabiac](https://github.com/MihaiBabiac)
 
 ### 2.2 [2018-10-16]
 
