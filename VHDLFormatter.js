@@ -3,9 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 let isTesting = false;
 const ILEscape = "@@";
 const ILCommentPrefix = ILEscape + "comments";
-const ILQuotesPrefix = ILEscape + "quotes";
-const ILSingleQuotesPrefix = ILEscape + "singlequotes";
-const ILBackslashesPrefix = ILEscape + "backslash";
+const ILQuote = "⨵";
+const ILSingleQuote = "⦼";
+const ILBackslash = "⨸";
+const ILSemicolon = "⨴";
 var FormatMode;
 (function (FormatMode) {
     FormatMode[FormatMode["Default"] = 0] = "Default";
@@ -179,7 +180,7 @@ function beautify(input, settings) {
     input = input.replace(/\n/g, "\r\n");
     var arr = input.split("\r\n");
     var comments = EscapeComments(arr);
-    var backslashes = escapeBackslashes(arr);
+    var backslashes = escapeText(arr, "\\\\[^\\\\]+\\\\", ILBackslash);
     RemoveLeadingWhitespaces(arr);
     input = arr.join("\r\n");
     if (settings.RemoveComments) {
@@ -193,8 +194,8 @@ function beautify(input, settings) {
     input = input.replace(/[ ]+;/g, ';');
     input = input.replace(/:[ ]*(PROCESS|ENTITY)/gi, ':$1');
     arr = input.split("\r\n");
-    let quotes = EscapeQuotes(arr);
-    let singleQuotes = EscapeSingleQuotes(arr);
+    let quotes = escapeText(arr, '"([^"]+)"', ILQuote);
+    let singleQuotes = escapeText(arr, "'[^']'", ILSingleQuote);
     input = arr.join("\r\n");
     input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
     arr = input.split("\r\n");
@@ -235,35 +236,31 @@ function beautify(input, settings) {
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
     input = SetKeywordCase(input, settings.KeywordCase, KeyWords, TypeNames);
-    input = replaceEscapedWords(input, quotes, ILQuotesPrefix);
-    input = replaceEscapedWords(input, singleQuotes, ILSingleQuotesPrefix);
-    input = replaceEscapedWords(input, comments, ILCommentPrefix);
-    input = replaceEscapedWords(input, backslashes, ILBackslashesPrefix);
-    input = input.replace(/@@semicolon/g, ";");
+    input = replaceEscapedWords(input, quotes, ILQuote);
+    input = replaceEscapedWords(input, singleQuotes, ILSingleQuote);
+    input = replaceEscapedComments(input, comments, ILCommentPrefix);
+    input = replaceEscapedWords(input, backslashes, ILBackslash);
+    input = input.replace(new RegExp(ILSemicolon, "g"), ";");
     input = input.replace(/@@[a-z]+/g, "");
+    var escapedTexts = new RegExp("[" + ILBackslash + ILQuote + ILSingleQuote + "]", "g");
+    input = input.replace(escapedTexts, "");
     input = input.replace(/\r\n/g, settings.EndOfLine);
     return input;
 }
 exports.beautify = beautify;
 function replaceEscapedWords(input, arr, prefix) {
     for (var i = 0; i < arr.length; i++) {
-        input = input.replace(prefix + i, arr[i]);
+        var text = arr[i];
+        var regex = new RegExp(prefix + "{" + text.length + "}");
+        input = input.replace(regex, text);
     }
     return input;
 }
-function escapeBackslashes(arr) {
-    var escaped = [];
-    var count = 0;
+function replaceEscapedComments(input, arr, prefix) {
     for (var i = 0; i < arr.length; i++) {
-        var sequence = arr[i].match(/\\[^\\]+\\/g);
-        if (sequence != null) {
-            for (var j = 0; j < sequence.length; j++) {
-                arr[i] = arr[i].replace(sequence[j], ILBackslashesPrefix + count);
-                escaped[count++] = sequence[j];
-            }
-        }
+        input = input.replace(prefix + i, arr[i]);
     }
-    return escaped;
+    return input;
 }
 function RemoveLeadingWhitespaces(arr) {
     for (var i = 0; i < arr.length; i++) {
@@ -649,7 +646,7 @@ exports.beautify3 = beautify3;
 function ReserveSemicolonInKeywords(arr) {
     for (let i = 0; i < arr.length; i++) {
         if (arr[i].match(/FUNCTION|PROCEDURE/) != null) {
-            arr[i] = arr[i].replace(/;/g, '@@semicolon');
+            arr[i] = arr[i].replace(/;/g, ILSemicolon);
         }
     }
 }
@@ -692,29 +689,16 @@ function RemoveAsserts(arr) {
     }
 }
 exports.RemoveAsserts = RemoveAsserts;
-function EscapeQuotes(arr) {
+function escapeText(arr, regex, escapedChar) {
     let quotes = [];
-    let quotesIndex = 0;
+    let regexEpr = new RegExp(regex, "g");
     for (let i = 0; i < arr.length; i++) {
-        let quote = arr[i].match(/"([^"]+)"/g);
-        if (quote != null) {
-            for (var j = 0; j < quote.length; j++) {
-                arr[i] = arr[i].replace(quote[j], ILQuotesPrefix + quotesIndex);
-                quotes[quotesIndex++] = quote[j];
-            }
-        }
-    }
-    return quotes;
-}
-function EscapeSingleQuotes(arr) {
-    let quotes = [];
-    let quotesIndex = 0;
-    for (let i = 0; i < arr.length; i++) {
-        let quote = arr[i].match(/'[^']'/g);
-        if (quote != null) {
-            for (var j = 0; j < quote.length; j++) {
-                arr[i] = arr[i].replace(quote[j], ILSingleQuotesPrefix + quotesIndex);
-                quotes[quotesIndex++] = quote[j];
+        let matches = arr[i].match(regexEpr);
+        if (matches != null) {
+            for (var j = 0; j < matches.length; j++) {
+                var match = matches[j];
+                arr[i] = arr[i].replace(match, escapedChar.repeat(match.length));
+                quotes.push(match);
             }
         }
     }
