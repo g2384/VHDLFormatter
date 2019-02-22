@@ -9,6 +9,7 @@ VHDL formatter web online written in javascript
 ### 2.4 [2018-02-23]
 
 - use local storage to store settings
+- add `main.js`
 
 ### 2.3 [2018-02-22]
 
@@ -17,6 +18,7 @@ VHDL formatter web online written in javascript
 - support extended identifier (backslash names)
 - fix exponential notation
 - user can choose EOL symbols (or use system's by default)
+- align comments (when user chooses "align" option)
 
 Many thanks to [@MihaiBabiac](https://github.com/MihaiBabiac)
 

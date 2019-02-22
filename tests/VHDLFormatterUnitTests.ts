@@ -913,6 +913,8 @@ function IntegrationTest() {
     IntegrationTest72();
     IntegrationTest73();
     IntegrationTest74();
+    IntegrationTest75();
+    IntegrationTest76();
 }
 
 function IntegrationTest23() {
@@ -1317,6 +1319,24 @@ function IntegrationTest74() {
     let expected = 'test := test; EOF test := test;';
     let actual = beautify(input, settings);
     assertAndCountTest("end of line 2", expected, actual);
+}
+
+function IntegrationTest75() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = 'test := loooong; -- test\r\ntest := short; -- test';
+    let expected = 'test := loooong; -- test\r\ntest := short;   -- test';
+    let actual = beautify(input, settings);
+    assertAndCountTest("align comments", expected, actual);
+}
+
+function IntegrationTest76() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = "a <= (b => '000'); -- test\r\nlooong <= (others => '0'); -- test";
+    let expected = "a      <= (b      => '000'); -- test\r\nlooong <= (OTHERS => '0');   -- test";
+    let actual = beautify(input, settings);
+    assertAndCountTest("align <= => signs", expected, actual);
 }
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
