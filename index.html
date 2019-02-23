@@ -93,6 +93,7 @@
             padding: 2px 5px;
             border-radius: 3px;
             font-size: 0.8em;
+            cursor: pointer;
         }
         
         a:hover {
@@ -208,6 +209,15 @@
             margin-left: 10px;
             display: inline-block;
         }
+
+        .hide {
+            display: none;
+        }
+
+        #settings_control {
+            margin: 10px 0px;
+            display: inline-block;
+        }
     </style>
     <link href="highlight.css" rel="stylesheet" />
     <script src="highlight.js"></script>
@@ -247,7 +257,7 @@
         <input type="checkbox" id="no_format" onclick="noFormat()">
         <label for="no_format">Only highlight, don't format</label>
     </div>
-    <form id="keyword">Keyword case:
+    <form id="keyword_div">Keyword case:
         <label>
             <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label> |
         <label>
@@ -258,7 +268,7 @@
             e.g. begin, case, when
         </div>
     </form>
-    <form id="typename">Type name case:
+    <form id="typename_div">Type name case:
         <label>
             <input type="radio" name="typenamecase" value="UpperCase" checked="checked">UPPERCASE</label> |
         <label>
@@ -269,113 +279,125 @@
             e.g. boolean, natural, string
         </div>
     </form>
-    <fieldset id="new_line_after_div">
-        <legend>New line after</legend>
-        <form id="new_line_after_then">
-            <span class="code">THEN</span>
-            <label>
-                <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_thencase" value="None">None</label>
-        </form>
-        <form id="new_line_after_semicolon">
-            <span class="code">semicolon ";"</span>
-            <label>
-                <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
-        </form>
-        <form id="new_line_after_else">
-            <span class="code">ELSE</span>
-            <label>
-                <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
-        </form>
-        <form id="new_line_after_port">
-            <span class="code">PORT | PORT MAP</span>
-            <label>
-                <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
-        </form>
-        <form id="new_line_after_generic">
-            <span class="code">GENERIC</span>
-            <label>
-                <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
-            <label>
-                <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
-        </form>
-    </fieldset>
-    <div class="checkbox inline" id="remove_comments_div">
-        <input type="checkbox" id="remove_comments">
-        <label for="remove_comments">Remove commments</label> |
-    </div>
-    <div class="checkbox inline" id="remove_lines_div">
-        <input type="checkbox" id="remove_lines">
-        <label for="remove_lines">Remove blank lines</label> |
-    </div>
-    <div class="checkbox inline" id="remove_report_div">
-        <input type="checkbox" id="remove_report">
-        <label for="remove_report">Remove REPORT</label>
-    </div>
-    <br>
-    <div class="checkbox" id="check_alias_div">
-        <input type="checkbox" id="check_alias">
-        <label for="check_alias">Check ALIAS (all long names will be replaced by ALIAS names)</label>
-    </div>
-    <div id="sign_align_in_div">
-        Align signs in
-        <div class="checkbox inline" id="sign_align_port_div">
-            <input type="checkbox" id="sign_align_port">
-            <label for="sign_align_port" class="code">PORT()</label>
+    <div class="hide" id="settings_div">
+        <fieldset id="new_line_after_div">
+            <legend>New line after</legend>
+            <form id="new_line_after_then">
+                <span class="code">THEN</span>
+                <label>
+                    <input type="radio" name="new_line_after_thencase" value="NewLine" checked="checked">New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_thencase" value="NoNewLine">No New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_thencase" value="None">None</label>
+            </form>
+            <form id="new_line_after_semicolon">
+                <span class="code">semicolon ";"</span>
+                <label>
+                    <input type="radio" name="new_line_after_semicoloncase" value="NewLine" checked="checked">New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_semicoloncase" value="NoNewLine">No New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_semicoloncase" value="None">None</label>
+            </form>
+            <form id="new_line_after_else">
+                <span class="code">ELSE</span>
+                <label>
+                    <input type="radio" name="new_line_after_elsecase" value="NewLine">New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_elsecase" value="NoNewLine">No New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_elsecase" value="None" checked="checked">None</label>
+            </form>
+            <form id="new_line_after_port">
+                <span class="code">PORT | PORT MAP</span>
+                <label>
+                    <input type="radio" name="new_line_after_portcase" value="NewLine">New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_portcase" value="NoNewLine">No New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_portcase" value="None" checked="checked">None</label>
+            </form>
+            <form id="new_line_after_generic">
+                <span class="code">GENERIC</span>
+                <label>
+                    <input type="radio" name="new_line_after_genericcase" value="NewLine">New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_genericcase" value="NoNewLine">No New Line</label>
+                <label>
+                    <input type="radio" name="new_line_after_genericcase" value="None" checked="checked">None</label>
+            </form>
+        </fieldset>
+        <div class="checkbox inline" id="remove_comments_div">
+            <input type="checkbox" id="remove_comments">
+            <label for="remove_comments">Remove commments</label> |
         </div>
-        <div class="checkbox inline" id="sign_align_generic_div">
-            <input type="checkbox" id="sign_align_generic">
-            <label for="sign_align_generic" class="code">GENERIC()</label></div>
-        <div class="checkbox inline" id="sign_align_procedure_div">
-            <input type="checkbox" id="sign_align_procedure">
-            <label for="sign_align_procedure" class="code">PROCEDURE()</label>
+        <div class="checkbox inline" id="remove_lines_div">
+            <input type="checkbox" id="remove_lines">
+            <label for="remove_lines">Remove blank lines</label> |
         </div>
-        <div class="checkbox inline" id="sign_align_function_div">
-            <input type="checkbox" id="sign_align_function">
-            <label for="sign_align_function" class="code">FUNCTION()</label>
+        <div class="checkbox inline" id="remove_report_div">
+            <input type="checkbox" id="remove_report">
+            <label for="remove_report">Remove REPORT</label>
+        </div>
+        <br>
+        <div class="checkbox" id="check_alias_div">
+            <input type="checkbox" id="check_alias">
+            <label for="check_alias">Check ALIAS (all long names will be replaced by ALIAS names)</label>
+        </div>
+        <div id="sign_align_in_div">
+            Align signs in
+            <div class="checkbox inline" id="sign_align_port_div">
+                <input type="checkbox" id="sign_align_port">
+                <label for="sign_align_port" class="code">PORT()</label>
+            </div>
+            <div class="checkbox inline" id="sign_align_generic_div">
+                <input type="checkbox" id="sign_align_generic">
+                <label for="sign_align_generic" class="code">GENERIC()</label></div>
+            <div class="checkbox inline" id="sign_align_procedure_div">
+                <input type="checkbox" id="sign_align_procedure">
+                <label for="sign_align_procedure" class="code">PROCEDURE()</label>
+            </div>
+            <div class="checkbox inline" id="sign_align_function_div">
+                <input type="checkbox" id="sign_align_function">
+                <label for="sign_align_function" class="code">FUNCTION()</label>
+            </div>
+        </div>
+        <div class="checkbox inline" id="sign_align_all_div">
+            <input type="checkbox" id="sign_align_all">
+            <label for="sign_align_all">Align signs in all places</label>
+        </div>
+        <form class="inline" id="sign_align_mode_div">
+            <span>Mode: </span>
+            <label>
+                <input type="radio" name="sign_align_modecase" value="local">Local</label>
+            <label>
+                <input type="radio" name="sign_align_modecase" value="global">Global</label>
+        </form>
+        <div id="customise_indentation_div">
+            <div class="checkbox inline" id="use_space_div">
+                <input type="checkbox" id="use_space">
+                <label for="use_space">Customise Indentation: </label>
+            </div>(tab is \t)
+            <input type="text" id="customise_indentation" size="8" onKeyUp="counterDecode('customise_indentation', 'indent_s')" value="    " /> (
+            <span id="indent_s">four blankspaces</span>)
+        </div>
+        <div id="cust_eol_div">
+            End of line:
+            <input type="text" id="cust_eol" size="8" onKeyUp="counterDecode('cust_eol', 'eol_s')" value="\r\n" /> (
+            <span id="eol_s">one \r & one \n</span>)
+        </div>
+        <div class="checkbox" id="compress_div">
+            <input type="checkbox" id="compress">
+            <label for="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
+        </div>
+        <div class="checkbox" id="mix_letter_div">
+            <input type="checkbox" id="mix_letter">
+            <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
         </div>
     </div>
-    <div class="checkbox" id="sign_align_all_div">
-        <input type="checkbox" id="sign_align_all">
-        <label for="sign_align_all">Align signs in all places</label>
-    </div>
-    <div id="customise_indentation_div">
-        <div class="checkbox inline" id="use_space_div">
-            <input type="checkbox" id="use_space">
-            <label for="use_space">Customise Indentation: </label>
-        </div>(tab is \t)
-        <input type="text" id="customise_indentation" size="8" onKeyUp="counterDecode('customise_indentation', 'indent_s')" value="    " /> (
-        <span id="indent_s">four blankspaces</span>)
-    </div>
-    <div id="cust_eol_div">
-        End of line:
-        <input type="text" id="cust_eol" size="8" onKeyUp="counterDecode('cust_eol', 'eol_s')" value="\r\n" /> (
-        <span id="eol_s">one \r & one \n</span>)
-    </div>
-    <div class="checkbox" id="compress_div">
-        <input type="checkbox" id="compress">
-        <label for="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
-    </div>
-    <div class="checkbox" id="mix_letter_div">
-        <input type="checkbox" id="mix_letter">
-        <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
+    <div>
+        <a id="settings_control" onclick="showHideSettings();">Show More Settings ▼</a>
     </div>
     <input type="button" class="btn" onclick="f()" value="start" />
     <span class="show">
@@ -446,6 +468,19 @@
         const localStorageSettingKey = "settings";
         const localStorageNoFormatKey = "noFormat";
 
+        function showHideSettings() {
+            var settingsDiv = document.getElementById("settings_div");
+            var control = document.getElementById("settings_control");
+            if (settingsDiv.className.indexOf("hide") >= 0) {
+                settingsDiv.className = settingsDiv.className.replace(/\s*hide/, "");
+                control.innerHTML = "Show Less ▲";
+            }
+            else {
+                settingsDiv.className += "hide";
+                control.innerHTML = "Show More Settings ▼";
+            }
+        }
+
         function onLoad() {
             let global_endOfLine = navigator.platform === 'Win32' ? '\\r\\n' : '\\n';
             document.getElementById("cust_eol").value = global_endOfLine;
@@ -459,14 +494,18 @@
             document.getElementById("remove_lines").checked = setting.removeLines;
             document.getElementById("remove_report").checked = beautifierSettings.RemoveAsserts;
             document.getElementById("check_alias").checked = beautifierSettings.CheckAlias;
-            var signAlignKeywords = beautifierSettings.SignAlignKeyWords;
-            if (signAlignKeywords != null && signAlignKeywords.length > 0) {
-                document.getElementById("sign_align_port").checked = signAlignKeywords.indexOf("PORT") >= 0;
-                document.getElementById("sign_align_function").checked = signAlignKeywords.indexOf("FUNCTION") >= 0;
-                document.getElementById("sign_align_procedure").checked = signAlignKeywords.indexOf("PROCEDURE") >= 0;
-                document.getElementById("sign_align_generic").checked = signAlignKeywords.indexOf("GENERIC") >= 0;
+            var alignSettings = beautifierSettings.SignAlignSettings;
+            if (alignSettings != null) {
+                var signAlignKeywords = alignSettings.keyWords;
+                if (signAlignKeywords != null && signAlignKeywords.length > 0) {
+                    document.getElementById("sign_align_port").checked = signAlignKeywords.indexOf("PORT") >= 0;
+                    document.getElementById("sign_align_function").checked = signAlignKeywords.indexOf("FUNCTION") >= 0;
+                    document.getElementById("sign_align_procedure").checked = signAlignKeywords.indexOf("PROCEDURE") >= 0;
+                    document.getElementById("sign_align_generic").checked = signAlignKeywords.indexOf("GENERIC") >= 0;
+                }
+                document.getElementById("sign_align_all").checked = alignSettings.isAll;
+                document.getElementById("sign_align_mode_div").elements.namedItem("sign_align_modecase").value = alignSettings.mode;
             }
-            document.getElementById("sign_align_all").checked = beautifierSettings.SignAlignAll;
             var newLineSettings = beautifierSettings.NewLineSettings;
             var newLineAfter = newLineSettings.newLineAfter;
             var noNewLineAfter = newLineSettings.noNewLineAfter;
@@ -479,8 +518,8 @@
             var indentation = beautifierSettings.Indentation;
             document.getElementById("use_space").checked = indentation != "\t";
             document.getElementById("customise_indentation").value = indentation;
-            document.getElementById("keyword").elements.namedItem("keywordcase").value = beautifierSettings.KeywordCase;
-            document.getElementById("typename").elements.namedItem("typenamecase").value = beautifierSettings.TypeNameCase;
+            document.getElementById("keyword_div").elements.namedItem("keywordcase").value = beautifierSettings.KeywordCase;
+            document.getElementById("typename_div").elements.namedItem("typenamecase").value = beautifierSettings.TypeNameCase;
             document.getElementById("mix_letter").checked = setting.mixLetter;
             var eof = beautifierSettings.EndOfLine
             eof = eof.replace(/\r/g, "\\r");
@@ -527,6 +566,7 @@
             var sign_align_procedure = document.getElementById("sign_align_procedure").checked;
             var sign_align_generic = document.getElementById("sign_align_generic").checked;
             var sign_align_all = document.getElementById("sign_align_all").checked;
+            var sign_align_mode = document.getElementById("sign_align_mode_div").elements.namedItem("sign_align_modecase").value;
             var new_line_after_port = document.getElementById("new_line_after_port").elements.namedItem("new_line_after_portcase").value;
             var new_line_after_then = document.getElementById("new_line_after_then").elements.namedItem("new_line_after_thencase").value;
             var new_line_after_semicolon = document.getElementById("new_line_after_semicolon").elements.namedItem("new_line_after_semicoloncase").value;
@@ -535,8 +575,8 @@
             var use_space = document.getElementById("use_space").checked;
             var compress = document.getElementById("compress").checked;
             var cust_indent = document.getElementById("customise_indentation").value;
-            var keywordcase = document.getElementById("keyword").elements.namedItem("keywordcase").value;
-            var typenamecase = document.getElementById("typename").elements.namedItem("typenamecase").value;
+            var keywordcase = document.getElementById("keyword_div").elements.namedItem("keywordcase").value;
+            var typenamecase = document.getElementById("typename_div").elements.namedItem("typenamecase").value;
             var mix_letter = document.getElementById("mix_letter").checked;
             var endOfLine = document.getElementById("cust_eol").value;
             endOfLine = endOfLine.replace(/\\r/g, "\r");
@@ -575,15 +615,15 @@
                 signAlignKeywords.push("PROCEDURE");
             }
             sign_align = signAlignKeywords.length > 0;
+            let alignSettings = new signAlignSettings(sign_align, sign_align_all, sign_align_mode, signAlignKeywords)
 
-            beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias, sign_align,
-                sign_align_all,
+            beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias,
+                alignSettings,
                 keywordcase,
                 typenamecase,
                 indentation,
                 newLineSettings,
                 endOfLine);
-            beautifierSettings.SignAlignKeyWords = signAlignKeywords;
 
             vhdlSettings = new VhdlSettings(beautifierSettings, remove_lines, compress, mix_letter);
             saveSetting(vhdlSettings);

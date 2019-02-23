@@ -15,7 +15,10 @@ function noFormat() {
         "customise_indentation",
         "compress",
         "mix_letter",
-        "cust_eol"
+        "cust_eol",
+        "sign_align_mode",
+        "keyword",
+        "typename"
     ];
     var isDisabled = getHTMLInputElement("no_format").checked;
     elements.forEach(element => {

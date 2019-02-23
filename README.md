@@ -11,6 +11,8 @@ VHDL formatter web online written in javascript
 - use local storage to store settings
 - add `main.js`
 - treat key words and type names separately
+- expand/hide setting options
+- align signs locally or globally
 
 ### 2.3 [2018-02-22]
 

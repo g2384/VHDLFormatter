@@ -155,13 +155,21 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
     return text;
 }
 exports.SetNewLinesAfterSymbols = SetNewLinesAfterSymbols;
+class signAlignSettings {
+    constructor(isRegional, isAll, mode, keyWords) {
+        this.isRegional = isRegional;
+        this.isAll = isAll;
+        this.mode = mode;
+        this.keyWords = keyWords;
+    }
+}
+exports.signAlignSettings = signAlignSettings;
 class BeautifierSettings {
-    constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine) {
+    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
-        this.SignAlignRegional = signAlign;
-        this.SignAlignAll = signAlignAll;
+        this.SignAlignSettings = signAlignSettings;
         this.KeywordCase = keywordCase;
         this.TypeNameCase = typeNameCase;
         this.Indentation = indentation;
@@ -233,8 +241,9 @@ function beautify(input, settings) {
     arr = input.split("\r\n");
     let result = [];
     beautify3(arr, result, settings, 0, 0);
-    if (settings.SignAlignAll) {
-        AlignSigns(result, 0, result.length - 1);
+    var alignSettings = settings.SignAlignSettings;
+    if (alignSettings != null && alignSettings.isAll) {
+        AlignSigns(result, 0, result.length - 1, alignSettings.mode);
     }
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
@@ -368,24 +377,27 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
         result[i].Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional && !settings.SignAlignAll
-        && settings.SignAlignKeyWords != null
-        && settings.SignAlignKeyWords.indexOf(mode) >= 0) {
-        blockBodyStartIndex++;
-        AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
+    var alignSettings = settings.SignAlignSettings;
+    if (alignSettings != null) {
+        if (alignSettings.isRegional && !alignSettings.isAll
+            && alignSettings.keyWords != null
+            && alignSettings.keyWords.indexOf(mode) >= 0) {
+            blockBodyStartIndex++;
+            AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex, alignSettings.mode);
+        }
     }
     return [i, parentEndIndex];
 }
 exports.beautifyPortGenericBlock = beautifyPortGenericBlock;
-function AlignSigns(result, startIndex, endIndex) {
-    AlignSign_(result, startIndex, endIndex, ":");
-    AlignSign_(result, startIndex, endIndex, ":=");
-    AlignSign_(result, startIndex, endIndex, "<=");
-    AlignSign_(result, startIndex, endIndex, "=>");
-    AlignSign_(result, startIndex, endIndex, "@@comments");
+function AlignSigns(result, startIndex, endIndex, mode) {
+    AlignSign_(result, startIndex, endIndex, ":", mode);
+    AlignSign_(result, startIndex, endIndex, ":=", mode);
+    AlignSign_(result, startIndex, endIndex, "<=", mode);
+    AlignSign_(result, startIndex, endIndex, "=>", mode);
+    AlignSign_(result, startIndex, endIndex, "@@comments", mode);
 }
 exports.AlignSigns = AlignSigns;
-function AlignSign_(result, startIndex, endIndex, symbol) {
+function AlignSign_(result, startIndex, endIndex, symbol, mode) {
     let maxSymbolIndex = -1;
     let symbolIndices = {};
     let startLine = startIndex;
@@ -411,7 +423,8 @@ function AlignSign_(result, startIndex, endIndex, symbol) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
             symbolIndices[i] = colonIndex;
         }
-        else if (!line.startsWith(ILCommentPrefix) && line.length != 0) {
+        else if ((mode != "local" && !line.startsWith(ILCommentPrefix) && line.length != 0)
+            || (mode == "local")) {
             if (startLine < i - 1) // if cannot find the symbol, a block of symbols ends
              {
                 AlignSign(result, startLine, i - 1, symbol, maxSymbolIndex, symbolIndices);

@@ -1,4 +1,4 @@
-import { beautify } from "../VHDLFormatter";
+import { beautify, signAlignSettings } from "../VHDLFormatter";
 import { NewLineSettings } from "../VHDLFormatter";
 import { BeautifierSettings } from "../VHDLFormatter";
 import { RemoveAsserts } from "../VHDLFormatter";
@@ -853,7 +853,7 @@ function IntegrationTest() {
     assertAndCountTest("Double BEGIN", expected, actual);
 
     let newSettings2 = deepCopy(newSettings);
-    newSettings2.SignAlignAll = true;
+    newSettings2.SignAlignSettings = new signAlignSettings(false, true, "", []);
     newSettings2.NewLineSettings.newLineAfter = ["then", ";", "generic", "port"];
     newSettings2.NewLineSettings.noNewLineAfter = [];
     input = "entity a is\r\n    port ( w  : in  std_logic_vector (7 downto 0) ;\r\n           w_s : out std_logic_vector (3 downto 0) ; ) ;\r\nend a ;\r\narchitecture b of a is\r\nbegin\r\n    process ( w )\r\n    variable t : std_logic_vector (4 downto 0) ;\r\n    variable bcd     : std_logic_vector (11 downto 0) ;\r\nbegin\r\n    b(2 downto 0) := w(7 downto 5) ;\r\n    t         := w(4 downto 0) ;\r\n    w_s <= b(11 downto 8) ;\r\n    w <= b(3  downto 0) ;\r\nend process ;\r\nend b ;";
@@ -919,6 +919,7 @@ function IntegrationTest() {
     IntegrationTest78();
     IntegrationTest79();
     IntegrationTest80();
+    IntegrationTest82();
 }
 
 function IntegrationTest23() {
@@ -1118,8 +1119,7 @@ function IntegrationTest48() {
 
 function IntegrationTest49() {
     let settings = GetDefaultSettings();
-    settings.SignAlignRegional = true;
-    settings.SignAlignKeyWords = ["PROCEDURE"];
+    settings.SignAlignSettings = new signAlignSettings(true, false, "", ["PROCEDURE"]);
     let input = 'PROCEDURE wait_until(\r\n    SIGNAL a : IN data_status;\r\n    b        : data_status\r\n);';
     let actual = beautify(input, settings);
     assertAndCountTest("align sign in procedure", input, actual);
@@ -1127,7 +1127,7 @@ function IntegrationTest49() {
 
 function IntegrationTest50() {
     let settings = GetDefaultSettings();
-    settings.SignAlignRegional = true;
+    settings.SignAlignSettings = new signAlignSettings(true, false, "", []);
     let input = 'PROCEDURE wait_until(\r\n    SIGNAL a : IN data_status;\r\n    b : data_status\r\n);';
     let actual = beautify(input, settings);
     assertAndCountTest("does not align sign in procedure", input, actual);
@@ -1135,7 +1135,7 @@ function IntegrationTest50() {
 
 function IntegrationTest51() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
     let input = 'architecture behaviour of a is\r\nbegin\r\n    main : process\r\n        variable b : e := (others => DR_INIT);\r\n        variable c, d : positive := 8;\r\n    begin\r\n    end process main;\r\nend architecture behaviour;';
     let expected = 'ARCHITECTURE behaviour OF a IS\r\nBEGIN\r\n    main : PROCESS\r\n        VARIABLE b    : e        := (OTHERS => DR_INIT);\r\n        VARIABLE c, d : POSITIVE := 8;\r\n    BEGIN\r\n    END PROCESS main;\r\nEND ARCHITECTURE behaviour;';
     let actual = beautify(input, settings);
@@ -1169,7 +1169,7 @@ function IntegrationTest54() {
 
 function IntegrationTest55() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
     let input = 'main :\r\nPROCESS\r\n    VARIABLE b : a := (OTHERS => DR_INIT);\r\nBEGIN';
     let actual = beautify(input, settings);
     assertAndCountTest("package with label and align all symbols", input, actual);
@@ -1177,7 +1177,7 @@ function IntegrationTest55() {
 
 function IntegrationTest56() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
     let input = 'a  <= (2 => DR_ONE, 5 => DR_ZERO);\r\nbc <= (32 => DR_ONE);';
     let actual = beautify(input, settings);
     assertAndCountTest("package with label and align all symbols", input, actual);
@@ -1335,7 +1335,7 @@ function IntegrationTest74() {
 
 function IntegrationTest75() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
     let input = 'test := loooong; -- test\r\ntest := short; -- test';
     let expected = 'test := loooong; -- test\r\ntest := short;   -- test';
     let actual = beautify(input, settings);
@@ -1344,7 +1344,7 @@ function IntegrationTest75() {
 
 function IntegrationTest76() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
     let input = "a <= (b => '000'); -- test\r\nlooong <= (others => '0'); -- test";
     let expected = "a      <= (b      => '000'); -- test\r\nlooong <= (OTHERS => '0');   -- test";
     let actual = beautify(input, settings);
@@ -1367,8 +1367,7 @@ function IntegrationTest78() {
 }
 
 function IntegrationTest79() {
-    let settings = new BeautifierSettings(false, false, false, false, false, "lowercase", "uppercase", null, null, "\r\n");
-    settings.SignAlignAll = true;
+    let settings = new BeautifierSettings(false, false, false, null, "lowercase", "uppercase", null, null, "\r\n");
     let input = "case when others;\r\nx : STRING;\r\ny : BIT;";
     let actual = beautify(input, settings);
     assertAndCountTest("uppercase typename and lowercase keyword", input, actual);
@@ -1381,17 +1380,36 @@ function IntegrationTest80() {
     assertAndCountTest("function name in quotes", input, actual);
 }
 
+function IntegrationTest81() { // TODO
+    let settings = GetDefaultSettings();
+    let input = 'test : IN type := 0\r\ntest : OUT type := 0\r\ntest : INOUT type := 0\r\ntest : BUFFER type := 0\r\ntest : LINKAGE type := 0';
+    let expected = 'test : IN      type := 0\r\ntest : OUT     type := 0\r\ntest : INOUT   type := 0\r\ntest : BUFFER  type := 0\r\ntest : LINKAGE type := 0';
+    let actual = beautify(input, settings);
+    assertAndCountTest("signal in out alignment", expected, actual);
+}
+
+function IntegrationTest82() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignSettings = new signAlignSettings(false, true, "local", []);
+    let input = 'long : test;\r\n-- comment\r\nloooooong : test;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("block alignment local", input, actual);
+}
+
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
     let new_line_after_symbols = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     new_line_after_symbols.noNewLineAfter = ["generic"];
-    let settings = getDefaultBeautifierSettings(new_line_after_symbols, indentation);
+    let signAligns = new signAlignSettings(false, false, "", []);
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols, signAligns, indentation);
     return settings;
 }
 
-function getDefaultBeautifierSettings(newLineSettings: NewLineSettings, indentation: string = "    "): BeautifierSettings {
-    return new BeautifierSettings(false, false, false, false, false, "uppercase", "uppercase", indentation, newLineSettings, "\r\n");
+function getDefaultBeautifierSettings(newLineSettings: NewLineSettings, signAlignSettings: signAlignSettings = null, indentation: string = "    "): BeautifierSettings {
+    return new BeautifierSettings(false, false, false, signAlignSettings, "uppercase", "uppercase", indentation, newLineSettings, "\r\n");
 }
+
+
 
 function IntegrationTest20() {
     let settings = GetDefaultSettings();
@@ -1403,8 +1421,7 @@ function IntegrationTest20() {
 
 function IntegrationTest5() {
     let settings = GetDefaultSettings();
-    settings.SignAlignRegional = true;
-    settings.SignAlignKeyWords = ["PORT"];
+    settings.SignAlignSettings = new signAlignSettings(true, false, "", ["PORT"]);
     let input = "port map(\r\ninput_1 => input_1_sig,\r\ninput_2 => input_2_sig,\r\noutput => output_sig\r\n);";
     let expected = "PORT MAP(\r\n    input_1 => input_1_sig,\r\n    input_2 => input_2_sig,\r\n    output  => output_sig\r\n);";
     let actual = beautify(input, settings);
@@ -1416,8 +1433,7 @@ function IntegrationTest6() {
     new_line_after_symbols.newLineAfter = ["then", ";", "port map"];
     new_line_after_symbols.noNewLineAfter = ["generic"];
     let settings = getDefaultBeautifierSettings(new_line_after_symbols);
-    settings.SignAlignRegional = true;
-    settings.SignAlignKeyWords = ["PORT"];
+    settings.SignAlignSettings = new signAlignSettings(true, false, "", ["PORT"]);
     let input = "port map(\r\ninput_1 => input_1_sig,\r\ninput_2 => input_2_sig,\r\noutput => output_sig\r\n);";
     let expected = "PORT MAP\r\n(\r\n    input_1 => input_1_sig,\r\n    input_2 => input_2_sig,\r\n    output  => output_sig\r\n);";
     let actual = beautify(input, settings);
@@ -1428,8 +1444,7 @@ function IntegrationTest7() {
     let new_line_after_symbols: NewLineSettings = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
     let settings = getDefaultBeautifierSettings(new_line_after_symbols);
-    settings.SignAlignRegional = true;
-    settings.SignAlignKeyWords = ["PORT", "GENERIC"];
+    settings.SignAlignSettings = new signAlignSettings(true, false, "global", ["PORT", "GENERIC"]);
     let input = "entity p is\r\n  generic\r\n  (\r\n    -- INCLK\r\n    INCLK0_INPUT_FREQUENCY  : natural;\r\n\r\n    -- CLK1\r\n    CLK1_DIVIDE_BY          : natural := 1;\r\n    CLK1_MULTIPLY_BY        : unnatural:= 1;\r\n    CLK1_PHASE_SHIFT        : string := \"0\"\r\n  );\r\n	port\r\n	(\r\n		inclk0	: in std_logic  := '0';\r\n		c0		    : out std_logic ;\r\n		c1		    : out std_logic \r\n	);\r\nEND pll;";
     let expected = "ENTITY p IS\r\n    GENERIC (\r\n        -- INCLK\r\n        INCLK0_INPUT_FREQUENCY : NATURAL;\r\n\r\n        -- CLK1\r\n        CLK1_DIVIDE_BY         : NATURAL   := 1;\r\n        CLK1_MULTIPLY_BY       : unnatural := 1;\r\n        CLK1_PHASE_SHIFT       : STRING    := \"0\"\r\n    );\r\n    PORT (\r\n        inclk0 : IN std_logic := '0';\r\n        c0     : OUT std_logic;\r\n        c1     : OUT std_logic\r\n    );\r\nEND pll;";
     let actual = beautify(input, settings);

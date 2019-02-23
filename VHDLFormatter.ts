@@ -191,26 +191,36 @@ export function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSe
     return text;
 }
 
+export class signAlignSettings {
+    isRegional: boolean;
+    isAll: boolean;
+    mode: string;
+    keyWords: Array<string>;
+    constructor(isRegional: boolean, isAll: boolean, mode: string, keyWords: Array<string>) {
+        this.isRegional = isRegional;
+        this.isAll = isAll;
+        this.mode = mode;
+        this.keyWords = keyWords;
+    }
+}
+
 export class BeautifierSettings {
     RemoveComments: boolean;
     RemoveAsserts: boolean;
     CheckAlias: boolean;
-    SignAlignRegional: boolean;
-    SignAlignAll: boolean;
-    SignAlignKeyWords: Array<string>;
+    SignAlignSettings: signAlignSettings;
     KeywordCase: string;
     TypeNameCase: string;
     Indentation: string;
     NewLineSettings: NewLineSettings;
     EndOfLine: string;
     constructor(removeComments: boolean, removeReport: boolean, checkAlias: boolean,
-        signAlign: boolean, signAlignAll: boolean, keywordCase: string, typeNameCase: string, indentation: string,
+        signAlignSettings: signAlignSettings, keywordCase: string, typeNameCase: string, indentation: string,
         newLineSettings: NewLineSettings, endOfLine: string) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
-        this.SignAlignRegional = signAlign;
-        this.SignAlignAll = signAlignAll;
+        this.SignAlignSettings = signAlignSettings;
         this.KeywordCase = keywordCase;
         this.TypeNameCase = typeNameCase;
         this.Indentation = indentation;
@@ -287,8 +297,9 @@ export function beautify(input: string, settings: BeautifierSettings) {
     arr = input.split("\r\n");
     let result: (FormattedLine | FormattedLine[])[] = [];
     beautify3(arr, result, settings, 0, 0);
-    if (settings.SignAlignAll) {
-        AlignSigns(result, 0, result.length - 1);
+    var alignSettings = settings.SignAlignSettings;
+    if (alignSettings != null && alignSettings.isAll) {
+        AlignSigns(result, 0, result.length - 1, alignSettings.mode);
     }
 
     arr = FormattedLineToString(result, settings.Indentation);
@@ -430,24 +441,27 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
         (<FormattedLine>result[i]).Indent--;
         blockBodyEndIndex--;
     }
-    if (settings.SignAlignRegional && !settings.SignAlignAll
-        && settings.SignAlignKeyWords != null
-        && settings.SignAlignKeyWords.indexOf(mode) >= 0) {
-        blockBodyStartIndex++;
-        AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex);
+    var alignSettings = settings.SignAlignSettings;
+    if (alignSettings != null) {
+        if (alignSettings.isRegional && !alignSettings.isAll
+            && alignSettings.keyWords != null
+            && alignSettings.keyWords.indexOf(mode) >= 0) {
+            blockBodyStartIndex++;
+            AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex, alignSettings.mode);
+        }
     }
     return [i, parentEndIndex];
 }
 
-export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number) {
-    AlignSign_(result, startIndex, endIndex, ":");
-    AlignSign_(result, startIndex, endIndex, ":=");
-    AlignSign_(result, startIndex, endIndex, "<=");
-    AlignSign_(result, startIndex, endIndex, "=>");
-    AlignSign_(result, startIndex, endIndex, "@@comments");
+export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, mode: string) {
+    AlignSign_(result, startIndex, endIndex, ":", mode);
+    AlignSign_(result, startIndex, endIndex, ":=", mode);
+    AlignSign_(result, startIndex, endIndex, "<=", mode);
+    AlignSign_(result, startIndex, endIndex, "=>", mode);
+    AlignSign_(result, startIndex, endIndex, "@@comments", mode);
 }
 
-function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string) {
+function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string, mode: string) {
     let maxSymbolIndex: number = -1;
     let symbolIndices = {};
     let startLine = startIndex;
@@ -474,7 +488,8 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
             symbolIndices[i] = colonIndex;
         }
-        else if (!line.startsWith(ILCommentPrefix) && line.length != 0) {
+        else if ((mode != "local" && !line.startsWith(ILCommentPrefix) && line.length != 0)
+            || (mode == "local")) {
             if (startLine < i - 1) // if cannot find the symbol, a block of symbols ends
             {
                 AlignSign(result, startLine, i - 1, symbol, maxSymbolIndex, symbolIndices);
