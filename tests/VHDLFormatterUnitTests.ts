@@ -1421,6 +1421,15 @@ function IntegrationTest85() {
     assertAndCountTest("report and severity", input, actual);
 }
 
+function IntegrationTest86() { // TODO
+    let settings = GetDefaultSettings();
+    let input = 'round_up(arg       => arg,\r\n    result    => result,\r\n    overflowx => round_overflow);';
+    let actual = beautify(input, settings);
+    assertAndCountTest("multilines in bracket", input, actual);
+}
+
+//TODO multiline setting, if true, \r\n\r\n -> \r\n\r\n, if false, \r\n\r\n -> \r\n
+
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
     let new_line_after_symbols = new NewLineSettings();
     new_line_after_symbols.newLineAfter = ["then", ";"];
