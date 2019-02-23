@@ -915,6 +915,8 @@ function IntegrationTest() {
     IntegrationTest74();
     IntegrationTest75();
     IntegrationTest76();
+    IntegrationTest77();
+    IntegrationTest78();
 }
 
 function IntegrationTest23() {
@@ -1337,6 +1339,23 @@ function IntegrationTest76() {
     let expected = "a      <= (b      => '000'); -- test\r\nlooong <= (OTHERS => '0');   -- test";
     let actual = beautify(input, settings);
     assertAndCountTest("align <= => signs", expected, actual);
+}
+
+function IntegrationTest77() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = "WHEN -2;\r\nSIGNAL +0;";
+    let actual = beautify(input, settings);
+    assertAndCountTest("negative sign and number", input, actual);
+}
+
+function IntegrationTest78() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignAll = true;
+    let input = "sfixed(4 downto - 18);\r\nx <= to_sfixed( - 2.3, x);\r\nresize(x + 1, 4, - 18) when others;";
+    let expected = "sfixed(4 DOWNTO -18);\r\nx <= to_sfixed(-2.3, x);\r\nresize(x + 1, 4, -18) WHEN OTHERS;";
+    let actual = beautify(input, settings);
+    assertAndCountTest("negative sign and number", expected, actual);
 }
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {

@@ -19,6 +19,7 @@ VHDL formatter web online written in javascript
 - fix exponential notation
 - user can choose EOL symbols (or use system's by default)
 - align comments (when user chooses "align" option)
+- bugfix "extra whitespaces around unary minus or plus"
 
 Many thanks to [@MihaiBabiac](https://github.com/MihaiBabiac)
 

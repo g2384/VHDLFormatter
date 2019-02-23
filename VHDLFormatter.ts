@@ -230,6 +230,8 @@ export function beautify(input: string, settings: BeautifierSettings) {
     var arr = input.split("\r\n");
     var comments = EscapeComments(arr);
     var backslashes = escapeText(arr, "\\\\[^\\\\]+\\\\", ILBackslash);
+    let quotes = escapeText(arr, '"([^"]+)"', ILQuote);
+    let singleQuotes = escapeText(arr, "'[^']'", ILSingleQuote);
     RemoveLeadingWhitespaces(arr);
 
     input = arr.join("\r\n");
@@ -239,17 +241,12 @@ export function beautify(input: string, settings: BeautifierSettings) {
         comments = [];
     }
 
+    input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
     input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
     input = input.replace(/[ ]+;/g, ';');
     input = input.replace(/:[ ]*(PROCESS|ENTITY)/gi, ':$1');
-
-    arr = input.split("\r\n");
-    let quotes = escapeText(arr, '"([^"]+)"', ILQuote);
-    let singleQuotes = escapeText(arr, "'[^']'", ILSingleQuote);
-    input = arr.join("\r\n");
-    input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
 
     arr = input.split("\r\n");
     if (settings.RemoveAsserts) {
@@ -267,7 +264,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
 
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
-    input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3');// Fix exponential notation format broken by previous step
+    input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3');// fix exponential notation format broken by previous step
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
     input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
     input = input.replace(/[ ]?(\?)?[ ]?(<|:|>|\/)?[ ]+(=)?[ ]?/g, ' $1$2$3 ');
@@ -281,7 +278,11 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/\r\n\r\n\r\n/g, '\r\n');
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
-    input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1');//function(..\r\n)return type; -> function(..\r\n)return type;
+    input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1');//function(..)\r\nreturn type; -> function(..\r\n)return type;
+    let keywordAndSignRegex = new RegExp("(\\b" + KeyWords.join("\\b|\\b") + "\\b) +([\\-+]) +(\\w)", "g");
+    input = input.replace(keywordAndSignRegex, "$1 $2$3");// `WHEN - 2` -> `WHEN -2`
+    input = input.replace(/([,|]) +([+\-]) +(\w)/g, '$1 $2$3');// `1, - 2)` -> `1, -2)`
+    input = input.replace(/(\() +([+\-]) +(\w)/g, '$1$2$3');// `( - 2)` -> `(-2)`
     arr = input.split("\r\n");
     let result: (FormattedLine | FormattedLine[])[] = [];
     beautify3(arr, result, settings, 0, 0);
