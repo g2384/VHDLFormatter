@@ -1,6 +1,7 @@
 let isTesting = false;
 const ILEscape = "@@";
 const ILCommentPrefix = ILEscape + "comments";
+const ILIndentedReturnPrefix = ILEscape;
 const ILQuote = "⨵";
 const ILSingleQuote = "⦼";
 const ILBackslash = "⨸";
@@ -175,16 +176,32 @@ export function SetNewLinesAfterSymbols(text: string, newLineSettings: NewLineSe
     }
     if (newLineSettings.newLineAfter != null) {
         newLineSettings.newLineAfter.forEach(symbol => {
-            let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ ]?([^ \r\n@])", "g");
+            let upper = symbol.toUpperCase();
+            var rexString = "(" + upper + ")[ ]?([^ \r\n@])";
+            let regex: RegExp = null;
+            if (upper.regexStartsWith(/\w/)) {
+                regex = new RegExp("(?<!\\w)" + rexString, "g");
+            }
+            else {
+                regex = new RegExp(rexString, "g");
+            }
             text = text.replace(regex, '$1\r\n$2');
-            if (symbol.toUpperCase() == "PORT") {
-                text = text.replace(/PORT\s+MAP/, "PORT MAP");
+            if (upper == "PORT") {
+                text = text.replace(/\bPORT\b\s+MAP/, "PORT MAP");
             }
         });
     }
     if (newLineSettings.noNewLineAfter != null) {
         newLineSettings.noNewLineAfter.forEach(symbol => {
-            let regex: RegExp = new RegExp("(" + symbol.toUpperCase() + ")[ \r\n]+([^@])", "g");
+            let rexString = "(" + symbol.toUpperCase() + ")[ \r\n]+([^@])";
+            let regex: RegExp = null;
+            if (symbol.regexStartsWith(/\w/)) {
+                regex = new RegExp("(?<!\\w)" + rexString, "g");
+                text = text.replace(regex, '$1 $2');
+            }
+            else {
+                regex = new RegExp(rexString, "g");
+            }
             text = text.replace(regex, '$1 $2');
         });
     }
@@ -263,8 +280,8 @@ export function beautify(input: string, settings: BeautifierSettings) {
     }
     ReserveSemicolonInKeywords(arr);
     input = arr.join("\r\n");
-    input = input.replace(/(PORT|GENERIC)\s+MAP/g, '$1 MAP');
-    input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
+    input = input.replace(/\b(PORT|GENERIC)\b\s+MAP/g, '$1 MAP');
+    input = input.replace(/\b(PORT|PROCESS|GENERIC)\b[\s]*\(/g, '$1 (');
     let newLineSettings = settings.NewLineSettings;
     if (newLineSettings != null) {
         input = SetNewLinesAfterSymbols(input, newLineSettings);
@@ -290,6 +307,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
     input = input.replace(/[\r\n\s]+$/g, '');
     input = input.replace(/[ \t]+\)/g, ')');
     input = input.replace(/\s*\)\s+RETURN\s+([\w]+;)/g, '\r\n) RETURN $1');//function(..)\r\nreturn type; -> function(..\r\n)return type;
+    input = input.replace(/\)\s*(@@\w+)\r\n\s*RETURN\s+([\w]+;)/g, ') $1\r\n' + ILIndentedReturnPrefix + 'RETURN $2');//function(..)\r\nreturn type; -> function(..\r\n)return type;
     let keywordAndSignRegex = new RegExp("(\\b" + KeyWords.join("\\b|\\b") + "\\b) +([\\-+]) +(\\w)", "g");
     input = input.replace(keywordAndSignRegex, "$1 $2$3");// `WHEN - 2` -> `WHEN -2`
     input = input.replace(/([,|]) +([+\-]) +(\w)/g, '$1 $2$3');// `1, - 2)` -> `1, -2)`
@@ -304,6 +322,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
 
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
+    input = input.replace(/@@RETURN/g, "RETURN");
     input = SetKeywordCase(input, settings.KeywordCase, KeyWords);
     input = SetKeywordCase(input, settings.TypeNameCase, TypeNames);
 
@@ -405,7 +424,7 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
     }
     let endIndex: number = hasParenthese ? GetCloseparentheseEndIndex(inputs, startIndex) : startIndex;
     if (endIndex != startIndex && firstLineHasParenthese) {
-        inputs[startIndex] = inputs[startIndex].replace(/(PORT|GENERIC|PROCEDURE)([\w ]+)\(([\w\(\) ]+)/, '$1$2(\r\n$3');
+        inputs[startIndex] = inputs[startIndex].replace(/\b(PORT|GENERIC|PROCEDURE)\b([\w ]+)\(([\w\(\) ]+)/, '$1$2(\r\n$3');
         let newInputs = inputs[startIndex].split("\r\n");
         if (newInputs.length == 2) {
             inputs[startIndex] = newInputs[0];
@@ -618,6 +637,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "UNITS",
         "\\w+\\s+\\w+\\s+IS\\s+RECORD"];
     let blockEndsKeyWords: Array<string> = ["END", ".*\\)\\s*RETURN\\s+[\\w]+;"];
+    let indentedEndsKeyWords: Array<string> = [ILIndentedReturnPrefix + "RETURN\\s+\\w+;"];
     let blockEndsWithSemicolon: Array<string> = [
         "(WITH\\s+[\\w\\s\\\\]+SELECT)",
         "([\\w\\\\]+[\\s]*<=)",
@@ -629,7 +649,8 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
     let newLineAfterKeyWordsStr: string = blockStartsKeyWords.join("|");
     let regexBlockMidKeyWords: RegExp = blockMidKeyWords.convertToRegexBlockWords();
     let regexBlockStartsKeywords: RegExp = new RegExp("([\\w]+\\s*:\\s*)?(" + newLineAfterKeyWordsStr + ")([^\\w]|$)")
-    let regexBlockEndsKeyWords: RegExp = blockEndsKeyWords.convertToRegexBlockWords()
+    let regexBlockEndsKeyWords: RegExp = blockEndsKeyWords.convertToRegexBlockWords();
+    let regexBlockIndentedEndsKeyWords: RegExp = indentedEndsKeyWords.convertToRegexBlockWords();
     let regexblockEndsWithSemicolon: RegExp = blockEndsWithSemicolon.convertToRegexBlockWords();
     let regexMidKeyWhen: RegExp = "WHEN".convertToRegexBlockWords();
     let regexMidKeyElse: RegExp = "ELSE|ELSIF".convertToRegexBlockWords();
@@ -641,6 +662,10 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             indent = 0;
         }
         let input: string = inputs[i].trim();
+        if (input.regexStartsWith(regexBlockIndentedEndsKeyWords)) {
+            result.push(new FormattedLine(input, indent));
+            return i;
+        }
         if (input.regexStartsWith(/COMPONENT\s/)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
@@ -669,7 +694,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             Mode = modeCache;
             continue;
         }
-        if (input.regexStartsWith(/[\w\s:]*PORT([\s]|$)/)) {
+        if (input.regexStartsWith(/[\w\s:]*\bPORT\b([\s]|$)/)) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PORT");
             continue;
         }
@@ -702,7 +727,11 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             && input.regexIndexOf(/[^\w]RETURN[^\w]/) < 0) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "IMPURE FUNCTION");
             if (!inputs[i].regexStartsWith(regexBlockEndsKeyWords)) {
-                i = beautify3(inputs, result, settings, i + 1, indent + 1);
+                if (inputs[i].regexStartsWith(regexBlockIndentedEndsKeyWords)) {
+                    (<FormattedLine>result[i]).Indent++;
+                } else {
+                    i = beautify3(inputs, result, settings, i + 1, indent + 1);
+                }
             } else {
                 (<FormattedLine>result[i]).Indent++;
             }

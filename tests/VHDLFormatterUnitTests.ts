@@ -15,6 +15,7 @@ let testCount: number = 0;
 
 var showUnitTests = true;//window.location.href.indexOf("http") < 0;
 if (showUnitTests) {
+    //IntegrationTest84();
     testCount = 0;
     IntegrationTest();
 
@@ -920,6 +921,8 @@ function IntegrationTest() {
     IntegrationTest79();
     IntegrationTest80();
     IntegrationTest82();
+    IntegrationTest84();
+    IntegrationTest85();
 }
 
 function IntegrationTest23() {
@@ -1394,6 +1397,28 @@ function IntegrationTest82() {
     let input = 'long : test;\r\n-- comment\r\nloooooong : test;';
     let actual = beautify(input, settings);
     assertAndCountTest("block alignment local", input, actual);
+}
+
+function IntegrationTest83() { // TODO
+    let settings = GetDefaultSettings();
+    let input = 'FUNCTION "<=" (l : ufixed; long : NATURAL) return BOOLEAN;\r\nFUNCTION ">" (l  : ufixed; r    : NATURAL) RETURN BOOLEAN;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("signal in out alignment", input, actual);
+}
+
+function IntegrationTest84() {
+    let settings = GetDefaultSettings();
+    let input = 'PACKAGE f IS\r\n    FUNCTION s (\r\n        arg : sfixed) -- fp vector\r\n        RETURN t;\r\nEND PACKAGE f;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("empty body and return", input, actual);
+}
+
+function IntegrationTest85() {
+    let settings = GetDefaultSettings();
+    settings.NewLineSettings.newLineAfter = ["port"]
+    let input = 'REPORT "FIXED_GENERIC_PKG: Vector passed using a ""to"" range, expected is ""downto"""\r\n    SEVERITY error;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("report and severity", input, actual);
 }
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
