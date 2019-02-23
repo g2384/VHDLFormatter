@@ -10,6 +10,7 @@ VHDL formatter web online written in javascript
 
 - use local storage to store settings
 - add `main.js`
+- treat key words and type names separately
 
 ### 2.3 [2018-02-22]
 

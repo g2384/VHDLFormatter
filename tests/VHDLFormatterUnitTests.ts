@@ -917,6 +917,8 @@ function IntegrationTest() {
     IntegrationTest76();
     IntegrationTest77();
     IntegrationTest78();
+    IntegrationTest79();
+    IntegrationTest80();
 }
 
 function IntegrationTest23() {
@@ -1078,6 +1080,7 @@ function IntegrationTest44() {
 function IntegrationTest45() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     settings.Indentation = "	";
     let input = 'REPORT\n"A_ARITH_MOD_tester.main Tester is now ready. A total OF " &\nINTEGER\'image(totalTests) & " tests have been detected.";';
     let expected = 'report\r\n	"A_ARITH_MOD_tester.main Tester is now ready. A total OF " &\r\n	integer\'image(totalTests) & " tests have been detected.";';
@@ -1088,6 +1091,7 @@ function IntegrationTest45() {
 function IntegrationTest46() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     let input = 'impure function delay(\r\n    l : integer\r\n) return time is\r\n    variable r : real;\r\nbegin\r\n    result := 2ps;\r\n    return result;\r\nend function;';
     let actual = beautify(input, settings);
     assertAndCountTest("impure function indent", input, actual);
@@ -1096,6 +1100,7 @@ function IntegrationTest46() {
 function IntegrationTest47() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     settings.Indentation = " ";
     let input = 'result := 1\r\n 1\r\n + 1; -- hello';
     let actual = beautify(input, settings);
@@ -1105,6 +1110,7 @@ function IntegrationTest47() {
 function IntegrationTest48() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     let input = 'function delay(\r\n    l : integer\r\n) return time is\r\n    variable r : real;\r\nbegin\r\n    result := 2ps;\r\n    return result;\r\nend function;';
     let actual = beautify(input, settings);
     assertAndCountTest("function indent", input, actual);
@@ -1139,6 +1145,7 @@ function IntegrationTest51() {
 function IntegrationTest52() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     let input = 'function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nimpure function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nfunction a(\r\n    b : integer\r\n    c : integer\r\n) return integer;';
     let actual = beautify(input, settings);
     assertAndCountTest("function without sequential statements", input, actual);
@@ -1147,6 +1154,7 @@ function IntegrationTest52() {
 function IntegrationTest53() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     let input = 'function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nimpure function a(\r\n    b : integer\r\n    c : integer\r\n) return integer;\r\n\r\nfunction a(\r\n    b : integer\r\n    c : integer\r\n) return integer;';
     let actual = beautify(input, settings);
     assertAndCountTest("function without sequential statements, without new line", input, actual);
@@ -1185,6 +1193,7 @@ function IntegrationTest57() {
 function IntegrationTest58() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     let input = 'package body a is\r\n    procedure b(\r\n        signal a : in boolean;\r\n        b : boolean\r\n    ) is\r\n    begin\r\n        a = 1\r\n    end procedure b;\r\nend a;';
     let actual = beautify(input, settings);
     assertAndCountTest("package body", input, actual);
@@ -1193,6 +1202,7 @@ function IntegrationTest58() {
 function IntegrationTest59() {
     let settings = GetDefaultSettings();
     settings.KeywordCase = "lowercase";
+    settings.TypeNameCase = "lowercase";
     let input = 'package body a is\r\n    procedure b(\r\n        signal a : in boolean;\r\n        b : boolean) is\r\n    begin\r\n        a = 1\r\n    end procedure b;\r\nend a;';
     let actual = beautify(input, settings);
     assertAndCountTest("package body 2", input, actual);
@@ -1343,19 +1353,32 @@ function IntegrationTest76() {
 
 function IntegrationTest77() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
     let input = "WHEN -2;\r\nSIGNAL +0;";
     let actual = beautify(input, settings);
-    assertAndCountTest("negative sign and number", input, actual);
+    assertAndCountTest("negative sign and number after key word", input, actual);
 }
 
 function IntegrationTest78() {
     let settings = GetDefaultSettings();
-    settings.SignAlignAll = true;
     let input = "sfixed(4 downto - 18);\r\nx <= to_sfixed( - 2.3, x);\r\nresize(x + 1, 4, - 18) when others;";
     let expected = "sfixed(4 DOWNTO -18);\r\nx <= to_sfixed(-2.3, x);\r\nresize(x + 1, 4, -18) WHEN OTHERS;";
     let actual = beautify(input, settings);
-    assertAndCountTest("negative sign and number", expected, actual);
+    assertAndCountTest("negative sign and number after symbol", expected, actual);
+}
+
+function IntegrationTest79() {
+    let settings = new BeautifierSettings(false, false, false, false, false, "lowercase", "uppercase", null, null, "\r\n");
+    settings.SignAlignAll = true;
+    let input = "case when others;\r\nx : STRING;\r\ny : BIT;";
+    let actual = beautify(input, settings);
+    assertAndCountTest("uppercase typename and lowercase keyword", input, actual);
+}
+
+function IntegrationTest80() {
+    let settings = GetDefaultSettings();
+    let input = 'FUNCTION "abs" (arg : sfixed) RETURN sfixed;';
+    let actual = beautify(input, settings);
+    assertAndCountTest("function name in quotes", input, actual);
 }
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
@@ -1367,7 +1390,7 @@ function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
 }
 
 function getDefaultBeautifierSettings(newLineSettings: NewLineSettings, indentation: string = "    "): BeautifierSettings {
-    return new BeautifierSettings(false, false, false, false, false, "uppercase", indentation, newLineSettings, "\r\n");
+    return new BeautifierSettings(false, false, false, false, false, "uppercase", "uppercase", indentation, newLineSettings, "\r\n");
 }
 
 function IntegrationTest20() {

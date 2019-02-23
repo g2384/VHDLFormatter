@@ -1,6 +1,7 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <title>VHDL Beautifier, Formatter Online</title>
     <style>
         body {
@@ -201,6 +202,12 @@
         .checkbox input[type="checkbox"]:focus+label::before {
             outline: #333 auto 5px;
         }
+
+        .inline-note {
+            color: #888;
+            margin-left: 10px;
+            display: inline-block;
+        }
     </style>
     <link href="highlight.css" rel="stylesheet" />
     <script src="highlight.js"></script>
@@ -240,13 +247,27 @@
         <input type="checkbox" id="no_format" onclick="noFormat()">
         <label for="no_format">Only highlight, don't format</label>
     </div>
-    <form id="keyword">Keyword Case:
+    <form id="keyword">Keyword case:
         <label>
             <input type="radio" name="keywordcase" value="UpperCase" checked="checked">UPPERCASE</label> |
         <label>
             <input type="radio" name="keywordcase" value="LowerCase">lowercase</label> |
         <label>
             <input type="radio" name="keywordcase" value="DefaultCase">Default</label>
+        <div class="inline-note">
+            e.g. begin, case, when
+        </div>
+    </form>
+    <form id="typename">Type name case:
+        <label>
+            <input type="radio" name="typenamecase" value="UpperCase" checked="checked">UPPERCASE</label> |
+        <label>
+            <input type="radio" name="typenamecase" value="LowerCase">lowercase</label> |
+        <label>
+            <input type="radio" name="typenamecase" value="DefaultCase">Default</label>
+        <div class="inline-note">
+            e.g. boolean, natural, string
+        </div>
     </form>
     <fieldset id="new_line_after_div">
         <legend>New line after</legend>
@@ -459,6 +480,7 @@
             document.getElementById("use_space").checked = indentation != "\t";
             document.getElementById("customise_indentation").value = indentation;
             document.getElementById("keyword").elements.namedItem("keywordcase").value = beautifierSettings.KeywordCase;
+            document.getElementById("typename").elements.namedItem("typenamecase").value = beautifierSettings.TypeNameCase;
             document.getElementById("mix_letter").checked = setting.mixLetter;
             var eof = beautifierSettings.EndOfLine
             eof = eof.replace(/\r/g, "\\r");
@@ -514,6 +536,7 @@
             var compress = document.getElementById("compress").checked;
             var cust_indent = document.getElementById("customise_indentation").value;
             var keywordcase = document.getElementById("keyword").elements.namedItem("keywordcase").value;
+            var typenamecase = document.getElementById("typename").elements.namedItem("typenamecase").value;
             var mix_letter = document.getElementById("mix_letter").checked;
             var endOfLine = document.getElementById("cust_eol").value;
             endOfLine = endOfLine.replace(/\\r/g, "\r");
@@ -556,6 +579,7 @@
             beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias, sign_align,
                 sign_align_all,
                 keywordcase,
+                typenamecase,
                 indentation,
                 newLineSettings,
                 endOfLine);

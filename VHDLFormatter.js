@@ -118,23 +118,19 @@ function ReplaceKeyWords(text, keywords) {
     }
     return text;
 }
-function SetKeywordCase(input, keywordcase, keywords, typenames) {
+function SetKeywordCase(input, keywordcase, keywords) {
     let inputcase = keywordcase.toLowerCase();
-    switch (keywordcase.toLowerCase()) {
+    switch (inputcase) {
         case "lowercase":
             ToLowerCases(keywords);
-            ToLowerCases(typenames);
             break;
         case "defaultcase":
             ToCamelCases(keywords);
-            ToCamelCases(typenames);
             break;
         case "uppercase":
             ToUpperCases(keywords);
-            ToUpperCases(typenames);
     }
     input = ReplaceKeyWords(input, keywords);
-    input = ReplaceKeyWords(input, typenames);
     return input;
 }
 function SetNewLinesAfterSymbols(text, newLineSettings) {
@@ -160,13 +156,14 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
 }
 exports.SetNewLinesAfterSymbols = SetNewLinesAfterSymbols;
 class BeautifierSettings {
-    constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, indentation, newLineSettings, endOfLine) {
+    constructor(removeComments, removeReport, checkAlias, signAlign, signAlignAll, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
         this.SignAlignRegional = signAlign;
         this.SignAlignAll = signAlignAll;
         this.KeywordCase = keywordCase;
+        this.TypeNameCase = typeNameCase;
         this.Indentation = indentation;
         this.NewLineSettings = newLineSettings;
         this.EndOfLine = endOfLine;
@@ -190,7 +187,8 @@ function beautify(input, settings) {
         input = input.replace(/@@comments[0-9]+/g, '');
         comments = [];
     }
-    input = SetKeywordCase(input, "uppercase", KeyWords, TypeNames);
+    input = SetKeywordCase(input, "uppercase", KeyWords);
+    input = SetKeywordCase(input, "uppercase", TypeNames);
     input = RemoveExtraNewLines(input);
     input = input.replace(/[\t ]+/g, ' ');
     input = input.replace(/\([\t ]+/g, '\(');
@@ -204,10 +202,13 @@ function beautify(input, settings) {
     input = arr.join("\r\n");
     input = input.replace(/(PORT|GENERIC)\s+MAP/g, '$1 MAP');
     input = input.replace(/(PORT|PROCESS|GENERIC)[\s]*\(/g, '$1 (');
-    input = SetNewLinesAfterSymbols(input, settings.NewLineSettings);
-    arr = input.split("\r\n");
-    ApplyNoNewLineAfter(arr, settings.NewLineSettings.noNewLineAfter);
-    input = arr.join("\r\n");
+    let newLineSettings = settings.NewLineSettings;
+    if (newLineSettings != null) {
+        input = SetNewLinesAfterSymbols(input, newLineSettings);
+        arr = input.split("\r\n");
+        ApplyNoNewLineAfter(arr, newLineSettings.noNewLineAfter);
+        input = arr.join("\r\n");
+    }
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
     input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
     input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3'); // fix exponential notation format broken by previous step
@@ -237,7 +238,8 @@ function beautify(input, settings) {
     }
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
-    input = SetKeywordCase(input, settings.KeywordCase, KeyWords, TypeNames);
+    input = SetKeywordCase(input, settings.KeywordCase, KeyWords);
+    input = SetKeywordCase(input, settings.TypeNameCase, TypeNames);
     input = replaceEscapedWords(input, quotes, ILQuote);
     input = replaceEscapedWords(input, singleQuotes, ILSingleQuote);
     input = replaceEscapedComments(input, comments, ILCommentPrefix);
@@ -253,7 +255,7 @@ exports.beautify = beautify;
 function replaceEscapedWords(input, arr, prefix) {
     for (var i = 0; i < arr.length; i++) {
         var text = arr[i];
-        var regex = new RegExp(prefix + "{" + text.length + "}");
+        var regex = new RegExp("(" + prefix + "){" + text.length + "}");
         input = input.replace(regex, text);
     }
     return input;
@@ -280,6 +282,9 @@ function FormattedLineToString(arr, indentation) {
     let result = [];
     if (arr == null) {
         return result;
+    }
+    if (indentation == null) {
+        indentation = "";
     }
     arr.forEach(i => {
         if (i instanceof FormattedLine) {
