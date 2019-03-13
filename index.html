@@ -3,222 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>VHDL Beautifier, Formatter Online</title>
-    <style>
-        body {
-            margin: 0 auto;
-            max-width: 960px;
-            tab-size: 4;
-            font-family: arial, sans-serif;
-        }
-        
-        textarea {
-            width: 100%;
-            font-family: Consolas, Courier;
-        }
-        
-        fieldset {
-            width: fit-content;
-            border: 1px solid #9a9a9a;
-            margin: 25px 0 5px 0;
-            padding-left: 0;
-        }
-        
-        legend {
-            padding: 2px 5px;
-            background-color: #e0e0e0;
-            border-radius: 2px;
-            margin: -27px 0 0 -1px;
-            position: absolute;
-        }
-        
-        .subtitle {
-            font-weight: normal;
-        }
-        
-        .btn {
-            margin: 10px 10px;
-            padding: 5px 8px;
-            font-size: 16px;
-            line-height: 1.33;
-            border-radius: 3px;
-            color: #333;
-            border-color: #ccc;
-            cursor: pointer;
-            text-align: center;
-            white-space: nowrap;
-            border: 1px solid rgb(194, 194, 194);
-            background-color: #fff;
-        }
-        
-        .btn:hover {
-            background-color: #eee;
-        }
-        
-        .show {
-            display: none;
-        }
-        
-        .wordwrap {
-            white-space: pre-wrap;
-            white-space: -moz-pre-wrap;
-            white-space: -pre-wrap;
-            white-space: -o-pre-wrap;
-            word-wrap: break-word;
-        }
-        
-        label {
-            cursor: pointer;
-            line-height: 1.5em;
-        }
-        
-        label:hover {
-            color: #555;
-            text-decoration: underline;
-        }
-        
-        form {
-            margin-bottom: 0px;
-        }
-        
-        form span {
-            width: 170px;
-            display: inline-block;
-            text-align: right;
-        }
-        
-        a {
-            color: #4b9aff;
-            text-decoration: none;
-            background: #f0f8ff;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.8em;
-            cursor: pointer;
-        }
-        
-        a:hover {
-            text-decoration: none;
-            background: #d6e8ff;
-        }
-        
-        p {
-            line-height: 1em;
-            margin: 0.5em 0em;
-        }
-        
-        .code {
-            font-family: 'Consolas', Courier, monospace;
-        }
-        
-        .inline {
-            display: inline-block;
-        }
-        
-        .disabled {
-            color: #ccc;
-            cursor: default;
-        }
-        
-        .disabled label:hover {
-            color: #ccc;
-            text-decoration: none;
-            cursor: default;
-        }
-        
-        .checkbox input[type="checkbox"] {
-            opacity: 0;
-            display: none;
-        }
-        
-        .checkbox label {
-            position: relative;
-            display: inline-block;
-            /*16px width of fake checkbox + 6px distance between fake checkbox and text*/
-            padding-left: 22px;
-        }
-        
-        .checkbox label::before,
-        .checkbox label::after {
-            position: absolute;
-            content: "";
-            /*Needed for the line-height to take effect*/
-            display: inline-block;
-        }
-        /*Outer box of the fake checkbox*/
-        
-        .checkbox label::before {
-            height: 16px;
-            width: 16px;
-            border: 1px solid #9A9A9A;
-            left: 0px;
-            /*(24px line-height - 16px height of fake checkbox) / 2 - 1px for the border to vertically center it.*/
-            top: 3px;
-        }
-        /*Checkmark of the fake checkbox*/
-        
-        .checkbox label::after {
-            height: 5px;
-            width: 9px;
-            border-left: 2px solid;
-            border-bottom: 2px solid;
-            transform: rotate(-45deg);
-            left: 4px;
-            top: 7px;
-            color: #333;
-        }
-        /*Hide the checkmark by default*/
-        
-        .checkbox input[type="checkbox"]+label::after {
-            content: none;
-        }
-        /*Unhide on the checked state*/
-        
-        .checkbox input[type="checkbox"]:checked+label::after {
-            content: "";
-        }
-        /*Adding focus styles on the outer-box of the fake checkbox*/
-        
-        .checkbox input[type="checkbox"]:hover+label::after {
-            border-color: #888;
-            outline: #ccc;
-        }
-        
-        .checkbox input[type="checkbox"]:hover+label::before {
-            outline: #888;
-            border-color: #888;
-            background-color: #eee;
-        }
-        
-        .checkbox input[type="checkbox"]:disabled+label::before {
-            outline: #ccc;
-            border-color: #ccc;
-            background-color: #fff;
-            color: #ccc;
-        }
-        
-        .checkbox input[type="checkbox"]:disabled+label::after {
-            color: #888;
-        }
-        
-        .checkbox input[type="checkbox"]:focus+label::before {
-            outline: #333 auto 5px;
-        }
-
-        .inline-note {
-            color: #888;
-            margin-left: 10px;
-            display: inline-block;
-        }
-
-        .hide {
-            display: none;
-        }
-
-        #settings_control {
-            margin: 10px 0px;
-            display: inline-block;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css" />
     <link href="highlight.css" rel="stylesheet" />
     <script src="highlight.js"></script>
     <script>
@@ -242,11 +27,36 @@
 </head>
 
 <body>
+    <div class="content">
     <h2>VHDL Beautifier, Formatter</h2>
-    <h4 class="subtitle">Beautify and format your VHDL code online</h4>
-    <p>Proper formatting makes code easier to read and understand.</p>
-    <p>Please make a backup before you replace your code!</p>
     <p style="color:#888">
+        <div class="tooltip emoji" onclick="showInfo();">&#x2139;
+                <span class="tooltiptext">Beautify and format your VHDL code online</span>
+            </div>
+            <div id="info" class="modal">
+                <div class="modal-content">
+                    <span id="close-info" class="close">&times;</span>
+                    <p>Beautify and format your VHDL code online</p>
+                </div>
+            </div>
+        <div class="tooltip emoji" onclick="showWarning();">&#x26A0;
+            <span class="tooltiptext">Please make a backup before you replace your code!</span>
+        </div>
+        <div id="warning" class="modal">
+            <div class="modal-content">
+                <span id="close-warning" class="close">&times;</span>
+                <p>Please make a backup before you replace your code!</p>
+            </div>
+        </div>
+        <div class="tooltip emoji" onclick="showHappy();">&#x1F638;
+            <span class="tooltiptext">Proper formatting makes code easier to read and understand.</span>
+        </div>
+        <div id="happy" class="modal">
+            <div class="modal-content">
+                <span id="close-happy" class="close">&times;</span>
+                <p>Proper formatting makes code easier to read and understand.</p>
+            </div>
+        </div>
         <a href="https://github.com/g2384/VHDLFormatter#release-notes">Release notes</a>
         <a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>
         <a href="https://github.com/g2384/VHDLFormatter">Source code</a>
@@ -398,8 +208,9 @@
     </div>
     <div>
         <a id="settings_control" onclick="showHideSettings();">Show More Settings ▼</a>
+        <a onclick="outputSetting()">Output Settings</a>
     </div>
-    <input type="button" class="btn" onclick="f()" value="start" />
+    <input type="button" class="btn" onclick="f()" value="Start" />
     <span class="show">
         <input type="button" class="btn " id="selectAll" value="Select All" onclick="selectText(document.getElementById('vhdl'))" />
         <div class="checkbox inline">
@@ -458,6 +269,8 @@
 		 
 	<span class="hljs-keyword">END</span> <span class="hljs-keyword">PROCESS</span>;
 <span class="hljs-keyword">END</span> EXA;</code></pre>
+
+</div>
     <script>
         var exports = {};
     </script>
@@ -557,8 +370,34 @@
                 hljs.highlightBlock(document.getElementById("vhdl"));
                 return;
             }
-            var remove_comments = document.getElementById("remove_comments").checked;
+            
             var remove_lines = document.getElementById("remove_lines").checked;
+            var mix_letter = document.getElementById("mix_letter").checked;
+            [beautifierSettings, compress] = CreateSettings();
+            vhdlSettings = new VhdlSettings(beautifierSettings, remove_lines, compress, mix_letter);
+            saveSetting(vhdlSettings);
+
+            input = beautify(input, beautifierSettings);
+
+            if (remove_lines) {
+                input = input.replace(/(\r\n)*[ \t]*\r\n/g, '\r\n');
+            }
+
+            if (compress) {
+                input = Compress(input);
+            }
+
+            if (mix_letter) {
+                input = MixLetters(input);
+            }
+
+            document.getElementById("vhdl").innerHTML = input;
+            document.querySelector(".show").style.display = "inline-block";
+            hljs.highlightBlock(document.getElementById("vhdl"));
+        }
+
+        function CreateSettings() {
+            var remove_comments = document.getElementById("remove_comments").checked;            
             var remove_report = document.getElementById("remove_report").checked;
             var check_alias = document.getElementById("check_alias").checked;
             var sign_align_port = document.getElementById("sign_align_port").checked;
@@ -576,8 +415,7 @@
             var compress = document.getElementById("compress").checked;
             var cust_indent = document.getElementById("customise_indentation").value;
             var keywordcase = document.getElementById("keyword_div").elements.namedItem("keywordcase").value;
-            var typenamecase = document.getElementById("typename_div").elements.namedItem("typenamecase").value;
-            var mix_letter = document.getElementById("mix_letter").checked;
+            var typenamecase = document.getElementById("typename_div").elements.namedItem("typenamecase").value;            
             var endOfLine = document.getElementById("cust_eol").value;
             endOfLine = endOfLine.replace(/\\r/g, "\r");
             endOfLine = endOfLine.replace(/\\n/g, "\n");
@@ -625,26 +463,13 @@
                 newLineSettings,
                 endOfLine);
 
-            vhdlSettings = new VhdlSettings(beautifierSettings, remove_lines, compress, mix_letter);
-            saveSetting(vhdlSettings);
+            return [beautifierSettings, compress];
+        }
 
-            input = beautify(input, beautifierSettings);
-
-            if (remove_lines) {
-                input = input.replace(/(\r\n)*[ \t]*\r\n/g, '\r\n');
-            }
-
-            if (compress) {
-                input = Compress(input);
-            }
-
-            if (mix_letter) {
-                input = MixLetters(input);
-            }
-
-            document.getElementById("vhdl").innerHTML = input;
-            document.querySelector(".show").style.display = "inline-block";
-            hljs.highlightBlock(document.getElementById("vhdl"));
+        function outputSetting() {
+            [beautifierSettings, compress] = CreateSettings();
+            var json = JSON.stringify(beautifierSettings, null, 4);
+            document.getElementById("vhdl").innerHTML = json;
         }
 
         function saveSetting(setting) {
@@ -677,6 +502,54 @@
                 this.removeLines = removeLines;
                 this.compress = compress;
                 this.mixLetter = mixLetter;
+            }
+        }
+
+        var warning = document.getElementById('warning');
+        var info = document.getElementById('info');
+        var happy = document.getElementById('happy');
+
+        var closeInfo = document.getElementById("close-info");
+        var closeWarning = document.getElementById("close-warning");
+        var closeHappy = document.getElementById("close-happy");
+
+        function showWarning() {
+            warning.style.display = "block";
+        }
+
+        function showInfo() {
+            info.style.display = "block";
+        }
+
+        function showHappy() {
+            happy.style.display = "block";
+        }
+
+        closeInfo.onclick = function() {
+            hidePopups();
+        }
+
+        closeWarning.onclick = function() {
+            hidePopups();
+        }
+
+        closeHappy.onclick = function(){
+            hidePopups();
+        }
+
+        function hidePopups() {
+            warning.style.display = "none";
+            info.style.display = "none";
+            happy.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            var target = event.target;
+            if (target == warning
+            || target == info
+            || target == happy) {
+                hidePopups();
             }
         }
     </script>

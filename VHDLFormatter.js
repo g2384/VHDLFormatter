@@ -144,7 +144,7 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
             var rexString = "(" + upper + ")[ ]?([^ \r\n@])";
             let regex = null;
             if (upper.regexStartsWith(/\w/)) {
-                regex = new RegExp("(?<!\\w)" + rexString, "g");
+                regex = new RegExp("\\b" + rexString, "g");
             }
             else {
                 regex = new RegExp(rexString, "g");
@@ -160,7 +160,7 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
             let rexString = "(" + symbol.toUpperCase() + ")[ \r\n]+([^@])";
             let regex = null;
             if (symbol.regexStartsWith(/\w/)) {
-                regex = new RegExp("(?<!\\w)" + rexString, "g");
+                regex = new RegExp("\\b" + rexString, "g");
                 text = text.replace(regex, '$1 $2');
             }
             else {
