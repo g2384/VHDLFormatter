@@ -28,8 +28,9 @@
 
 <body>
     <div class="content">
+<div class="top-bar">
+    <div class="container">
     <h2>VHDL Beautifier, Formatter</h2>
-    <p style="color:#888">
         <ul>
             <li>
                 <div class="tooltip emoji top-button" onclick="showInfo();">&#x2139;
@@ -75,7 +76,8 @@
                 <a class="top-button" href="https://github.com/g2384/VHDLFormatter">Source code</a>
             </li>
         </ul>
-    </p>
+</div>
+</div>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
     <div class="setting-field">
@@ -297,6 +299,9 @@
     <script>
         const localStorageSettingKey = "settings";
         const localStorageNoFormatKey = "noFormat";
+
+        var areaIn = document.getElementById("in");
+        areaIn.placeholder = "library IEEE;\nuse IEEE.std_logic_1164.all;\nuse IEEE.std_logic_unsigned.all;\n...";
 
         function showHideSettings() {
             var settingsDiv = document.getElementById("settings_div");
