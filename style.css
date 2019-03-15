@@ -58,9 +58,9 @@ li {
 
 .top-button:hover {
     color: #000;
-    background: #eff0f1;
-    -webkit-transition: .1s background-color ease;
-    transition: .1s background-color ease;
+    background: #ededed;
+    -webkit-transition: .5s background-color ease, .5s color ease;
+    transition: .5s background-color ease, .5s color ease;
 }
 
 .top-bar {
@@ -387,7 +387,7 @@ p {
     padding: .5em 1em;
     border: 1px solid #cecece;
     border-radius: 3px;
-    top: 130%;
+    top: 120%;
     left: 0%;
     position: absolute;
     z-index: 1;
@@ -405,7 +405,7 @@ p {
     content: " ";
     position: absolute;
     bottom: 100%;
-    left: 9%;
+    left: 6%;
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
@@ -417,4 +417,5 @@ p {
 
 .emoji {
     font-family: apple color emoji, segoe ui emoji, noto color emoji, android emoji, emojisymbols, emojione mozilla, twemoji mozilla, segoe ui symbol;
+    color: #fff;
 }
