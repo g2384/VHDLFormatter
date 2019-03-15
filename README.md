@@ -9,7 +9,7 @@ VHDL formatter web online written in javascript
 ### 2.5 [2018-03-13]
 
 - keep the front page concise
-- add `style.css`
+- add `style.css`, improve UI
 - support all browsers (do not use `RegExp Lookbehind Assertions`)
 
 ### 2.4 [2018-02-23]

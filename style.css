@@ -7,9 +7,76 @@ body {
 
 textarea {
     width: 100%;
-    border: solid 1px #9a9a9a;
     padding: 3px;
+    resize: vertical;
     font-family: 'Consolas', Courier, monospace;
+}
+
+input[type="text"] {
+    padding: 2px 4px;
+}
+
+input[type="text"],
+textarea {
+    border: solid 1px #dbdbdb;
+    box-shadow: inset 0 1px 2px rgba(10, 10, 10, .1);
+    border-radius: 4px 4px 0px 0px;
+    font-size: 1rem;
+}
+
+input[type="text"]:hover,
+textarea:hover {
+    border-color: #b5b5b5;
+}
+
+ul {
+    flex-wrap: wrap;
+    max-width: 100%;
+    list-style: none;
+    align-items: center;
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 0;
+    justify-content: flex-start;
+    padding: 0px;
+}
+
+li {
+    display: block;
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+    user-select: none;
+}
+
+.top-button {
+    color: #000;
+    font-size: 1rem;
+    line-height: 1rem;
+    padding: .5em 1em;
+    margin: 0;
+    cursor: pointer;
+    margin-bottom: -2px;
+    border-radius: 0px;
+    background-color: #fff;
+    border-bottom: solid 2px #f5f5f5;
+}
+
+.top-button:hover {
+    border-bottom: solid 2px #dbdbdb;
+    background: rgba(0, 0, 0, .03);
+    -webkit-transition: .1s background-color ease;
+    transition: .1s background-color ease;
+}
+
+.inline-emoji {
+    font-size: 0.8em;
+}
+
+.setting-field {
+    padding: 1.25rem 1.5rem;
+    background-color: #f5f5f5;
+    border-radius: 0px 0px 6px 6px;
 }
 
 fieldset {
@@ -32,22 +99,21 @@ legend {
 }
 
 .btn {
-    margin: 10px 10px;
-    padding: 5px 8px;
-    font-size: 16px;
-    line-height: 1.33;
+    margin: 10px 0px;
+    padding: .5em 1em;
+    font-size: 1rem;
     border-radius: 3px;
     color: #333;
-    border-color: #ccc;
+    border: solid 1px #dbdbdb;
     cursor: pointer;
     text-align: center;
     white-space: nowrap;
-    border: 1px solid rgb(194, 194, 194);
     background-color: #fff;
 }
 
 .btn:hover {
-    background-color: #eee;
+    border-color: #b5b5b5;
+    background: rgba(0, 0, 0, .03);
 }
 
 .show {
@@ -85,8 +151,8 @@ form span {
 a {
     color: #4b9aff;
     text-decoration: none;
-    background: #f0f8ff;
-    padding: 2px 5px;
+    background-color: #f0f8ff;
+    padding: .5em 1em;
     border-radius: 3px;
     font-size: 0.8em;
     cursor: pointer;
@@ -274,24 +340,25 @@ p {
     cursor: pointer;
     position: relative;
     display: inline-block;
-    border-bottom: 1px dotted black;
 }
 
 .tooltip .tooltiptext {
     visibility: hidden;
     opacity: 0;
     width: 220px;
-    background-color: black;
-    color: #fff;
+    background-color: #fff;
+    color: #000;
     text-align: left;
-    padding: 5px 3px;
-    border-radius: 5px;
-    top: 100%;
-    left: 50%;
+    padding: .5em 1em;
+    border: 1px solid #cecece;
+    border-radius: 3px;
+    top: 130%;
+    left: 0%;
     position: absolute;
     z-index: 1;
-    -webkit-transition: opacity 1s ease-in-out;
-    transition: opacity 1s ease-in-out;
+    -webkit-transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out;
+    box-shadow: 1px 0px 5px #bcbcbc;
 }
 
 .tooltip:hover .tooltiptext {
@@ -299,7 +366,20 @@ p {
     opacity: 1;
 }
 
+.tooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    bottom: 100%;
+    left: 9%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-width: 0 0.5em 0.5em 0.5em;
+    border-color: transparent transparent white transparent;
+    -webkit-filter: drop-shadow(1px 2px 1px #bcbcbc);
+    filter: drop-shadow(1px -1px 1px #bcbcbc);
+}
+
 .emoji {
-    padding: 2px;
     font-family: apple color emoji, segoe ui emoji, noto color emoji, android emoji, emojisymbols, emojione mozilla, twemoji mozilla, segoe ui symbol;
 }

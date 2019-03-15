@@ -30,39 +30,55 @@
     <div class="content">
     <h2>VHDL Beautifier, Formatter</h2>
     <p style="color:#888">
-        <div class="tooltip emoji" onclick="showInfo();">&#x2139;
-                <span class="tooltiptext">Beautify and format your VHDL code online</span>
-            </div>
-            <div id="info" class="modal">
-                <div class="modal-content">
-                    <span id="close-info" class="close">&times;</span>
-                    <p>Beautify and format your VHDL code online</p>
+        <ul>
+            <li>
+                <div class="tooltip emoji top-button" onclick="showInfo();">&#x2139;
+                    <span class="tooltiptext">Beautify and format your VHDL code online</span>
                 </div>
-            </div>
-        <div class="tooltip emoji" onclick="showWarning();">&#x26A0;
-            <span class="tooltiptext">Please make a backup before you replace your code!</span>
-        </div>
-        <div id="warning" class="modal">
-            <div class="modal-content">
-                <span id="close-warning" class="close">&times;</span>
-                <p>Please make a backup before you replace your code!</p>
-            </div>
-        </div>
-        <div class="tooltip emoji" onclick="showHappy();">&#x1F638;
-            <span class="tooltiptext">Proper formatting makes code easier to read and understand.</span>
-        </div>
-        <div id="happy" class="modal">
-            <div class="modal-content">
-                <span id="close-happy" class="close">&times;</span>
-                <p>Proper formatting makes code easier to read and understand.</p>
-            </div>
-        </div>
-        <a href="https://github.com/g2384/VHDLFormatter#release-notes">Release notes</a>
-        <a href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report <span>&#x1f41e;</span> bug</a>
-        <a href="https://github.com/g2384/VHDLFormatter">Source code</a>
+                <div id="info" class="modal">
+                    <div class="modal-content">
+                        <span id="close-info" class="close">&times;</span>
+                        <p>Beautify and format your VHDL code online</p>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <div class="tooltip emoji top-button" onclick="showWarning();">&#x26A0;
+                    <span class="tooltiptext">Please make a backup before you replace your code!</span>
+                </div>
+                <div id="warning" class="modal">
+                    <div class="modal-content">
+                        <span id="close-warning" class="close">&times;</span>
+                        <p>Please make a backup before you replace your code!</p>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <div class="tooltip emoji top-button" onclick="showHappy();">&#x1F638;
+                    <span class="tooltiptext">Proper formatting makes code easier to read and understand.</span>
+                </div>
+                <div id="happy" class="modal">
+                    <div class="modal-content">
+                        <span id="close-happy" class="close">&times;</span>
+                        <p>Proper formatting makes code easier to read and understand.</p>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <a class="top-button" href="https://github.com/g2384/VHDLFormatter#release-notes">Release notes</a>
+            </li>
+            <li>
+                <a class="top-button" href="https://github.com/g2384/VHDLFormatter/issues/new" target="_blank">Report
+                    <span class="inline-emoji">&#x1f41e;</span> bug</a>
+            </li>
+            <li>
+                <a class="top-button" href="https://github.com/g2384/VHDLFormatter">Source code</a>
+            </li>
+        </ul>
     </p>
     <textarea id="in" rows="10" wrap="off"></textarea>
     <br>
+    <div class="setting-field">
     <div class="checkbox">
         <input type="checkbox" id="no_format" onclick="noFormat()">
         <label for="no_format">Only highlight, don't format</label>
@@ -206,6 +222,7 @@
             <label for="mix_letter">! EVIL - unreadable (mix upper/lower-case letters)</label>
         </div>
     </div>
+</div>
     <div>
         <a id="settings_control" onclick="showHideSettings();">Show More Settings ▼</a>
         <a onclick="outputSetting()">Output Settings</a>
