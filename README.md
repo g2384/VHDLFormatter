@@ -6,13 +6,13 @@ VHDL formatter web online written in javascript
 
 ## Release Notes
 
-### 2.5 [2018-03-13]
+### 2.5 [2019-03-13]
 
 - keep the front page concise
 - add `style.css`, improve UI
 - support all browsers (do not use `RegExp Lookbehind Assertions`)
 
-### 2.4 [2018-02-23]
+### 2.4 [2019-02-23]
 
 - use local storage to store settings
 - add `main.js`
@@ -20,7 +20,7 @@ VHDL formatter web online written in javascript
 - expand/hide setting options
 - align signs locally or globally
 
-### 2.3 [2018-02-22]
+### 2.3 [2019-02-22]
 
 - bugfix "remove non-comment code by mistake"
 - add `tests` folder, improve the project management
