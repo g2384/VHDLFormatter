@@ -5,11 +5,15 @@ body {
     font-family: arial, sans-serif;
 }
 
+pre, code, textarea {
+    font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+}
+
 textarea {
     width: 100%;
     padding: 3px;
     resize: vertical;
-    font-family: 'Consolas', Courier, monospace;
+    min-height: 100px;
 }
 
 input[type="text"] {
