@@ -291,7 +291,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
     }
 
     input = input.replace(/([a-zA-Z0-9\); ])\);(@@comments[0-9]+)?@@end/g, '$1\r\n);$2@@end');
-    input = input.replace(/[ ]?([&=:\-<>\+|\*])[ ]?/g, ' $1 ');
+    input = input.replace(/[ ]?([&=:\-\+|\*]|[<>]+)[ ]?/g, ' $1 ');
     input = input.replace(/(\d+e) +([+\-]) +(\d+)/g, '$1$2$3');// fix exponential notation format broken by previous step
     input = input.replace(/[ ]?([,])[ ]?/g, '$1 ');
     input = input.replace(/[ ]?(['"])(THEN)/g, '$1 $2');
