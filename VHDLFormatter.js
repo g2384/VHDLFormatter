@@ -635,6 +635,10 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "GENERIC");
             continue;
         }
+        if (input.regexStartsWith(/.*?\:\=\s*\($/)) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, ":=");
+            continue;
+        }
         if (input.regexStartsWith(/[\w\s:]*PROCEDURE[\s\w]+\($/)) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PROCEDURE");
             if (inputs[i].regexStartsWith(/.*\)[\s]*IS/)) {
