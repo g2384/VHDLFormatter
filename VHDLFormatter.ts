@@ -621,7 +621,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
         "CASE",
         "ARCHITECTURE",
         "PROCEDURE",
-        "PACKAGE",
+        "(PACKAGE\\s+(BODY\\s+)?\\w+\\s+IS\\s*$)",
         "(([\\w\\s]*:)?(\\s)*PROCESS)",// with label
         "(([\\w\\s]*:)?(\\s)*POSTPONED PROCESS)",// with label
         "(.*\\s*PROTECTED)",
