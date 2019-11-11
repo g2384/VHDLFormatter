@@ -550,7 +550,7 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
         "CASE",
         "ARCHITECTURE",
         "PROCEDURE",
-        "PACKAGE",
+        "(PACKAGE\\s+(BODY\\s+)?\\w+\\s+IS\\s*$)",
         "(([\\w\\s]*:)?(\\s)*PROCESS)",
         "(([\\w\\s]*:)?(\\s)*POSTPONED PROCESS)",
         "(.*\\s*PROTECTED)",
