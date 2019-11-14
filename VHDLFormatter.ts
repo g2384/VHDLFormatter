@@ -694,6 +694,10 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             Mode = modeCache;
             continue;
         }
+        if (input.regexStartsWith(/.*?\:\=\s*\($/)) {
+            [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, ":=");
+            continue;
+        }
         if (input.regexStartsWith(/[\w\s:]*\bPORT\b([\s]|$)/)) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, "PORT");
             continue;
