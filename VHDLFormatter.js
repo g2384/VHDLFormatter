@@ -408,9 +408,22 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
     return [i, parentEndIndex];
 }
 exports.beautifyPortGenericBlock = beautifyPortGenericBlock;
+function indexOfGroup(regex, input, group) {
+    var match = regex.exec(input);
+    if (match == null) {
+        return -1;
+    }
+    var index = match.index;
+    for (let i = 1; i < group; i++) {
+        index += match[i].length;
+    }
+    return index;
+}
+exports.indexOfGroup = indexOfGroup;
 function AlignSigns(result, startIndex, endIndex, mode) {
     AlignSign_(result, startIndex, endIndex, ":", mode);
     AlignSign_(result, startIndex, endIndex, ":=", mode);
+    AlignSign_(result, startIndex, endIndex, "IN", mode);
     AlignSign_(result, startIndex, endIndex, "<=", mode);
     AlignSign_(result, startIndex, endIndex, "=>", mode);
     AlignSign_(result, startIndex, endIndex, "@@comments", mode);
@@ -433,11 +446,21 @@ function AlignSign_(result, startIndex, endIndex, symbol, mode) {
         if (symbol == ":" && line.regexStartsWith(labelAndKeywordsRegex)) {
             continue;
         }
-        let regex = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        if (symbol == "IN") {
+            let regex = new RegExp("(:\\s+)(IN|OUT|INOUT)(\\s+)(\\w)");
+        }
+        else {
+            let regex = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        }
         if (line.regexCount(regex) > 1) {
             continue;
         }
-        let colonIndex = line.regexIndexOf(regex);
+        if (symbol == "IN) {
+            let colonIndex = indexOfGroup(regex, line, 4);
+        }
+        else {
+            let colonIndex = line.regexIndexOf(regex);
+        }
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
             symbolIndices[i] = colonIndex;
