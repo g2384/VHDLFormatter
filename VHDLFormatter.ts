@@ -519,7 +519,7 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
         if (line.regexCount(regex) > 1) {
             continue;
         }
-        if (symbol == "IN) {
+        if (symbol == "IN") {
             let colonIndex = indexOfGroup(regex, line, 4);
         }
         else {
