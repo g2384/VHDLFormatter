@@ -422,8 +422,8 @@ function indexOfGroup(regex, input, group) {
 exports.indexOfGroup = indexOfGroup;
 function AlignSigns(result, startIndex, endIndex, mode) {
     AlignSign_(result, startIndex, endIndex, ":", mode);
-    AlignSign_(result, startIndex, endIndex, ":=", mode);
     AlignSign_(result, startIndex, endIndex, "IN", mode);
+    AlignSign_(result, startIndex, endIndex, ":=", mode);
     AlignSign_(result, startIndex, endIndex, "<=", mode);
     AlignSign_(result, startIndex, endIndex, "=>", mode);
     AlignSign_(result, startIndex, endIndex, "@@comments", mode);
