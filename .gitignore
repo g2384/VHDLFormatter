@@ -1,3 +1,4 @@
 *.map
 /.vscode/*
 /tests/*.js
+node_modules
