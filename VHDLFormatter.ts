@@ -93,9 +93,22 @@ String.prototype.regexIndexOf = function (pattern, startIndex) {
 }
 
 String.prototype.regexLastIndexOf = function (pattern, startIndex) {
-    startIndex = startIndex === undefined ? this.length : startIndex;
-    var searchResult = this.substr(0, startIndex).reverse().regexIndexOf(pattern, 0);
-    return (-1 === searchResult) ? -1 : this.length - ++searchResult;
+    pattern = (pattern.global) ? pattern :
+        new RegExp(pattern.source, 'g' + (pattern.ignoreCase ? 'i' : '') + (pattern.multiline ? 'm' : ''));
+    if (typeof (startIndex) === 'undefined') {
+        startIndex = this.length;
+    } else if (startIndex < 0) {
+        startIndex = 0;
+    }
+    const stringToWorkWith = this.substring(0, startIndex + 1);
+    let lastIndexOf = -1;
+    let nextStop = 0;
+    let result: RegExpExecArray;
+    while ((result = pattern.exec(stringToWorkWith)) != null) {
+        lastIndexOf = result.index;
+        pattern.lastIndex = ++nextStop;
+    }
+    return lastIndexOf;
 }
 
 String.prototype.reverse = function () {
@@ -117,12 +130,71 @@ function EscapeComments(arr: Array<string>): Array<string> {
     var comments = [];
     var count = 0;
     for (var i = 0; i < arr.length; i++) {
-        var line: string = arr[i];
+        var line = arr[i];
         var commentStartIndex = line.indexOf("--");
         if (commentStartIndex >= 0) {
             comments.push(line.substr(commentStartIndex));
             arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + count;
             count++;
+        }
+    }
+    var isInComment = false;
+    var commentRegex = new RegExp("(?<=" + ILCommentPrefix + "[\\d]+).");
+    for (var i = 0; i < arr.length; i++) {
+        var commentStartIndex = 0;
+        var hasComment = true;
+        var commentEndInlineIndex = 0;
+        while (hasComment) {
+            var line = arr[i];
+            if (!isInComment) {
+                commentStartIndex = line.indexOf("/*");
+                var commentEndIndex = line.indexOf("*/", commentStartIndex);
+                if (commentStartIndex >= 0) {
+                    if (commentEndIndex >= 0) {
+                        commentEndInlineIndex = commentEndIndex + 2;
+                        isInComment = false;
+                        comments.push(line.substring(commentStartIndex, commentEndInlineIndex));
+                        arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + count + line.substr(commentEndInlineIndex);
+                        count++;
+                        hasComment = true;
+                        if (commentStartIndex + 2 == line.length) {
+                            hasComment = false;
+                        }
+                    }
+                    else {
+                        isInComment = true;
+                        comments.push(line.substr(commentStartIndex));
+                        arr[i] = line.substr(0, commentStartIndex) + ILCommentPrefix + count;
+                        count++;
+                        hasComment = false;
+                    }
+                }
+                else {
+                    hasComment = false;
+                }
+                continue;
+            }
+            if (isInComment) {
+                var lastCommentEndIndex = line.regexLastIndexOf(commentRegex, line.length);
+                if (commentStartIndex == 0) {
+                    var commentEndIndex = line.indexOf("*/", lastCommentEndIndex);
+                }
+                else {
+                    var commentEndIndex = line.indexOf("*/", commentStartIndex);
+                }
+                if (commentEndIndex >= 0) {
+                    isInComment = false;
+                    comments.push(line.substr(0, commentEndIndex + 2));
+                    arr[i] = ILCommentPrefix + count + line.substr(commentEndIndex + 2);
+                    count++;
+                    hasComment = true;
+                } else {
+                    comments.push(line);
+                    arr[i] = ILCommentPrefix + count;
+                    count++;
+                    hasComment = false;
+                }
+            }
         }
     }
     return comments

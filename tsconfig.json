@@ -10,7 +10,6 @@
     "descriptiveCounter.ts",
     "VHDLFormatter.ts",
     "tests/VHDLFormatterUnitTests.ts",
-    "tests/descriptiveCounterTests.ts",
     "tests/assert.ts",
   ],
   "exclude": [

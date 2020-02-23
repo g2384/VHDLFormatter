@@ -9,7 +9,6 @@ import { FormattedLine } from "../VHDLFormatter";
 import { FormattedLineToString } from "../VHDLFormatter";
 import { CompareString } from "./assert";
 import { assert } from "./assert";
-import { testDescriptiveCounter } from "./descriptiveCounterTests";
 
 let testCount: number = 0;
 
@@ -25,7 +24,6 @@ if (showUnitTests) {
     UnitTestFormattedLineToString();
     UnitTestbeautify3();
     console.log("total tests: " + testCount);
-    testDescriptiveCounter();
 }
 
 interface Function {
