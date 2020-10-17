@@ -36,6 +36,14 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });
+
+    it('add new line at the end of the file', function () {
+        let settings = GetDefaultSettings();
+        settings.AddNewLine = true;
+        let input = 'test';
+        let result = beautify(input, settings);
+        expect(result).toBe("test\r\n");
+    });
 });
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
@@ -48,5 +56,5 @@ function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
 }
 
 function getDefaultBeautifierSettings(newLineSettings: NewLineSettings, signAlignSettings: signAlignSettings = null, indentation: string = "    "): BeautifierSettings {
-    return new BeautifierSettings(false, false, false, signAlignSettings, "uppercase", "uppercase", indentation, newLineSettings, "\r\n");
+    return new BeautifierSettings(false, false, false, signAlignSettings, "uppercase", "uppercase", indentation, newLineSettings, "\r\n", false);
 }

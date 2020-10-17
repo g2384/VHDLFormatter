@@ -212,6 +212,12 @@
             <input type="text" id="cust_eol" size="8" onKeyUp="counterDecode('cust_eol', 'eol_s')" value="\r\n" /> (
             <span id="eol_s">one \r & one \n</span>)
         </div>
+        <div id="customise_extraEOL_div">
+            <div class="checkbox inline" id="add_extraEOL_div">
+                <input type="checkbox" id="add_extraEOL" checked=true>
+                <label for="add_extraEOL">Add a new line at the end of file</label>
+            </div>
+        </div>
         <div class="checkbox" id="compress_div">
             <input type="checkbox" id="compress">
             <label for="compress">! EVIL - compress VHDL (\r\n, comments will be removed)</label>
@@ -349,6 +355,7 @@
             document.getElementById("compress").checked = setting.compress;
             var indentation = beautifierSettings.Indentation;
             document.getElementById("use_space").checked = indentation != "\t";
+            document.getElementById("add_extraEOL").checked = beautifierSettings.AddNewLine;
             document.getElementById("customise_indentation").value = indentation;
             document.getElementById("keyword_div").elements.namedItem("keywordcase").value = beautifierSettings.KeywordCase;
             document.getElementById("typename_div").elements.namedItem("typenamecase").value = beautifierSettings.TypeNameCase;
@@ -433,6 +440,7 @@
             var use_space = document.getElementById("use_space").checked;
             var compress = document.getElementById("compress").checked;
             var cust_indent = document.getElementById("customise_indentation").value;
+            var addNewLine = document.getElementById("add_extraEOL").checked;
             var keywordcase = document.getElementById("keyword_div").elements.namedItem("keywordcase").value;
             var typenamecase = document.getElementById("typename_div").elements.namedItem("typenamecase").value;            
             var endOfLine = document.getElementById("cust_eol").value;
@@ -480,7 +488,8 @@
                 typenamecase,
                 indentation,
                 newLineSettings,
-                endOfLine);
+                endOfLine,
+                addNewLine);
 
             return [beautifierSettings, compress];
         }

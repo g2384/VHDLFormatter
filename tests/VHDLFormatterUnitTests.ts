@@ -1368,7 +1368,7 @@ function IntegrationTest78() {
 }
 
 function IntegrationTest79() {
-    let settings = new BeautifierSettings(false, false, false, null, "lowercase", "uppercase", null, null, "\r\n");
+    let settings = new BeautifierSettings(false, false, false, null, "lowercase", "uppercase", null, null, "\r\n", false);
     let input = "case when others;\r\nx : STRING;\r\ny : BIT;";
     let actual = beautify(input, settings);
     assertAndCountTest("uppercase typename and lowercase keyword", input, actual);
@@ -1438,7 +1438,7 @@ function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
 }
 
 function getDefaultBeautifierSettings(newLineSettings: NewLineSettings, signAlignSettings: signAlignSettings = null, indentation: string = "    "): BeautifierSettings {
-    return new BeautifierSettings(false, false, false, signAlignSettings, "uppercase", "uppercase", indentation, newLineSettings, "\r\n");
+    return new BeautifierSettings(false, false, false, signAlignSettings, "uppercase", "uppercase", indentation, newLineSettings, "\r\n", false);
 }
 
 

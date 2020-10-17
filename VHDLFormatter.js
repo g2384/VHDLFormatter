@@ -256,7 +256,7 @@ class signAlignSettings {
 }
 exports.signAlignSettings = signAlignSettings;
 class BeautifierSettings {
-    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine) {
+    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine, addNewLine) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
@@ -266,6 +266,7 @@ class BeautifierSettings {
         this.Indentation = indentation;
         this.NewLineSettings = newLineSettings;
         this.EndOfLine = endOfLine;
+        this.AddNewLine = addNewLine;
     }
 }
 exports.BeautifierSettings = BeautifierSettings;
@@ -351,6 +352,9 @@ function beautify(input, settings) {
     var escapedTexts = new RegExp("[" + ILBackslash + ILQuote + ILSingleQuote + "]", "g");
     input = input.replace(escapedTexts, "");
     input = input.replace(/\r\n/g, settings.EndOfLine);
+    if (settings.AddNewLine && !input.endsWith(settings.EndOfLine)) {
+        input += settings.EndOfLine;
+    }
     return input;
 }
 exports.beautify = beautify;
