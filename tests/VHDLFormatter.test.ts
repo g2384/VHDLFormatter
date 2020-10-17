@@ -44,6 +44,13 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe("test\r\n");
     });
+
+    it('upper case types', function () {
+        let settings = GetDefaultSettings();
+        let input = "x : string;\r\ny : std_logic_vector;";
+        let result = beautify(input, settings);
+        expect(result).toBe("x : STRING;\r\ny : STD_LOGIC_VECTOR;");
+    });
 });
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
