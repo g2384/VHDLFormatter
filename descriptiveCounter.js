@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.descriptiveCounter = void 0;
 function counterDecode(inputId, outputId) {
     var custom_indent = document.getElementById(inputId).value;
     var result = descriptiveCounter(custom_indent);
