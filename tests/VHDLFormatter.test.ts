@@ -51,6 +51,20 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe("x : STRING;\r\ny : STD_LOGIC_VECTOR;");
     });
+
+    it('package ends with ;', function () {
+        let settings = GetDefaultSettings();
+        let input = "PACKAGE p IS NEW work.p_template\r\n    GENERIC MAP(N => N);\r\nUSE p.ALL;";
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
+
+    it('package ends with ; (same line)', function () {
+        let settings = GetDefaultSettings();
+        let input = "PACKAGE p IS NEW work.p_template;\r\nUSE p.ALL;";
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
 });
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {

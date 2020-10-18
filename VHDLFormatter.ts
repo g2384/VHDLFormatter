@@ -677,6 +677,25 @@ export function beautifyComponentBlock(inputs: Array<string>, result: (Formatted
     return [endIndex, parentEndIndex];
 }
 
+export function beautifyPackageIsNewBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+    let endIndex = startIndex;
+    for (let i = startIndex; i < inputs.length; i++) {
+        if (inputs[i].regexIndexOf(/;(\s|$)/) >= 0) {
+            endIndex = i;
+            break;
+        }
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let actualEndIndex = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let incremental = actualEndIndex - endIndex;
+        endIndex += incremental;
+        parentEndIndex += incremental;
+    }
+
+    return [endIndex, parentEndIndex];
+}
+
 export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
     let endIndex = startIndex;
     [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
@@ -747,6 +766,13 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
             [i, endIndex] = beautifyComponentBlock(inputs, result, settings, i, endIndex, indent);
+            Mode = modeCache;
+            continue;
+        }
+        if (input.regexStartsWith(/PACKAGE[\s\w]+IS\s+NEW/)) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            [i, endIndex] = beautifyPackageIsNewBlock(inputs, result, settings, i, endIndex, indent);
             Mode = modeCache;
             continue;
         }
