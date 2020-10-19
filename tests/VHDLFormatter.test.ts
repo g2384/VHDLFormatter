@@ -84,7 +84,7 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(expected);
     });
-    
+
     it('align signs in all places', function () {
         let setting = getDefaultBeautifierSettings(new NewLineSettings());
         setting.SignAlignSettings = new signAlignSettings(false, true, "", []);
@@ -95,10 +95,27 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, setting);
         expect(result).toBe(expected);
     });
-    
+
     it('semicolon blocks are aligned', function () {
         let settings = GetDefaultSettings();
         let input = 'OUT <= In0 AFTER 2ns WHEN "00",\r\n       In1 AFTER 2ns WHEN "01",\r\n       In2 AFTER 2ns WHEN "10",\r\n       In3 AFTER 2ns WHEN "11";';
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
+
+    it('align comments', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], true);
+        let input = 'test := loooong; -- test\r\ntest := short; -- test';
+        let expected = 'test := loooong; -- test\r\ntest := short;   -- test';
+        let result = beautify(input, settings);
+        expect(result).toBe(expected);
+    });
+
+    it('do not align comments', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = 'test := loooong; -- test\r\ntest := short; -- test';
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });

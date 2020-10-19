@@ -285,11 +285,13 @@ export class signAlignSettings {
     isAll: boolean;
     mode: string;
     keyWords: Array<string>;
-    constructor(isRegional: boolean, isAll: boolean, mode: string, keyWords: Array<string>) {
+    alignComments: boolean;
+    constructor(isRegional: boolean, isAll: boolean, mode: string, keyWords: Array<string>, alignComments: boolean = false) {
         this.isRegional = isRegional;
         this.isAll = isAll;
         this.mode = mode;
         this.keyWords = keyWords;
+        this.alignComments = alignComments;
     }
 }
 
@@ -391,7 +393,7 @@ export function beautify(input: string, settings: BeautifierSettings) {
     beautify3(arr, result, settings, 0, 0);
     var alignSettings = settings.SignAlignSettings;
     if (alignSettings != null && alignSettings.isAll) {
-        AlignSigns(result, 0, result.length - 1, alignSettings.mode);
+        AlignSigns(result, 0, result.length - 1, alignSettings.mode, alignSettings.alignComments);
     }
 
     arr = FormattedLineToString(result, settings.Indentation);
@@ -543,19 +545,21 @@ export function beautifyPortGenericBlock(inputs: Array<string>, result: (Formatt
             && alignSettings.keyWords != null
             && alignSettings.keyWords.indexOf(mode) >= 0) {
             blockBodyStartIndex++;
-            AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex, alignSettings.mode);
+            AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex, alignSettings.mode, alignSettings.alignComments);
         }
     }
     return [i, parentEndIndex];
 }
 
-export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, mode: string) {
+export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, mode: string, alignComments: boolean = false) {
     AlignSign_(result, startIndex, endIndex, ":", mode);
     AlignSign_(result, startIndex, endIndex, ":=", mode);
     AlignSign_(result, startIndex, endIndex, "<=", mode);
     AlignSign_(result, startIndex, endIndex, "=>", mode);
     AlignSign_(result, startIndex, endIndex, "direction", mode);
-    AlignSign_(result, startIndex, endIndex, "@@comments", mode);
+    if (alignComments) {
+        AlignSign_(result, startIndex, endIndex, "@@comments", mode);
+    }
 }
 
 function indexOfGroup(regex: RegExp, input: string, group: number) {

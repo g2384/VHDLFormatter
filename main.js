@@ -18,9 +18,20 @@ function noFormat() {
         "cust_eol",
         "sign_align_mode",
         "keyword",
-        "typename"
+        "typename",
+        "align_comments",
+        "add_extraEOL"
     ];
     var isDisabled = getHTMLInputElement("no_format").checked;
+    changeStateOfElements(elements, isDisabled);
+    let radioButtons = document.getElementsByTagName("input");
+    for (let i = 0; i < radioButtons.length; i++) {
+        if (radioButtons[i].type == "radio") {
+            radioButtons[i].disabled = isDisabled;
+        }
+    }
+}
+function changeStateOfElements(elements, isDisabled) {
     elements.forEach(element => {
         var htmlElement = getHTMLInputElement(element + "_div");
         try {
@@ -34,12 +45,6 @@ function noFormat() {
             htmlElement.className = htmlElement.className.replace(/\bdisabled\b/g, "");
         }
     });
-    let radioButtons = document.getElementsByTagName("input");
-    for (let i = 0; i < radioButtons.length; i++) {
-        if (radioButtons[i].type == "radio") {
-            radioButtons[i].disabled = isDisabled;
-        }
-    }
 }
 function getHTMLInputElement(id) {
     return document.getElementById(id);
@@ -63,12 +68,32 @@ function MixLetters(input) {
     return arr.join("");
 }
 function wordWrap() {
-    var d = document.getElementById("result");
+    let d = getHTMLInputElement("result");
     if (d.className == "") {
         d.className = "wordwrap";
     }
     else {
         d.className = "";
+    }
+}
+function alignAllSigns(alignAll) {
+    if (alignAll) {
+        getHTMLInputElement("sign_align_port").checked = false;
+        getHTMLInputElement("sign_align_generic").checked = false;
+        getHTMLInputElement("sign_align_procedure").checked = false;
+        getHTMLInputElement("sign_align_function").checked = false;
+        getHTMLInputElement("sign_align_mode_div").disabled = false;
+    }
+    else {
+        getHTMLInputElement("sign_align_all").checked = false;
+    }
+    let isDisabled = !alignAll;
+    changeStateOfElements(["sign_align_mode"], isDisabled);
+    let radioButtons = document.querySelectorAll("#sign_align_mode_div input[type=radio]");
+    for (let i = 0; i < radioButtons.length; i++) {
+        if (radioButtons[i].type == "radio") {
+            radioButtons[i].disabled = isDisabled;
+        }
     }
 }
 //# sourceMappingURL=main.js.map

@@ -248,11 +248,12 @@ function SetNewLinesAfterSymbols(text, newLineSettings) {
 }
 exports.SetNewLinesAfterSymbols = SetNewLinesAfterSymbols;
 class signAlignSettings {
-    constructor(isRegional, isAll, mode, keyWords) {
+    constructor(isRegional, isAll, mode, keyWords, alignComments = false) {
         this.isRegional = isRegional;
         this.isAll = isAll;
         this.mode = mode;
         this.keyWords = keyWords;
+        this.alignComments = alignComments;
     }
 }
 exports.signAlignSettings = signAlignSettings;
@@ -337,7 +338,7 @@ function beautify(input, settings) {
     beautify3(arr, result, settings, 0, 0);
     var alignSettings = settings.SignAlignSettings;
     if (alignSettings != null && alignSettings.isAll) {
-        AlignSigns(result, 0, result.length - 1, alignSettings.mode);
+        AlignSigns(result, 0, result.length - 1, alignSettings.mode, alignSettings.alignComments);
     }
     arr = FormattedLineToString(result, settings.Indentation);
     input = arr.join("\r\n");
@@ -481,19 +482,21 @@ function beautifyPortGenericBlock(inputs, result, settings, startIndex, parentEn
             && alignSettings.keyWords != null
             && alignSettings.keyWords.indexOf(mode) >= 0) {
             blockBodyStartIndex++;
-            AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex, alignSettings.mode);
+            AlignSigns(result, blockBodyStartIndex, blockBodyEndIndex, alignSettings.mode, alignSettings.alignComments);
         }
     }
     return [i, parentEndIndex];
 }
 exports.beautifyPortGenericBlock = beautifyPortGenericBlock;
-function AlignSigns(result, startIndex, endIndex, mode) {
+function AlignSigns(result, startIndex, endIndex, mode, alignComments = false) {
     AlignSign_(result, startIndex, endIndex, ":", mode);
     AlignSign_(result, startIndex, endIndex, ":=", mode);
     AlignSign_(result, startIndex, endIndex, "<=", mode);
     AlignSign_(result, startIndex, endIndex, "=>", mode);
     AlignSign_(result, startIndex, endIndex, "direction", mode);
-    AlignSign_(result, startIndex, endIndex, "@@comments", mode);
+    if (alignComments) {
+        AlignSign_(result, startIndex, endIndex, "@@comments", mode);
+    }
 }
 exports.AlignSigns = AlignSigns;
 function indexOfGroup(regex, input, group) {

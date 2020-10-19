@@ -105,7 +105,7 @@
         </div>
     </form>
     <div class="hide" id="settings_div">
-        <fieldset id="new_line_after_div">
+        <fieldset id="new_line_after_div" style="text-align: right;">
             <legend>New line after</legend>
             <form id="new_line_after_then">
                 <span class="code">THEN</span>
@@ -170,35 +170,44 @@
             <input type="checkbox" id="check_alias">
             <label for="check_alias">Check ALIAS (all long names will be replaced by ALIAS names)</label>
         </div>
-        <div id="sign_align_in_div">
-            Align signs in
-            <div class="checkbox inline" id="sign_align_port_div">
-                <input type="checkbox" id="sign_align_port">
-                <label for="sign_align_port" class="code">PORT()</label>
+        <fieldset id="align_settings_div">
+            <legend>Sign Alignment</legend>
+            <div id="sign_align_in_div">
+                Align signs in
+                <div class="checkbox inline" id="sign_align_port_div">
+                    <input type="checkbox" id="sign_align_port" onclick="alignAllSigns(false);">
+                    <label for="sign_align_port" class="code">PORT()</label>
+                </div>
+                <div class="checkbox inline" id="sign_align_generic_div">
+                    <input type="checkbox" id="sign_align_generic" onclick="alignAllSigns(false);">
+                    <label for="sign_align_generic" class="code">GENERIC()</label></div>
+                <div class="checkbox inline" id="sign_align_procedure_div">
+                    <input type="checkbox" id="sign_align_procedure" onclick="alignAllSigns(false);">
+                    <label for="sign_align_procedure" class="code">PROCEDURE()</label>
+                </div>
+                <div class="checkbox inline" id="sign_align_function_div">
+                    <input type="checkbox" id="sign_align_function" onclick="alignAllSigns(false);">
+                    <label for="sign_align_function" class="code">FUNCTION()</label>
+                </div>
             </div>
-            <div class="checkbox inline" id="sign_align_generic_div">
-                <input type="checkbox" id="sign_align_generic">
-                <label for="sign_align_generic" class="code">GENERIC()</label></div>
-            <div class="checkbox inline" id="sign_align_procedure_div">
-                <input type="checkbox" id="sign_align_procedure">
-                <label for="sign_align_procedure" class="code">PROCEDURE()</label>
+            <div class="checkbox inline" id="sign_align_all_div">
+                <input type="checkbox" id="sign_align_all" onclick="alignAllSigns(true);">
+                <label for="sign_align_all">Align signs in all places</label>
             </div>
-            <div class="checkbox inline" id="sign_align_function_div">
-                <input type="checkbox" id="sign_align_function">
-                <label for="sign_align_function" class="code">FUNCTION()</label>
+            <form class="inline" id="sign_align_mode_div">
+                <span> | Mode: </span>
+                <label>
+                    <input type="radio" name="sign_align_modecase" value="local">Local</label>
+                <label>
+                    <input type="radio" name="sign_align_modecase" value="global">Global</label>
+            </form>
+            <div>
+                <div class="checkbox inline" id="align_comments_div">
+                    <input type="checkbox" id="align_comments">
+                    <label for="align_comments">Align comments</label>
+                </div>
             </div>
-        </div>
-        <div class="checkbox inline" id="sign_align_all_div">
-            <input type="checkbox" id="sign_align_all">
-            <label for="sign_align_all">Align signs in all places</label>
-        </div>
-        <form class="inline" id="sign_align_mode_div">
-            <span>Mode: </span>
-            <label>
-                <input type="radio" name="sign_align_modecase" value="local">Local</label>
-            <label>
-                <input type="radio" name="sign_align_modecase" value="global">Global</label>
-        </form>
+        </fieldset>
         <div id="customise_indentation_div">
             <div class="checkbox inline" id="use_space_div">
                 <input type="checkbox" id="use_space">
@@ -343,6 +352,7 @@
                 }
                 document.getElementById("sign_align_all").checked = alignSettings.isAll;
                 document.getElementById("sign_align_mode_div").elements.namedItem("sign_align_modecase").value = alignSettings.mode;
+                document.getElementById("align_comments").checked = alignSettings.alignComments;
             }
             var newLineSettings = beautifierSettings.NewLineSettings;
             var newLineAfter = newLineSettings.newLineAfter;
@@ -431,6 +441,7 @@
             var sign_align_procedure = document.getElementById("sign_align_procedure").checked;
             var sign_align_generic = document.getElementById("sign_align_generic").checked;
             var sign_align_all = document.getElementById("sign_align_all").checked;
+            var align_comments = document.getElementById("align_comments").checked;
             var sign_align_mode = document.getElementById("sign_align_mode_div").elements.namedItem("sign_align_modecase").value;
             var new_line_after_port = document.getElementById("new_line_after_port").elements.namedItem("new_line_after_portcase").value;
             var new_line_after_then = document.getElementById("new_line_after_then").elements.namedItem("new_line_after_thencase").value;
@@ -480,7 +491,7 @@
                 signAlignKeywords.push("PROCEDURE");
             }
             sign_align = signAlignKeywords.length > 0;
-            let alignSettings = new signAlignSettings(sign_align, sign_align_all, sign_align_mode, signAlignKeywords)
+            let alignSettings = new signAlignSettings(sign_align, sign_align_all, sign_align_mode, signAlignKeywords, align_comments)
 
             beautifierSettings = new BeautifierSettings(remove_comments, remove_report, check_alias,
                 alignSettings,
