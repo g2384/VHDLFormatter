@@ -65,6 +65,36 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });
+
+    it('align in, out, inout, buffer', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings.isAll = true;
+        let input = "Incr, Load, Clock : IN     BIT;\r\nCarry             : OUT    BIT;\r\nData_Out          : BUFFER bit_vector(7 DOWNTO 0);\r\nData_In           : IN     bit_vector(7 DOWNTO 0)";
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
+
+    it('align sign in PORT & GENERIC', function () {
+        let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+        new_line_after_symbols.newLineAfter = ["then", ";"];
+        let settings = getDefaultBeautifierSettings(new_line_after_symbols);
+        settings.SignAlignSettings = new signAlignSettings(true, false, "global", ["PORT", "GENERIC"]);
+        let input = "entity p is\r\n  generic\r\n  (\r\n    -- INCLK\r\n    INCLK0_INPUT_FREQUENCY  : natural;\r\n\r\n    -- CLK1\r\n    CLK1_DIVIDE_BY          : natural := 1;\r\n    CLK1_MULTIPLY_BY        : unnatural:= 1;\r\n    CLK1_PHASE_SHIFT        : string := \"0\"\r\n  );\r\n	port\r\n	(\r\n		inclk0	: in bit  := '0';\r\n		c0		    : out bit;\r\n		c1		    : out bit \r\n	);\r\nEND pll;";
+        let expected = "ENTITY p IS\r\n    GENERIC (\r\n        -- INCLK\r\n        INCLK0_INPUT_FREQUENCY : NATURAL;\r\n\r\n        -- CLK1\r\n        CLK1_DIVIDE_BY         : NATURAL   := 1;\r\n        CLK1_MULTIPLY_BY       : unnatural := 1;\r\n        CLK1_PHASE_SHIFT       : STRING    := \"0\"\r\n    );\r\n    PORT (\r\n        inclk0 : IN  BIT := '0';\r\n        c0     : OUT BIT;\r\n        c1     : OUT BIT\r\n    );\r\nEND pll;";
+        let result = beautify(input, settings);
+        expect(result).toBe(expected);
+    });
+    
+    it('align signs in all places', function () {
+        let setting = getDefaultBeautifierSettings(new NewLineSettings());
+        setting.SignAlignSettings = new signAlignSettings(false, true, "", []);
+        setting.NewLineSettings.newLineAfter = ["then", ";", "generic", "port"];
+        setting.NewLineSettings.noNewLineAfter = [];
+        let input = "entity a is\r\n    port ( w  : in  bit;\r\n           w_s : out bit; ) ;\r\nend a ;\r\narchitecture b of a is\r\nbegin\r\n    process ( w )\r\n    variable t : bit;\r\n    variable bcd     : bit;\r\nbegin\r\n    b(2 downto 0) := w(7 downto 5) ;\r\n    t         := w(4 downto 0) ;\r\n    w_s <= b(11 downto 8) ;\r\n    w <= b(3  downto 0) ;\r\nend process ;\r\nend b;";
+        let expected = "ENTITY a IS\r\n    PORT\r\n    (\r\n        w   : IN  BIT;\r\n        w_s : OUT BIT;\r\n    );\r\nEND a;\r\nARCHITECTURE b OF a IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t   : BIT;\r\n        VARIABLE bcd : BIT;\r\n    BEGIN\r\n        b(2 DOWNTO 0) := w(7 DOWNTO 5);\r\n        t             := w(4 DOWNTO 0);\r\n        w_s <= b(11 DOWNTO 8);\r\n        w   <= b(3 DOWNTO 0);\r\n    END PROCESS;\r\nEND b;";
+        let result = beautify(input, setting);
+        expect(result).toBe(expected);
+    });
 });
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {

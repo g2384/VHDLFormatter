@@ -554,7 +554,20 @@ export function AlignSigns(result: (FormattedLine | FormattedLine[])[], startInd
     AlignSign_(result, startIndex, endIndex, ":=", mode);
     AlignSign_(result, startIndex, endIndex, "<=", mode);
     AlignSign_(result, startIndex, endIndex, "=>", mode);
+    AlignSign_(result, startIndex, endIndex, "direction", mode);
     AlignSign_(result, startIndex, endIndex, "@@comments", mode);
+}
+
+function indexOfGroup(regex: RegExp, input: string, group: number) {
+    var match = regex.exec(input);
+    if (match == null) {
+        return -1;
+    }
+    var index = match.index;
+    for (let i = 1; i < group; i++) {
+        index += match[i].length;
+    }
+    return index;
 }
 
 function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: number, endIndex: number, symbol: string, mode: string) {
@@ -574,12 +587,23 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
         if (symbol == ":" && line.regexStartsWith(labelAndKeywordsRegex)) {
             continue;
         }
-
-        let regex: RegExp = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        let regex: RegExp;
+        if (symbol == "direction") {
+            regex = new RegExp("(:\\s*)(IN|OUT|INOUT|BUFFER)(\\s+)(\\w)");
+        }
+        else {
+            regex = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+        }
         if (line.regexCount(regex) > 1) {
             continue;
         }
-        let colonIndex = line.regexIndexOf(regex);
+        let colonIndex: number;
+        if (symbol == "direction") {
+            colonIndex = indexOfGroup(regex, line, 4);
+        }
+        else {
+            colonIndex = line.regexIndexOf(regex);
+        }
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
             symbolIndices[i] = colonIndex;

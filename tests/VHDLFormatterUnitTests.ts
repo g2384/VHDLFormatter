@@ -789,7 +789,6 @@ function IntegrationTest() {
 
     IntegrationTest5();
     IntegrationTest6();
-    IntegrationTest7();
 
     input = 'if a(3 downto 0) > "0100" then\r\na(3 downto 0) := a(3 downto 0) + "0011" ;\r\nend if ;';
     expected = 'IF a(3 DOWNTO 0) > "0100" THEN\r\n    a(3 DOWNTO 0) := a(3 DOWNTO 0) + "0011";\r\nEND IF;';
@@ -850,15 +849,6 @@ function IntegrationTest() {
     expected = "ARCHITECTURE a OF b IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t : std_logic_vector (4 DOWNTO 0);\r\n    BEGIN\r\n        a := (OTHERS => '0');\r\n    END PROCESS;\r\nEND a;";
     actual = beautify(input, newSettings);
     assertAndCountTest("Double BEGIN", expected, actual);
-
-    let newSettings2 = deepCopy(newSettings);
-    newSettings2.SignAlignSettings = new signAlignSettings(false, true, "", []);
-    newSettings2.NewLineSettings.newLineAfter = ["then", ";", "generic", "port"];
-    newSettings2.NewLineSettings.noNewLineAfter = [];
-    input = "entity a is\r\n    port ( w  : in  std_logic_vector (7 downto 0) ;\r\n           w_s : out std_logic_vector (3 downto 0) ; ) ;\r\nend a ;\r\narchitecture b of a is\r\nbegin\r\n    process ( w )\r\n    variable t : std_logic_vector (4 downto 0) ;\r\n    variable bcd     : std_logic_vector (11 downto 0) ;\r\nbegin\r\n    b(2 downto 0) := w(7 downto 5) ;\r\n    t         := w(4 downto 0) ;\r\n    w_s <= b(11 downto 8) ;\r\n    w <= b(3  downto 0) ;\r\nend process ;\r\nend b ;";
-    expected = "ENTITY a IS\r\n    PORT\r\n    (\r\n        w   : IN std_logic_vector (7 DOWNTO 0);\r\n        w_s : OUT std_logic_vector (3 DOWNTO 0);\r\n    );\r\nEND a;\r\nARCHITECTURE b OF a IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t   : std_logic_vector (4 DOWNTO 0);\r\n        VARIABLE bcd : std_logic_vector (11 DOWNTO 0);\r\n    BEGIN\r\n        b(2 DOWNTO 0) := w(7 DOWNTO 5);\r\n        t             := w(4 DOWNTO 0);\r\n        w_s <= b(11 DOWNTO 8);\r\n        w   <= b(3 DOWNTO 0);\r\n    END PROCESS;\r\nEND b;";
-    actual = beautify(input, newSettings2);
-    assertAndCountTest("Align signs in all places", expected, actual);
 
     IntegrationTest23();
     IntegrationTest24();
@@ -1470,17 +1460,6 @@ function IntegrationTest6() {
     let expected = "PORT MAP\r\n(\r\n    input_1 => input_1_sig,\r\n    input_2 => input_2_sig,\r\n    output  => output_sig\r\n);";
     let actual = beautify(input, settings);
     assertAndCountTest("Sign align in PORT & new line after MAP", expected, actual);
-}
-
-function IntegrationTest7() {
-    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
-    new_line_after_symbols.newLineAfter = ["then", ";"];
-    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
-    settings.SignAlignSettings = new signAlignSettings(true, false, "global", ["PORT", "GENERIC"]);
-    let input = "entity p is\r\n  generic\r\n  (\r\n    -- INCLK\r\n    INCLK0_INPUT_FREQUENCY  : natural;\r\n\r\n    -- CLK1\r\n    CLK1_DIVIDE_BY          : natural := 1;\r\n    CLK1_MULTIPLY_BY        : unnatural:= 1;\r\n    CLK1_PHASE_SHIFT        : string := \"0\"\r\n  );\r\n	port\r\n	(\r\n		inclk0	: in std_logic  := '0';\r\n		c0		    : out std_logic ;\r\n		c1		    : out std_logic \r\n	);\r\nEND pll;";
-    let expected = "ENTITY p IS\r\n    GENERIC (\r\n        -- INCLK\r\n        INCLK0_INPUT_FREQUENCY : NATURAL;\r\n\r\n        -- CLK1\r\n        CLK1_DIVIDE_BY         : NATURAL   := 1;\r\n        CLK1_MULTIPLY_BY       : unnatural := 1;\r\n        CLK1_PHASE_SHIFT       : STRING    := \"0\"\r\n    );\r\n    PORT (\r\n        inclk0 : IN std_logic := '0';\r\n        c0     : OUT std_logic;\r\n        c1     : OUT std_logic\r\n    );\r\nEND pll;";
-    let actual = beautify(input, settings);
-    assertAndCountTest("Sign align in PORT & GENERIC", expected, actual);
 }
 
 function IntegrationTest2() {
