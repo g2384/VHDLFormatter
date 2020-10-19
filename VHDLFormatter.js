@@ -656,11 +656,27 @@ function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndI
     [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (endIndex != startIndex) {
-        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        alignSignalAssignmentBlock(settings, inputs, startIndex, endIndex, result);
     }
     return [endIndex, parentEndIndex];
 }
 exports.beautifySemicolonBlock = beautifySemicolonBlock;
+function alignSignalAssignmentBlock(settings, inputs, startIndex, endIndex, result) {
+    if (settings.Indentation.replace(/ +/g, "").length == 0) {
+        let reg = new RegExp("^([\\w\\\\]+[\\s]*<=\\s*)");
+        let match = reg.exec(inputs[startIndex]);
+        if (match != null) {
+            let length = match[0].length;
+            let prefixLength = length - settings.Indentation.length;
+            let prefix = new Array(prefixLength + 1).join(" ");
+            for (let i = startIndex + 1; i <= endIndex; i++) {
+                let fl = result[i];
+                fl.Line = prefix + fl.Line;
+            }
+        }
+    }
+}
 function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
     let i;
     let regexOneLineBlockKeyWords = new RegExp(/(PROCEDURE)[^\w](?!.+[^\w]IS([^\w]|$))/); //match PROCEDURE..; but not PROCEDURE .. IS;

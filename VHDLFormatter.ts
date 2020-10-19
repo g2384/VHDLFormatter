@@ -725,10 +725,27 @@ export function beautifySemicolonBlock(inputs: Array<string>, result: (Formatted
     [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
     result.push(new FormattedLine(inputs[startIndex], indent));
     if (endIndex != startIndex) {
-        let i = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        alignSignalAssignmentBlock(settings, inputs, startIndex, endIndex, result);
     }
 
     return [endIndex, parentEndIndex];
+}
+
+function alignSignalAssignmentBlock(settings: BeautifierSettings, inputs: string[], startIndex: number, endIndex: number, result: (FormattedLine | FormattedLine[])[]) {
+    if (settings.Indentation.replace(/ +/g, "").length == 0) {
+        let reg: RegExp = new RegExp("^([\\w\\\\]+[\\s]*<=\\s*)");
+        let match = reg.exec(inputs[startIndex]);
+        if (match != null) {
+            let length = match[0].length;
+            let prefixLength = length - settings.Indentation.length;
+            let prefix = new Array(prefixLength + 1).join(" ");
+            for (let i = startIndex + 1; i <= endIndex; i++) {
+                let fl = (result[i] as FormattedLine);
+                fl.Line = prefix + fl.Line;
+            }
+        }
+    }
 }
 
 export function beautify3(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number, endIndex?: number): number {

@@ -95,6 +95,13 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, setting);
         expect(result).toBe(expected);
     });
+    
+    it('semicolon blocks are aligned', function () {
+        let settings = GetDefaultSettings();
+        let input = 'OUT <= In0 AFTER 2ns WHEN "00",\r\n       In1 AFTER 2ns WHEN "01",\r\n       In2 AFTER 2ns WHEN "10",\r\n       In3 AFTER 2ns WHEN "11";';
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
 });
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
