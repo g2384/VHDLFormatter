@@ -724,6 +724,25 @@ export function beautifyPackageIsNewBlock(inputs: Array<string>, result: (Format
     return [endIndex, parentEndIndex];
 }
 
+export function beautifyVariableInitialiseBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
+    let endIndex = startIndex;
+    for (let i = startIndex; i < inputs.length; i++) {
+        if (inputs[i].regexIndexOf(/;(\s|$)/) >= 0) {
+            endIndex = i;
+            break;
+        }
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let actualEndIndex = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let incremental = actualEndIndex - endIndex;
+        endIndex += incremental;
+        parentEndIndex += incremental;
+    }
+
+    return [endIndex, parentEndIndex];
+}
+
 export function beautifySemicolonBlock(inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, parentEndIndex: number, indent: number): [number, number] {
     let endIndex = startIndex;
     [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
@@ -821,6 +840,21 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             Mode = modeCache;
             continue;
         }
+        if (input.regexStartsWith(/\w+\s+\w+\s*:.+:\s*=\s*\(([^;]|$)/)) { // 'variable symbol: type [:= initial_value];'
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            let endsWithBracket = input.regexIndexOf(/:\s*=\s*\(/) > 0;
+            let startIndex = i;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            if (endsWithBracket && startIndex != i) {
+                let fl = result[endIndex] as FormattedLine;
+                if (fl.Line.regexStartsWith(/\);$/)) {
+                    fl.Indent--;
+                }
+            }
+            Mode = modeCache;
+            continue;
+        }
         if (input.regexStartsWith(/\w+\s*:\s*ENTITY/)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
@@ -842,7 +876,7 @@ export function beautify3(inputs: Array<string>, result: (FormattedLine | Format
             Mode = modeCache;
             continue;
         }
-        if (input.regexStartsWith(/.*?\:\=\s*\($/)) {
+        if (input.regexStartsWith(/[\w\s:]*(:=)([\s]|$)/)) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, ":=");
             continue;
         }

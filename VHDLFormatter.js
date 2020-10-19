@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RemoveAsserts = exports.ApplyNoNewLineAfter = exports.beautify3 = exports.beautifySemicolonBlock = exports.beautifyPackageIsNewBlock = exports.beautifyComponentBlock = exports.beautifyCaseBlock = exports.AlignSign = exports.AlignSigns = exports.beautifyPortGenericBlock = exports.FormattedLineToString = exports.FormattedLine = exports.beautify = exports.BeautifierSettings = exports.signAlignSettings = exports.SetNewLinesAfterSymbols = exports.NewLineSettings = void 0;
+exports.RemoveAsserts = exports.ApplyNoNewLineAfter = exports.beautify3 = exports.beautifySemicolonBlock = exports.beautifyVariableInitialiseBlock = exports.beautifyPackageIsNewBlock = exports.beautifyComponentBlock = exports.beautifyCaseBlock = exports.AlignSign = exports.AlignSigns = exports.beautifyPortGenericBlock = exports.FormattedLineToString = exports.FormattedLine = exports.beautify = exports.BeautifierSettings = exports.signAlignSettings = exports.SetNewLinesAfterSymbols = exports.NewLineSettings = void 0;
 let isTesting = false;
 const ILEscape = "@@";
 const ILCommentPrefix = ILEscape + "comments";
@@ -654,6 +654,24 @@ function beautifyPackageIsNewBlock(inputs, result, settings, startIndex, parentE
     return [endIndex, parentEndIndex];
 }
 exports.beautifyPackageIsNewBlock = beautifyPackageIsNewBlock;
+function beautifyVariableInitialiseBlock(inputs, result, settings, startIndex, parentEndIndex, indent) {
+    let endIndex = startIndex;
+    for (let i = startIndex; i < inputs.length; i++) {
+        if (inputs[i].regexIndexOf(/;(\s|$)/) >= 0) {
+            endIndex = i;
+            break;
+        }
+    }
+    result.push(new FormattedLine(inputs[startIndex], indent));
+    if (endIndex != startIndex) {
+        let actualEndIndex = beautify3(inputs, result, settings, startIndex + 1, indent + 1, endIndex);
+        let incremental = actualEndIndex - endIndex;
+        endIndex += incremental;
+        parentEndIndex += incremental;
+    }
+    return [endIndex, parentEndIndex];
+}
+exports.beautifyVariableInitialiseBlock = beautifyVariableInitialiseBlock;
 function beautifySemicolonBlock(inputs, result, settings, startIndex, parentEndIndex, indent) {
     let endIndex = startIndex;
     [endIndex, parentEndIndex] = getSemicolonBlockEndIndex(inputs, settings, startIndex, parentEndIndex);
@@ -749,6 +767,21 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
             Mode = modeCache;
             continue;
         }
+        if (input.regexStartsWith(/\w+\s+\w+\s*:.+:\s*=\s*\(([^;]|$)/)) { // 'variable symbol: type [:= initial_value];'
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            let endsWithBracket = input.regexIndexOf(/:\s*=\s*\(/) > 0;
+            let startIndex = i;
+            [i, endIndex] = beautifySemicolonBlock(inputs, result, settings, i, endIndex, indent);
+            if (endsWithBracket && startIndex != i) {
+                let fl = result[endIndex];
+                if (fl.Line.regexStartsWith(/\);$/)) {
+                    fl.Indent--;
+                }
+            }
+            Mode = modeCache;
+            continue;
+        }
         if (input.regexStartsWith(/\w+\s*:\s*ENTITY/)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;
@@ -770,7 +803,7 @@ function beautify3(inputs, result, settings, startIndex, indent, endIndex) {
             Mode = modeCache;
             continue;
         }
-        if (input.regexStartsWith(/.*?\:\=\s*\($/)) {
+        if (input.regexStartsWith(/[\w\s:]*(:=)([\s]|$)/)) {
             [i, endIndex] = beautifyPortGenericBlock(inputs, result, settings, i, endIndex, indent, ":=");
             continue;
         }

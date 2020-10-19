@@ -119,6 +119,30 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });
+    
+    it('support invalid line', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = '(5 * 32 - 1 DOWNTO 0) := (\r\n);';
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
+
+    it('align initial values for constant', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = 'CONSTANT ADDR_MATCH : STD_LOGIC_VECTOR(5 * 32 - 1 DOWNTO 0) := (\r\n    X"00000000" &\r\n    X"00010000" &\r\n    X"00020000" &\r\n    X"00030000" &\r\n    X"00040000"\r\n);';
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
+    
+    it('one-line initial values for constant', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = "CONSTANT Vcc   : SIGNAL             := '1'; --logic 1 constant\r\nCONSTANT zero4 : bit_vector(0 TO 3) := ('0', '0', '0', '0');\r\nCONSTANT Vcc   : SIGNAL             := '1'; --logic 1 constant";
+        let result = beautify(input, settings);
+        expect(result).toBe(input);
+    });
 });
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
