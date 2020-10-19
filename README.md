@@ -6,6 +6,23 @@ VHDL formatter web online written in javascript
 
 ## Release Notes
 
+### 2.7 [2020-10-19]
+
+- align concurrent signal assignment
+- align in, out, buffer and inout key words
+- fix single line PACKAGE indentation
+- add more type names, support "STD_LOGIC", "STD_LOGIC_VECTOR", "STD_ULOGIC", "STD_ULOGIC_VECTOR"
+- add new lines at the end of file
+- update packages
+
+### 2.6 [2020-02-23]
+
+- support VHDL-2008 block comment /* */
+- use jest
+- indent multi-line signal and constant declarations
+- do not add space between "<" or ">"; e.g. "<<<" will become " <<< " and not " < < < "
+- array type definition breaks when formatting; e.g. "RANGE <>" becomes "RANGE < >"
+
 ### 2.5 [2019-03-13]
 
 - keep the front page concise
