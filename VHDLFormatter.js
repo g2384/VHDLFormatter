@@ -258,7 +258,7 @@ class signAlignSettings {
 }
 exports.signAlignSettings = signAlignSettings;
 class BeautifierSettings {
-    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine, addNewLine) {
+    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine, addNewLine, MoveLeadingCommasToPrevLine = false) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
@@ -269,6 +269,7 @@ class BeautifierSettings {
         this.NewLineSettings = newLineSettings;
         this.EndOfLine = endOfLine;
         this.AddNewLine = addNewLine;
+        this.MoveLeadingCommasToPrevLine = MoveLeadingCommasToPrevLine;
     }
 }
 exports.BeautifierSettings = BeautifierSettings;
@@ -296,6 +297,9 @@ function beautify(input, settings) {
     input = input.replace(/\([\t ]+/g, '\(');
     input = input.replace(/[ ]+;/g, ';');
     input = input.replace(/:[ ]*(PROCESS|ENTITY)/gi, ':$1');
+    if (settings.MoveLeadingCommasToPrevLine) {
+        input = input.replace(/(\s*(@__@comments[0-9]+)?)\r\n(\s*),/g, ',$1\r\n$3');
+    }
     arr = input.split("\r\n");
     if (settings.RemoveAsserts) {
         RemoveAsserts(arr); //RemoveAsserts must be after EscapeQuotes

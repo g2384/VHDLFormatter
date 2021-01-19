@@ -946,6 +946,7 @@ function IntegrationTest() {
     IntegrationTest82();
     IntegrationTest84();
     IntegrationTest85();
+    IntegrationTest87();
 }
 
 function IntegrationTest23() {
@@ -1443,6 +1444,15 @@ function IntegrationTest86() { // TODO
 }
 
 //TODO multiline setting, if true, \r\n\r\n -> \r\n\r\n, if false, \r\n\r\n -> \r\n
+
+function IntegrationTest87() {
+    let settings = GetDefaultSettings();
+    settings.MoveLeadingCommasToPrevLine = true;
+    let input = "PORT MAP(\r\na => '0' -- comment\r\n,b=>'1'-- more comment\r\n,c => '0'\r\n,d => '1', -- switching it up\r\ne => '0',\r\n f => '1'\r\n);";
+    let expect = "PORT MAP(\r\n    a => '0', -- comment\r\n    b => '1', -- more comment\r\n    c => '0',\r\n    d => '1', -- switching it up\r\n    e => '0',\r\n    f => '1'\r\n);";
+    let actual = beautify(input, settings);
+    assertAndCountTest("Move leading commas to previous line", expect, actual);
+}
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
     let new_line_after_symbols = new NewLineSettings();
