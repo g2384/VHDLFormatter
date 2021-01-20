@@ -471,8 +471,8 @@ function Beautify3Case16() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("x <= 1 WHEN foo", 0),
-        new FormattedLine("ELSE 2 WHEN bar", 1),
-        new FormattedLine("ELSE 3;", 1),
+        new FormattedLine(" ELSE 2 WHEN bar", 1),
+        new FormattedLine(" ELSE 3;", 1),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "one line ends with ;", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -562,7 +562,7 @@ function Beautify3Case20() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("m <= ((1, 2, 3, 4)", 0),
-        new FormattedLine("(5, 6, 7, 8));", 1),
+        new FormattedLine(" (5, 6, 7, 8));", 1),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
