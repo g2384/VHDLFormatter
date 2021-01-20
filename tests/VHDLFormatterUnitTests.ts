@@ -75,6 +75,7 @@ function UnitTestbeautify3() {
     Beautify3Case19();
     Beautify3Case20();
     Beautify3Case21();
+    Beautify3Case22();
 }
 
 function Beautify3Case1() {
@@ -588,6 +589,39 @@ function Beautify3Case21() {
         new FormattedLine("PORT MAP( a => open );", 1)
     ];
     UnitTest6(beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+
+function Beautify3Case22() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
+    let inputs: Array<string> = [
+        "test: ENTITY work.testing",
+        "GENERIC MAP( x => 1,",
+        "y => 2",
+        ")",
+        "PORT MAP( z => OPEN,",
+        "w => '1'",
+        ");",
+        "",
+        "foo <= '1';",
+        "bar <= '1';",
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("test: ENTITY work.testing", 0),
+        new FormattedLine("GENERIC MAP(", 1),
+        new FormattedLine("x => 1,", 2),
+        new FormattedLine("y => 2", 2),
+        new FormattedLine(")", 1),
+        new FormattedLine("PORT MAP(", 1),
+        new FormattedLine("z => OPEN,", 2),
+        new FormattedLine("w => '1'", 2),
+        new FormattedLine(");", 1),
+        new FormattedLine("", 0),
+        new FormattedLine("foo <= '1';", 0),
+        new FormattedLine("bar <= '1';", 0),
+    ];
+    UnitTest6(beautify3, "inserted line breaks in generic maps (issue #43)", settings, inputs, expected, 0, expected.length - 1, 0);
 }
 
 function UnitTestSetNewLinesAfterSymbols() {
