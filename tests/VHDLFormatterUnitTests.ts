@@ -4,7 +4,7 @@ import { BeautifierSettings } from "../VHDLFormatter";
 import { RemoveAsserts } from "../VHDLFormatter";
 import { ApplyNoNewLineAfter } from "../VHDLFormatter";
 import { SetNewLinesAfterSymbols } from "../VHDLFormatter";
-import { beautify3 } from "../VHDLFormatter";
+import { CodeBlock, beautify3 } from "../VHDLFormatter";
 import { FormattedLine } from "../VHDLFormatter";
 import { FormattedLineToString } from "../VHDLFormatter";
 import { CompareString } from "./assert";
@@ -746,7 +746,7 @@ type Array2Callback = (arr: Array<string>, parameters: Array<string>) => void;
 
 type String2Callback = (text: string, parameters: NewLineSettings) => string;
 
-type BeautifyCallback = (inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number) => number;
+type BeautifyCallback = (block: CodeBlock, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, indent: number) => void;
 
 type FormattedLinesCallback = (inputs: (FormattedLine | FormattedLine[])[], indentation: string) => Array<string>;
 
@@ -757,9 +757,11 @@ function UnitTest7(func: FormattedLinesCallback, testName: string, indentation: 
 
 function UnitTest6(func: BeautifyCallback, testName: string, parameters: BeautifierSettings, inputs: Array<string>, expected: (FormattedLine | FormattedLine[])[], startIndex: number, expectedEndIndex: number, indent: number) {
     let actual: (FormattedLine | FormattedLine[])[] = []
-    let endIndex: number = func(inputs, actual, parameters, startIndex, indent);
-    if (endIndex != expectedEndIndex) {
-        console.log(testName + " failed;\nend index, actual: " + endIndex + "; expected: " + expectedEndIndex)
+    let block = new CodeBlock(inputs);
+    block.cursor = startIndex;
+    func(block, actual, parameters, indent);
+    if (block.cursor != expectedEndIndex) {
+        console.log(testName + " failed;\nend index, actual: " + block.cursor + "; expected: " + expectedEndIndex)
     }
     assertFormattedLines(testName, expected, actual);
 }
