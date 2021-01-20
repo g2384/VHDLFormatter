@@ -626,8 +626,8 @@ function Beautify3Case22() {
 
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
-    let input = "a; @@comments1\r\nb;"
-    let expected = "a; @@comments1\r\nb;";
+    let input = "a; @__@comments1\r\nb;"
+    let expected = "a; @__@comments1\r\nb;";
     let parameters: NewLineSettings = new NewLineSettings();
     parameters.newLineAfter = ["then", ";"];
     parameters.noNewLineAfter = ["port", "generic"];
@@ -641,12 +641,12 @@ function UnitTestSetNewLinesAfterSymbols() {
 function UnitTestApplyNoNewLineAfter() {
     console.log("=== ApplyNoNewLineAfter ===");
     let input: Array<string> = ["a;", "b;"];
-    let expected: Array<string> = ["a;@@singleline", "b;@@singleline"];
+    let expected: Array<string> = ["a;@__@singleline", "b;@__@singleline"];
     let parameters: Array<string> = [";"];
     UnitTest4(ApplyNoNewLineAfter, "one blankspace", parameters, input, expected);
 
     input = ["a;", "b THEN", "c"];
-    expected = ["a;@@singleline", "b THEN@@singleline", "c"];
+    expected = ["a;@__@singleline", "b THEN@__@singleline", "c"];
     parameters = [";", "then"];
     UnitTest4(ApplyNoNewLineAfter, "one blankspace", parameters, input, expected);
 }
