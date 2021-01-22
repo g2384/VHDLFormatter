@@ -44,7 +44,3 @@ Tests must be run before each commit.
 1. open repo folder with Visua Studio Code
 2. click `Terminal` -> `Run Task...`
 3. select `npm: test jest`
-
----
-
-Release notes before 2.7: [test](ReleaseNotes_before27.md)
