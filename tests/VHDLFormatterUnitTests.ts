@@ -4,7 +4,7 @@ import { BeautifierSettings } from "../VHDLFormatter";
 import { RemoveAsserts } from "../VHDLFormatter";
 import { ApplyNoNewLineAfter } from "../VHDLFormatter";
 import { SetNewLinesAfterSymbols } from "../VHDLFormatter";
-import { beautify3 } from "../VHDLFormatter";
+import { CodeBlock, beautify3 } from "../VHDLFormatter";
 import { FormattedLine } from "../VHDLFormatter";
 import { FormattedLineToString } from "../VHDLFormatter";
 import { CompareString } from "./assert";
@@ -75,6 +75,7 @@ function UnitTestbeautify3() {
     Beautify3Case19();
     Beautify3Case20();
     Beautify3Case21();
+    Beautify3Case22();
 }
 
 function Beautify3Case1() {
@@ -471,8 +472,8 @@ function Beautify3Case16() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("x <= 1 WHEN foo", 0),
-        new FormattedLine("ELSE 2 WHEN bar", 1),
-        new FormattedLine("ELSE 3;", 1),
+        new FormattedLine(" ELSE 2 WHEN bar", 1),
+        new FormattedLine(" ELSE 3;", 1),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "one line ends with ;", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -562,7 +563,7 @@ function Beautify3Case20() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("m <= ((1, 2, 3, 4)", 0),
-        new FormattedLine("(5, 6, 7, 8));", 1),
+        new FormattedLine(" (5, 6, 7, 8));", 1),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -588,6 +589,39 @@ function Beautify3Case21() {
         new FormattedLine("PORT MAP( a => open );", 1)
     ];
     UnitTest6(beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
+}
+
+function Beautify3Case22() {
+    let new_line_after_symbols: NewLineSettings = new NewLineSettings();
+    new_line_after_symbols.newLineAfter = ["then", ";"];
+    let settings = getDefaultBeautifierSettings(new_line_after_symbols);
+    let inputs: Array<string> = [
+        "test: ENTITY work.testing",
+        "GENERIC MAP( x => 1,",
+        "y => 2",
+        ")",
+        "PORT MAP( z => OPEN,",
+        "w => '1'",
+        ");",
+        "",
+        "foo <= '1';",
+        "bar <= '1';",
+    ];
+    let expected: (FormattedLine | FormattedLine[])[] = [
+        new FormattedLine("test: ENTITY work.testing", 0),
+        new FormattedLine("GENERIC MAP(", 1),
+        new FormattedLine("x => 1,", 2),
+        new FormattedLine("y => 2", 2),
+        new FormattedLine(")", 1),
+        new FormattedLine("PORT MAP(", 1),
+        new FormattedLine("z => OPEN,", 2),
+        new FormattedLine("w => '1'", 2),
+        new FormattedLine(");", 1),
+        new FormattedLine("", 0),
+        new FormattedLine("foo <= '1';", 0),
+        new FormattedLine("bar <= '1';", 0),
+    ];
+    UnitTest6(beautify3, "inserted line breaks in generic maps (issue #43)", settings, inputs, expected, 0, expected.length - 1, 0);
 }
 
 function UnitTestSetNewLinesAfterSymbols() {
@@ -712,7 +746,7 @@ type Array2Callback = (arr: Array<string>, parameters: Array<string>) => void;
 
 type String2Callback = (text: string, parameters: NewLineSettings) => string;
 
-type BeautifyCallback = (inputs: Array<string>, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, startIndex: number, indent: number) => number;
+type BeautifyCallback = (block: CodeBlock, result: (FormattedLine | FormattedLine[])[], settings: BeautifierSettings, indent: number) => void;
 
 type FormattedLinesCallback = (inputs: (FormattedLine | FormattedLine[])[], indentation: string) => Array<string>;
 
@@ -723,9 +757,11 @@ function UnitTest7(func: FormattedLinesCallback, testName: string, indentation: 
 
 function UnitTest6(func: BeautifyCallback, testName: string, parameters: BeautifierSettings, inputs: Array<string>, expected: (FormattedLine | FormattedLine[])[], startIndex: number, expectedEndIndex: number, indent: number) {
     let actual: (FormattedLine | FormattedLine[])[] = []
-    let endIndex: number = func(inputs, actual, parameters, startIndex, indent);
-    if (endIndex != expectedEndIndex) {
-        console.log(testName + " failed;\nend index, actual: " + endIndex + "; expected: " + expectedEndIndex)
+    let block = new CodeBlock(inputs);
+    block.cursor = startIndex;
+    func(block, actual, parameters, indent);
+    if (block.cursor != expectedEndIndex) {
+        console.log(testName + " failed;\nend index, actual: " + block.cursor + "; expected: " + expectedEndIndex)
     }
     assertFormattedLines(testName, expected, actual);
 }
@@ -759,7 +795,7 @@ function IntegrationTest() {
     new_line_after_symbols.noNewLineAfter = ["port", "generic"];
     let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     let input = "architecture TB of TB_CPU is\r\n    component CPU_IF\r\n    port   -- port list\r\n    end component;\r\n    signal CPU_DATA_VALID: std_ulogic;\r\n    signal CLK, RESET: std_ulogic := '0';\r\n    constant PERIOD : time := 10 ns;\r\n    constant MAX_SIM: time := 50 * PERIOD;\r\n    begin\r\n    -- concurrent statements\r\n    end TB;"
-    let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT -- port list\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\n    -- concurrent statements\r\nEND TB;";
+    let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT -- port list\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : STD_ULOGIC;\r\n    SIGNAL CLK, RESET : STD_ULOGIC := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\n    -- concurrent statements\r\nEND TB;";
     let actual = beautify(input, settings);
     assertAndCountTest("General", expected, actual);
 
@@ -818,17 +854,17 @@ function IntegrationTest() {
     assertAndCountTest("WHEN CASE & IF", expected, actual);
 
     input = "entity aa is\r\n    port (a : in std_logic;\r\n          b : in std_logic;\r\n         );\r\nend aa;\r\narchitecture bb of aa is\r\n   component cc\r\n    port(\r\n         a : in std_logic;\r\n         b : in std_logic;\r\n        );\r\n    end cc;\r\n\r\nbegin\r\n  C : cc port map (\r\n          long => a,\r\n          b => b\r\n        );\r\nend;";
-    expected = "ENTITY aa IS\r\n    PORT (\r\n        a : IN std_logic;\r\n        b : IN std_logic;\r\n    );\r\nEND aa;\r\nARCHITECTURE bb OF aa IS\r\n    COMPONENT cc\r\n        PORT (\r\n            a : IN std_logic;\r\n            b : IN std_logic;\r\n        );\r\n    END cc;\r\n\r\nBEGIN\r\n    C : cc PORT MAP(\r\n        long => a,\r\n        b => b\r\n    );\r\nEND;";
+    expected = "ENTITY aa IS\r\n    PORT (\r\n        a : IN STD_LOGIC;\r\n        b : IN STD_LOGIC;\r\n    );\r\nEND aa;\r\nARCHITECTURE bb OF aa IS\r\n    COMPONENT cc\r\n        PORT (\r\n            a : IN STD_LOGIC;\r\n            b : IN STD_LOGIC;\r\n        );\r\n    END cc;\r\n\r\nBEGIN\r\n    C : cc PORT MAP(\r\n        long => a,\r\n        b => b\r\n    );\r\nEND;";
     actual = beautify(input, settings);
     assertAndCountTest("PORT MAP", expected, actual);
 
     input = "entity aa is\r\n    port (a : in std_logic;\r\n          b : in std_logic;\r\n         );\r\n    port (a : in std_logic;\r\n          b : in std_logic;\r\n         );\r\nend aa;\r\narchitecture bb of aa is\r\n   component cc\r\n    port(\r\n         a : in std_logic;\r\n         b : in std_logic;\r\n        );\r\n    port(\r\n         a : in std_logic;\r\n         b : in std_logic;\r\n        );\r\n    end cc;\r\n\r\nbegin\r\n  C : cc port map (\r\n          long => a,\r\n          b => b\r\n        );\r\n  D : cc port map (\r\n          long => a,\r\n          b => b\r\n        );\r\nend;";
-    expected = "ENTITY aa IS\r\n    PORT (\r\n        a : IN std_logic;\r\n        b : IN std_logic;\r\n    );\r\n    PORT (\r\n        a : IN std_logic;\r\n        b : IN std_logic;\r\n    );\r\nEND aa;\r\nARCHITECTURE bb OF aa IS\r\n    COMPONENT cc\r\n        PORT (\r\n            a : IN std_logic;\r\n            b : IN std_logic;\r\n        );\r\n        PORT (\r\n            a : IN std_logic;\r\n            b : IN std_logic;\r\n        );\r\n    END cc;\r\n\r\nBEGIN\r\n    C : cc PORT MAP(\r\n        long => a,\r\n        b => b\r\n    );\r\n    D : cc PORT MAP(\r\n        long => a,\r\n        b => b\r\n    );\r\nEND;";
+    expected = "ENTITY aa IS\r\n    PORT (\r\n        a : IN STD_LOGIC;\r\n        b : IN STD_LOGIC;\r\n    );\r\n    PORT (\r\n        a : IN STD_LOGIC;\r\n        b : IN STD_LOGIC;\r\n    );\r\nEND aa;\r\nARCHITECTURE bb OF aa IS\r\n    COMPONENT cc\r\n        PORT (\r\n            a : IN STD_LOGIC;\r\n            b : IN STD_LOGIC;\r\n        );\r\n        PORT (\r\n            a : IN STD_LOGIC;\r\n            b : IN STD_LOGIC;\r\n        );\r\n    END cc;\r\n\r\nBEGIN\r\n    C : cc PORT MAP(\r\n        long => a,\r\n        b => b\r\n    );\r\n    D : cc PORT MAP(\r\n        long => a,\r\n        b => b\r\n    );\r\nEND;";
     actual = beautify(input, settings);
     assertAndCountTest("Multiple PORT MAPs", expected, actual);
 
     input = "port (a : in std_logic;\r\n b : in std_logic;\r\n);";
-    expected = "PORT\r\n(\r\n    a : IN std_logic;\r\n    b : IN std_logic;\r\n);";
+    expected = "PORT\r\n(\r\n    a : IN STD_LOGIC;\r\n    b : IN STD_LOGIC;\r\n);";
     new_line_after_symbols_2 = new NewLineSettings();
     new_line_after_symbols_2.newLineAfter = ["then", ";", "generic", "port"];
     newSettings = deepCopy(settings);
@@ -839,14 +875,14 @@ function IntegrationTest() {
     newSettings = deepCopy(settings);
     newSettings.NewLineSettings.newLineAfter = [];
     input = "component a is\r\nport( Data : inout Std_Logic_Vector(7 downto 0););\r\nend component a;";
-    expected = "COMPONENT a IS\r\n    PORT (Data : INOUT Std_Logic_Vector(7 DOWNTO 0););\r\nEND COMPONENT a;";
+    expected = "COMPONENT a IS\r\n    PORT (Data : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0););\r\nEND COMPONENT a;";
     actual = beautify(input, newSettings);
     assertAndCountTest("New line after PORT (single line)", expected, actual);
 
     //IntegrationTest20();
 
     input = "architecture a of b is\r\nbegin\r\n    process (w)\r\n    variable t : std_logic_vector (4 downto 0) ;\r\nbegin\r\n    a := (others => '0') ;\r\nend process ;\r\nend a;";
-    expected = "ARCHITECTURE a OF b IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t : std_logic_vector (4 DOWNTO 0);\r\n    BEGIN\r\n        a := (OTHERS => '0');\r\n    END PROCESS;\r\nEND a;";
+    expected = "ARCHITECTURE a OF b IS\r\nBEGIN\r\n    PROCESS (w)\r\n        VARIABLE t : STD_LOGIC_VECTOR (4 DOWNTO 0);\r\n    BEGIN\r\n        a := (OTHERS => '0');\r\n    END PROCESS;\r\nEND a;";
     actual = beautify(input, newSettings);
     assertAndCountTest("Double BEGIN", expected, actual);
 
@@ -1459,7 +1495,7 @@ function IntegrationTest2() {
     let settings = getDefaultBeautifierSettings(new_line_after_symbols);
     settings.RemoveComments = true;
     let input = "architecture TB of TB_CPU is\r\n    component CPU_IF\r\n    port   -- port list\r\n    end component;\r\n    signal CPU_DATA_VALID: std_ulogic;\r\n    signal CLK, RESET: std_ulogic := '0';\r\n    constant PERIOD : time := 10 ns;\r\n    constant MAX_SIM: time := 50 * PERIOD;\r\n    begin\r\n    -- concurrent statements\r\n    end TB;"
-    let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : std_ulogic;\r\n    SIGNAL CLK, RESET : std_ulogic := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";
+    let expected = "ARCHITECTURE TB OF TB_CPU IS\r\n    COMPONENT CPU_IF\r\n        PORT\r\n    END COMPONENT;\r\n    SIGNAL CPU_DATA_VALID : STD_ULOGIC;\r\n    SIGNAL CLK, RESET : STD_ULOGIC := '0';\r\n    CONSTANT PERIOD : TIME := 10 ns;\r\n    CONSTANT MAX_SIM : TIME := 50 * PERIOD;\r\nBEGIN\r\nEND TB;";
     let actual = beautify(input, settings);
     assertAndCountTest("Remove comments", expected, actual);
 }
