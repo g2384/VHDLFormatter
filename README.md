@@ -1,82 +1,50 @@
 # VHDL Fomatter
 
-VHDL formatter web online written in javascript
+Online VHDL formatter written in Typescript
 
-[Online version https://g2384.github.io/VHDLFormatter/](https://g2384.github.io/VHDLFormatter/)
+[Try it here: https://g2384.github.io/VHDLFormatter/](https://g2384.github.io/VHDLFormatter/)
 
-## Release Notes
+---
 
-### 2.7 [2020-10-19]
+## Run Locally
 
-- align concurrent signal assignment
-- align in, out, buffer and inout key words
-- fix single line PACKAGE indentation
-- add more type names, support "STD_LOGIC", "STD_LOGIC_VECTOR", "STD_ULOGIC", "STD_ULOGIC_VECTOR"
-- add new lines at the end of file
-- update packages
+Simply download/clone this repository, and open the `index.html` file.
 
-### 2.6 [2020-02-23]
+---
 
-- support VHDL-2008 block comment /* */
-- use jest
-- indent multi-line signal and constant declarations
-- do not add space between "<" or ">"; e.g. "<<<" will become " <<< " and not " < < < "
-- array type definition breaks when formatting; e.g. "RANGE <>" becomes "RANGE < >"
+## Contribute
 
-### 2.5 [2019-03-13]
+### Structure
 
-- keep the front page concise
-- add `style.css`, improve UI
-- support all browsers (do not use `RegExp Lookbehind Assertions`)
+- `index.html`: html + javascript. Collect settings from UI, call the beautify function, load/save/update cached settings.
+- `main.ts`: typescript. Some code required by `index.html` are moved here.
+- `VHDLFormatter.ts`: typescript. Define classes, format VHDL code
+- `tests`: folder. Contain all test files
+  - *.test.ts: typescript. Proper test files.
+  - `VHDLFormatterUnitTests.ts`: typescript. Handcrafted, crude tests.
+- `VHDLFiles`: vhdl. Contain complicated VHDL files which I don't want to lose.
 
-### 2.4 [2019-02-23]
+### Develop
 
-- use local storage to store settings
-- add `main.js`
-- treat key words and type names separately
-- expand/hide setting options
-- align signs locally or globally
+Use Visual Studio Code to open the repo folder.
 
-### 2.3 [2019-02-22]
+### Run Tests
 
-- bugfix "remove non-comment code by mistake"
-- add `tests` folder, improve the project management
-- support extended identifier (backslash names)
-- fix exponential notation
-- user can choose EOL symbols (or use system's by default)
-- align comments (when user chooses "align" option)
-- bugfix "extra whitespaces around unary minus or plus"
+Tests must be run before each commit.
 
-Many thanks to [@MihaiBabiac](https://github.com/MihaiBabiac)
+#### Run Unit/Integration Tests
 
-### 2.2 [2018-10-16]
+1. open repo folder with Visua Studio Code
+2. click `Run (Ctrl + Shift + D)`
+3. select `Run Unit Tests` configuration
+4. click `Start Debugging` button
 
-- support enumerated types
+#### Run Jest Tests
 
-### 2.1 [2018-03-22]
+1. open repo folder with Visua Studio Code
+2. click `Terminal` -> `Run Task...`
+3. select `npm: test jest`
 
-- fix keywords case issues
-- anything in quotes will not be touched
-- correct format for comments after multi-line statement
-- options to align signs in parameter lists
-- fix function indentation
-- fix "align symbols affects process label"
-- do not align multi-occurrence symbols in a line
-- better styles (checkbox, button, disabled)
-- support package bodies
-- fix "newline after PORT affects PORT MAP"
+---
 
-### 2.0 [2018-02-16]
-
-- rewrite the main algorithm (& move to a new repository)
-- add more unit tests
-- fix all known issues
-
-### 1.1 [2016-11]
-
-- fix some bugs reported by users
-- add unit tests
-
-### 1.0 [2015-01]
-
-- support most of the VHDL features
+Release notes before 2.7: [test](ReleaseNotes_before27.md)
