@@ -516,7 +516,7 @@ function GetCloseparentheseEndIndex(block: CodeBlock) {
     let openParentheseCount: number = 0;
     let closeParentheseCount: number = 0;
     let startIndex = block.cursor;
-    for (;block.cursor <= block.end; block.cursor++) {
+    for (; block.cursor <= block.end; block.cursor++) {
         let input = block.lines[block.cursor];
         openParentheseCount += input.count("(");
         closeParentheseCount += input.count(")");
@@ -863,6 +863,13 @@ export function beautify3(block: CodeBlock, result: (FormattedLine | FormattedLi
                     fl.Indent--;
                 }
             }
+            Mode = modeCache;
+            continue;
+        }
+        if (input.regexIndexOf(/:=(\s*@@comments\d+\s*)?$/) > 0) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            beautifySemicolonBlock(block, result, settings, indent);
             Mode = modeCache;
             continue;
         }

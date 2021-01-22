@@ -784,6 +784,13 @@ function beautify3(block, result, settings, indent) {
             Mode = modeCache;
             continue;
         }
+        if (input.regexIndexOf(/:=(\s*@@comments\d+\s*)?$/) > 0) {
+            let modeCache = Mode;
+            Mode = FormatMode.EndsWithSemicolon;
+            beautifySemicolonBlock(block, result, settings, indent);
+            Mode = modeCache;
+            continue;
+        }
         if (input.regexStartsWith(/\w+\s*:\s*ENTITY/)) {
             let modeCache = Mode;
             Mode = FormatMode.EndsWithSemicolon;

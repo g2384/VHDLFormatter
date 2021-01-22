@@ -119,7 +119,7 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });
-    
+
     it('support invalid line', function () {
         let settings = GetDefaultSettings();
         settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
@@ -135,7 +135,7 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });
-    
+
     it('one-line initial values for constant', function () {
         let settings = GetDefaultSettings();
         settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
@@ -143,7 +143,81 @@ describe('VHDLFormatter', function () {
         let result = beautify(input, settings);
         expect(result).toBe(input);
     });
+
+    it('indent assignment statement (multiline, no comment)', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = "CONSTANT Vcc : SIGNAL :=\r\n'1'; --logic 1 constant\r\nCONSTANT zero4 : bit_vector(0 TO 3) :=\r\n('0', '0', '0', '0');";
+        let output = "CONSTANT Vcc : SIGNAL :=\r\n    '1'; --logic 1 constant\r\nCONSTANT zero4 : bit_vector(0 TO 3) :=\r\n    ('0', '0', '0', '0');";
+        let result = beautify(input, settings);
+        expect(result).toBe(output);
+    })
+
+    it('indent assignment statement (with comment)', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = "CONSTANT Vcc : SIGNAL := --logic 1 constant\r\n'1';\r\nCONSTANT zero4 : bit_vector(0 TO 3) :=--test\r\n('0', '0', '0', '0');";
+        let output = "CONSTANT Vcc : SIGNAL := --logic 1 constant\r\n    '1';\r\nCONSTANT zero4 : bit_vector(0 TO 3) := --test\r\n    ('0', '0', '0', '0');";
+        let result = beautify(input, settings);
+        expect(result).toBe(output);
+    })
+
+    it('indent assignment statement (multi line)', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = [
+            "CONSTANT ALMOST_EMPTY_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "    to_bitvector(STD_ULOGIC_VECTOR(to_unsigned(C_M_AXI_BURST_LEN - 1, 13)));",
+            "CONSTANT ALMOST_FULL_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "    to_bitvector(STD_ULOGIC_VECTOR(to_unsigned(C_M_AXI_BURST_LEN - 1, 13)));"
+        ];
+        let output = [
+            "CONSTANT ALMOST_EMPTY_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "    to_bitvector(STD_ULOGIC_VECTOR(to_unsigned(C_M_AXI_BURST_LEN - 1, 13)));",
+            "CONSTANT ALMOST_FULL_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "    to_bitvector(STD_ULOGIC_VECTOR(to_unsigned(C_M_AXI_BURST_LEN - 1, 13)));"
+        ];
+        let result = beautifyTestHelper(input, settings);
+        expect(result).toStrictEqual(output);
+    })
+
+    it('indent assignment statement (multi line (2))', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = [
+            "CONSTANT ALMOST_EMPTY_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "to_bitvector(",
+            "STD_ULOGIC_VECTOR(",
+            "to_unsigned(",
+            "C_M_AXI_BURST_LEN - 1, 13)));",
+            "CONSTANT ALMOST_FULL_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "to_bitvector(",
+            "STD_ULOGIC_VECTOR(",
+            "to_unsigned(",
+            "C_M_AXI_BURST_LEN - 1, 13)));"
+        ];
+        let output = [
+            "CONSTANT ALMOST_EMPTY_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "    to_bitvector(",
+            "    STD_ULOGIC_VECTOR(",
+            "    to_unsigned(",
+            "    C_M_AXI_BURST_LEN - 1, 13)));",
+            "CONSTANT ALMOST_FULL_OFFSET : bit_vector(12 DOWNTO 0) :=",
+            "    to_bitvector(",
+            "    STD_ULOGIC_VECTOR(",
+            "    to_unsigned(",
+            "    C_M_AXI_BURST_LEN - 1, 13)));"
+        ];
+        let result = beautifyTestHelper(input, settings);
+        expect(result).toStrictEqual(output);
+    })
 });
+
+function beautifyTestHelper(array: Array<string>, settings: BeautifierSettings): Array<string> {
+    let input = array.join("\r\n");
+    let result = beautify(input, settings);
+    return result.split("\r\n");
+}
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
     let new_line_after_symbols = new NewLineSettings();
