@@ -947,6 +947,7 @@ function IntegrationTest() {
     IntegrationTest84();
     IntegrationTest85();
     IntegrationTest87();
+    IntegrationTest88();
 }
 
 function IntegrationTest23() {
@@ -1452,6 +1453,14 @@ function IntegrationTest87() {
     let expect = "PORT MAP(\r\n    a => '0', -- comment\r\n    b => '1', -- more comment\r\n    c => '0',\r\n    d => '1', -- switching it up\r\n    e => '0',\r\n    f => '1'\r\n);";
     let actual = beautify(input, settings);
     assertAndCountTest("Move leading commas to previous line", expect, actual);
+}
+
+function IntegrationTest88() {
+    let settings = GetDefaultSettings();
+    let input = "testsignal <= '1'\r\nand '0'\r\nor '1';\r\n\r\ntestsignal(0 to 1) <= '1'\r\nand '0'\r\nor '1';";
+    let expect = "testsignal <= '1'\r\n              AND '0'\r\n              OR '1';\r\n\r\ntestsignal(0 TO 1) <= '1'\r\n                      AND '0'\r\n                      OR '1';";
+    let actual = beautify(input, settings);
+    assertAndCountTest("Multiline indentation for vector signals", expect, actual);
 }
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
