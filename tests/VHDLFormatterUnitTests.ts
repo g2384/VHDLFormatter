@@ -1361,7 +1361,7 @@ function IntegrationTest74() {
 
 function IntegrationTest76() {
     let settings = GetDefaultSettings();
-    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", [], true);
     let input = "a <= (b => '000'); -- test\r\nlooong <= (others => '0'); -- test";
     let expected = "a      <= (b      => '000'); -- test\r\nlooong <= (OTHERS => '0');   -- test";
     let actual = beautify(input, settings);
