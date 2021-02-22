@@ -428,7 +428,7 @@ function FormattedLineToString(arr, indentation) {
     arr.forEach(i => {
         if (i instanceof FormattedLine) {
             if (i.Line.length > 0) {
-                result.push((Array(i.Indent + 1).join(indentation)) + i.Line);
+                result.push(indentation.repeat(i.Indent) + i.Line);
             }
             else {
                 result.push("");
@@ -599,7 +599,7 @@ function AlignSign(result, startIndex, endIndex, symbol, maxSymbolIndex = -1, sy
         }
         let line = result[lineIndex].Line;
         result[lineIndex].Line = line.substring(0, symbolIndex)
-            + (Array(maxSymbolIndex - symbolIndex + 1).join(" "))
+            + " ".repeat(maxSymbolIndex - symbolIndex)
             + line.substring(symbolIndex);
     }
 }
@@ -696,7 +696,7 @@ function alignSignalAssignmentBlock(settings, inputs, startIndex, endIndex, resu
         if (match != null) {
             let length = match[0].length;
             let prefixLength = length - settings.Indentation.length;
-            let prefix = new Array(prefixLength + 1).join(" ");
+            let prefix = " ".repeat(prefixLength);
             for (let i = startIndex + 1; i <= endIndex; i++) {
                 let fl = result[i];
                 fl.Line = prefix + fl.Line;
