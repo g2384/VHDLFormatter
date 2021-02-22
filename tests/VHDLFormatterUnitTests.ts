@@ -472,8 +472,8 @@ function Beautify3Case16() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("x <= 1 WHEN foo", 0),
-        new FormattedLine(" ELSE 2 WHEN bar", 1),
-        new FormattedLine(" ELSE 3;", 1),
+        new FormattedLine("  ➥  ELSE 2 WHEN bar", 0),
+        new FormattedLine("  ➥  ELSE 3;", 0),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "one line ends with ;", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -563,7 +563,7 @@ function Beautify3Case20() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("m <= ((1, 2, 3, 4)", 0),
-        new FormattedLine(" (5, 6, 7, 8));", 1),
+        new FormattedLine("  ➥  (5, 6, 7, 8));", 0),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -948,6 +948,7 @@ function IntegrationTest() {
     IntegrationTest85();
     IntegrationTest87();
     IntegrationTest88();
+    IntegrationTest89();
 }
 
 function IntegrationTest23() {
@@ -1132,8 +1133,9 @@ function IntegrationTest47() {
     settings.TypeNameCase = "lowercase";
     settings.Indentation = " ";
     let input = 'result := 1\r\n 1\r\n + 1; -- hello';
+    let expected = 'result := 1\r\n          1\r\n          + 1; -- hello';
     let actual = beautify(input, settings);
-    assertAndCountTest("multiline expression & comment", input, actual);
+    assertAndCountTest("multiline expression & comment", expected, actual);
 }
 
 function IntegrationTest48() {
@@ -1461,6 +1463,16 @@ function IntegrationTest88() {
     let expect = "testsignal <= '1'\r\n              AND '0'\r\n              OR '1';\r\n\r\ntestsignal(0 TO 1) <= '1'\r\n                      AND '0'\r\n                      OR '1';";
     let actual = beautify(input, settings);
     assertAndCountTest("Multiline indentation for vector signals", expect, actual);
+}
+
+function IntegrationTest89() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignSettings.isAll = true;
+    settings.SignAlignSettings.mode = "global";
+    let input = "testsignal2 <= '1';\r\ntestsignal <= '0'\r\nand '1';";
+    let expect = "testsignal2 <= '1';\r\ntestsignal  <= '0'\r\n               AND '1';";
+    let actual = beautify(input, settings);
+    assertAndCountTest("Multiline indentation should match sign alignment in global alignment mode", expect, actual);
 }
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {

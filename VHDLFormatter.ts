@@ -6,6 +6,7 @@ const ILQuote = "⨵";
 const ILSingleQuote = "⦼";
 const ILBackslash = "⨸";
 const ILSemicolon = "⨴";
+const ILContinuation = "➥";
 
 enum FormatMode {
     Default,
@@ -505,7 +506,7 @@ export function FormattedLineToString(arr: (FormattedLine | FormattedLine[])[], 
     arr.forEach(i => {
         if (i instanceof FormattedLine) {
             if (i.Line.length > 0) {
-                result.push(indentation.repeat(i.Indent) + i.Line);
+                result.push(indentation.repeat(i.Indent) + i.Line.replace(ILContinuation, " "));
             }
             else {
                 result.push("");
@@ -635,22 +636,24 @@ function AlignSign_(result: (FormattedLine | FormattedLine[])[], startIndex: num
         if (symbol == ":" && line.regexStartsWith(labelAndKeywordsRegex)) {
             continue;
         }
+
         let regex: RegExp;
+        let groupIndex: number;
         if (symbol == "direction") {
             regex = new RegExp("(:\\s*)(IN|OUT|INOUT|BUFFER)(\\s+)(\\w)");
+            groupIndex = 4;
         }
         else {
-            regex = new RegExp("([\\s\\w\\\\]|^)" + symbol + "([\\s\\w\\\\]|$)");
+            regex = new RegExp("([\\s\\w\\\\]|^)(" + symbol + ")([\\s\\w\\\\]|$)");
+            groupIndex = 2;
         }
         if (line.regexCount(regex) > 1) {
             continue;
         }
-        let colonIndex: number;
-        if (symbol == "direction") {
-            colonIndex = indexOfGroup(regex, line, 4);
-        }
-        else {
-            colonIndex = line.regexIndexOf(regex);
+
+        let colonIndex = indexOfGroup(regex, line, groupIndex);
+        if (colonIndex < 0) {
+            colonIndex = line.indexOf(ILContinuation);
         }
         if (colonIndex > 0) {
             maxSymbolIndex = Math.max(maxSymbolIndex, colonIndex);
@@ -778,14 +781,15 @@ export function beautifySemicolonBlock(block: CodeBlock, result: (FormattedLine 
 
 function alignSignalAssignmentBlock(settings: BeautifierSettings, inputs: string[], startIndex: number, endIndex: number, result: (FormattedLine | FormattedLine[])[]) {
     if (settings.Indentation.replace(/ +/g, "").length == 0) {
-        let reg: RegExp = new RegExp("^([\\w\\\\]+(\\([\\w\\s]+\\))?[\\s]*[<:]=\\s*)");
+        let reg: RegExp = new RegExp("^([\\w\\\\]+(\\([\\w\\s]+\\))?[\\s]*([<:]=\\s*))");
         let match = reg.exec(inputs[startIndex]);
         if (match != null) {
-            let length = match[0].length;
-            let prefixLength = length - settings.Indentation.length;
-            let prefix = " ".repeat(prefixLength);
+            let prefixLength = match[0].length;
+            let suffixLength = match[3].length;
+            let prefix = " ".repeat(prefixLength - suffixLength) + ILContinuation + " ".repeat(suffixLength - 1);
             for (let i = startIndex + 1; i <= endIndex; i++) {
                 let fl = (result[i] as FormattedLine);
+                fl.Indent--;
                 fl.Line = prefix + fl.Line;
             }
         }
