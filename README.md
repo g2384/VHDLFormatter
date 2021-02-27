@@ -4,6 +4,8 @@ Online VHDL formatter written in Typescript
 
 [Try it here: https://g2384.github.io/VHDLFormatter/](https://g2384.github.io/VHDLFormatter/)
 
+Build Status: [![Main Branch](https://github.com/g2384/VHDLFormatter/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/g2384/VHDLFormatter/actions/workflows/ci.yml)
+
 ---
 
 ## Run Locally
