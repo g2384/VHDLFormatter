@@ -472,8 +472,8 @@ function Beautify3Case16() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("x <= 1 WHEN foo", 0),
-        new FormattedLine(" ELSE 2 WHEN bar", 1),
-        new FormattedLine(" ELSE 3;", 1),
+        new FormattedLine("  ➥  ELSE 2 WHEN bar", 0),
+        new FormattedLine("  ➥  ELSE 3;", 0),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "one line ends with ;", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -563,7 +563,7 @@ function Beautify3Case20() {
     ];
     let expected: (FormattedLine | FormattedLine[])[] = [
         new FormattedLine("m <= ((1, 2, 3, 4)", 0),
-        new FormattedLine(" (5, 6, 7, 8));", 1),
+        new FormattedLine("  ➥  (5, 6, 7, 8));", 0),
         new FormattedLine("y <= 2;", 0)
     ];
     UnitTest6(beautify3, "function", settings, inputs, expected, 0, expected.length - 1, 0);
@@ -626,8 +626,8 @@ function Beautify3Case22() {
 
 function UnitTestSetNewLinesAfterSymbols() {
     console.log("=== SetNewLinesAfterSymbols ===");
-    let input = "a; @@comments1\r\nb;"
-    let expected = "a; @@comments1\r\nb;";
+    let input = "a; @__@comments1\r\nb;"
+    let expected = "a; @__@comments1\r\nb;";
     let parameters: NewLineSettings = new NewLineSettings();
     parameters.newLineAfter = ["then", ";"];
     parameters.noNewLineAfter = ["port", "generic"];
@@ -641,12 +641,12 @@ function UnitTestSetNewLinesAfterSymbols() {
 function UnitTestApplyNoNewLineAfter() {
     console.log("=== ApplyNoNewLineAfter ===");
     let input: Array<string> = ["a;", "b;"];
-    let expected: Array<string> = ["a;@@singleline", "b;@@singleline"];
+    let expected: Array<string> = ["a;@__@singleline", "b;@__@singleline"];
     let parameters: Array<string> = [";"];
     UnitTest4(ApplyNoNewLineAfter, "one blankspace", parameters, input, expected);
 
     input = ["a;", "b THEN", "c"];
-    expected = ["a;@@singleline", "b THEN@@singleline", "c"];
+    expected = ["a;@__@singleline", "b THEN@__@singleline", "c"];
     parameters = [";", "then"];
     UnitTest4(ApplyNoNewLineAfter, "one blankspace", parameters, input, expected);
 }
@@ -946,6 +946,9 @@ function IntegrationTest() {
     IntegrationTest82();
     IntegrationTest84();
     IntegrationTest85();
+    IntegrationTest87();
+    IntegrationTest88();
+    IntegrationTest89();
 }
 
 function IntegrationTest23() {
@@ -1130,8 +1133,9 @@ function IntegrationTest47() {
     settings.TypeNameCase = "lowercase";
     settings.Indentation = " ";
     let input = 'result := 1\r\n 1\r\n + 1; -- hello';
+    let expected = 'result := 1\r\n          1\r\n          + 1; -- hello';
     let actual = beautify(input, settings);
-    assertAndCountTest("multiline expression & comment", input, actual);
+    assertAndCountTest("multiline expression & comment", expected, actual);
 }
 
 function IntegrationTest48() {
@@ -1361,7 +1365,7 @@ function IntegrationTest74() {
 
 function IntegrationTest76() {
     let settings = GetDefaultSettings();
-    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
+    settings.SignAlignSettings = new signAlignSettings(false, true, "", [], true);
     let input = "a <= (b => '000'); -- test\r\nlooong <= (others => '0'); -- test";
     let expected = "a      <= (b      => '000'); -- test\r\nlooong <= (OTHERS => '0');   -- test";
     let actual = beautify(input, settings);
@@ -1443,6 +1447,33 @@ function IntegrationTest86() { // TODO
 }
 
 //TODO multiline setting, if true, \r\n\r\n -> \r\n\r\n, if false, \r\n\r\n -> \r\n
+
+function IntegrationTest87() {
+    let settings = GetDefaultSettings();
+    settings.MoveLeadingCommasToPrevLine = true;
+    let input = "PORT MAP(\r\na => '0' -- comment\r\n,b=>'1'-- more comment\r\n,c => '0'\r\n,d => '1', -- switching it up\r\ne => '0',\r\n f => '1'\r\n);";
+    let expect = "PORT MAP(\r\n    a => '0', -- comment\r\n    b => '1', -- more comment\r\n    c => '0',\r\n    d => '1', -- switching it up\r\n    e => '0',\r\n    f => '1'\r\n);";
+    let actual = beautify(input, settings);
+    assertAndCountTest("Move leading commas to previous line", expect, actual);
+}
+
+function IntegrationTest88() {
+    let settings = GetDefaultSettings();
+    let input = "testsignal <= '1'\r\nand '0'\r\nor '1';\r\n\r\ntestsignal(0 to 1) <= '1'\r\nand '0'\r\nor '1';";
+    let expect = "testsignal <= '1'\r\n              AND '0'\r\n              OR '1';\r\n\r\ntestsignal(0 TO 1) <= '1'\r\n                      AND '0'\r\n                      OR '1';";
+    let actual = beautify(input, settings);
+    assertAndCountTest("Multiline indentation for vector signals", expect, actual);
+}
+
+function IntegrationTest89() {
+    let settings = GetDefaultSettings();
+    settings.SignAlignSettings.isAll = true;
+    settings.SignAlignSettings.mode = "global";
+    let input = "testsignal2 <= '1';\r\ntestsignal <= '0'\r\nand '1';";
+    let expect = "testsignal2 <= '1';\r\ntestsignal  <= '0'\r\n               AND '1';";
+    let actual = beautify(input, settings);
+    assertAndCountTest("Multiline indentation should match sign alignment in global alignment mode", expect, actual);
+}
 
 function GetDefaultSettings(indentation: string = "    "): BeautifierSettings {
     let new_line_after_symbols = new NewLineSettings();
