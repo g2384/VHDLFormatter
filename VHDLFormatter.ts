@@ -899,7 +899,15 @@ export function beautify3(block: CodeBlock, result: (FormattedLine | FormattedLi
             continue;
         }
         if (input.regexStartsWith(/[\w\s:]*\bPORT\b([\s]|$)/)) {
+            var preCursor = block.cursor;
             beautifyPortGenericBlock(block, result, settings, indent, "PORT");
+            var preLine = preCursor - 1;
+            if (preLine >= 0) {
+                var preL = block.lines[preLine];
+                if (preL.regexIndexOf(/:\s+(COMPONENT|ENTITY)/) >= 0) {
+                    indent--;
+                }
+            }
             continue;
         }
         if (input.regexStartsWith(/TYPE\s+\w+\s+IS\s+\(/)) {

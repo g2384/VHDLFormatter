@@ -211,6 +211,107 @@ describe('VHDLFormatter', function () {
         let result = beautifyTestHelper(input, settings);
         expect(result).toStrictEqual(output);
     })
+
+    it('indent PORT map', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = [
+            "test_iobuf : component IOBUF",
+            "port map(",
+            "	I  => '0',",
+            "	T  => '0'",
+            ");",
+            "test_iobuf : component IOBUF",
+            "  port map(",
+            "    I  => '0',",
+            "    T  => '0'",
+            ");"
+        ];
+        let output = [
+            "test_iobuf : COMPONENT IOBUF",
+            "    PORT MAP(",
+            "        I => '0',",
+            "        T => '0'",
+            "    );",
+            "test_iobuf : COMPONENT IOBUF",
+            "    PORT MAP(",
+            "        I => '0',",
+            "        T => '0'",
+            "    );"
+        ];
+        let result = beautifyTestHelper(input, settings);
+        expect(result).toStrictEqual(output);
+    })
+
+    it('indent PORT map (2)', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = [
+            "i_Mux1 : entity work.T15_Mux(rtl) port map(",
+            "   Sel    => Sel,",
+            "Sig1   => Sig1,",
+            "Output => Output);",
+            "",
+            "-- Testbench process",
+            "process is",
+            "begin",
+            "wait for 10 ns;",
+            "Sel <= Sel + 1;",
+            "wait for 10 ns;",
+            "Sel <= \"UU\";",
+            "wait;",
+            "end process;"
+        ];
+        let output = [
+            "i_Mux1 : ENTITY work.T15_Mux(rtl) PORT MAP(",
+            "    Sel    => Sel,",
+            "    Sig1   => Sig1,",
+            "    Output => Output);",
+            "",
+            "-- Testbench process",
+            "PROCESS IS",
+            "BEGIN",
+            "    WAIT FOR 10 ns;",
+            "    Sel <= Sel + 1;",
+            "    WAIT FOR 10 ns;",
+            "    Sel <= \"UU\";",
+            "    WAIT;",
+            "END PROCESS;"
+        ];
+        let result = beautifyTestHelper(input, settings);
+        expect(result).toStrictEqual(output);
+
+    });
+
+    it('multiline assignment', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = [
+            "test",
+            "        := test"
+        ];
+        let output = [
+            "test",
+            " := test" // is this desired?
+        ];
+        let result = beautifyTestHelper(input, settings);
+        expect(result).toStrictEqual(output);
+    });
+
+    it('align <= => signs', function () {
+        let settings = GetDefaultSettings();
+        settings.SignAlignSettings = new signAlignSettings(false, true, "", [], false);
+        let input = [
+            "a <= (b => '000'); -- test",
+            "looong <= (others => '0'); -- test"
+        ];
+        let output = [
+            "a      <= (b      => '000'); -- test",
+            "looong <= (OTHERS => '0'); -- test" // does comment need to be aligned?
+        ];
+        let result = beautifyTestHelper(input, settings);
+        expect(result).toStrictEqual(output);
+    });
 });
 
 function beautifyTestHelper(array: Array<string>, settings: BeautifierSettings): Array<string> {

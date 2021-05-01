@@ -933,12 +933,10 @@ function IntegrationTest() {
     IntegrationTest67();
     IntegrationTest68();
     IntegrationTest69();
-    IntegrationTest70();
     IntegrationTest71();
     IntegrationTest72();
     IntegrationTest73();
     IntegrationTest74();
-    IntegrationTest76();
     IntegrationTest77();
     IntegrationTest78();
     IntegrationTest79();
@@ -1318,14 +1316,6 @@ function IntegrationTest69() {
     assertAndCountTest("multiline enumerated type is", expected, actual);
 }
 
-function IntegrationTest70() {
-    let settings = GetDefaultSettings();
-    let input = 'test\r\n        := test';
-    let expected = 'test\r\n:= test';
-    let actual = beautify(input, settings);
-    assertAndCountTest("multiline assignment", expected, actual);
-}
-
 function IntegrationTest71() {
     let settings = GetDefaultSettings();
     let input = 'VARIABLE \\#$)!?\\ : INTEGER;\r\nVARIABLE \\try this in verilog\\ : BIT;\r\nVARIABLE \\Buffer\\ : BIT;';
@@ -1357,15 +1347,6 @@ function IntegrationTest74() {
     let expected = 'test := test; EOF test := test;';
     let actual = beautify(input, settings);
     assertAndCountTest("end of line 2", expected, actual);
-}
-
-function IntegrationTest76() {
-    let settings = GetDefaultSettings();
-    settings.SignAlignSettings = new signAlignSettings(false, true, "", []);
-    let input = "a <= (b => '000'); -- test\r\nlooong <= (others => '0'); -- test";
-    let expected = "a      <= (b      => '000'); -- test\r\nlooong <= (OTHERS => '0');   -- test";
-    let actual = beautify(input, settings);
-    assertAndCountTest("align <= => signs", expected, actual);
 }
 
 function IntegrationTest77() {
