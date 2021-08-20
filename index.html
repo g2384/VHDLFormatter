@@ -170,6 +170,10 @@
             <input type="checkbox" id="check_alias">
             <label for="check_alias">Check ALIAS (all long names will be replaced by ALIAS names)</label>
         </div>
+        <div class="checkbox" id="caseWhenIndent_div">
+            <input type="checkbox" id="caseWhenIndent" checked=true>
+            <label for="caseWhenIndent">Indent "whens" in a case statement</label>
+        </div>
         <fieldset id="align_settings_div">
             <legend>Sign Alignment</legend>
             <div id="sign_align_in_div">
@@ -370,6 +374,7 @@
             document.getElementById("keyword_div").elements.namedItem("keywordcase").value = beautifierSettings.KeywordCase;
             document.getElementById("typename_div").elements.namedItem("typenamecase").value = beautifierSettings.TypeNameCase;
             document.getElementById("mix_letter").checked = setting.mixLetter;
+            document.getElementById("caseWhenIndent").checked = beautifierSettings.CaseWhenIndent;
             var eof = beautifierSettings.EndOfLine
             eof = eof.replace(/\r/g, "\\r");
             eof = eof.replace(/\n/g, "\\n");
@@ -409,8 +414,9 @@
             
             var remove_lines = document.getElementById("remove_lines").checked;
             var mix_letter = document.getElementById("mix_letter").checked;
+            var caseWhenIndent = document.getElementById("caseWhenIndent").checked;
             [beautifierSettings, compress] = CreateSettings();
-            vhdlSettings = new VhdlSettings(beautifierSettings, remove_lines, compress, mix_letter);
+            vhdlSettings = new VhdlSettings(beautifierSettings, remove_lines, compress, mix_letter, caseWhenIndent);
             saveSetting(vhdlSettings);
 
             input = beautify(input, beautifierSettings);
@@ -455,6 +461,7 @@
             var keywordcase = document.getElementById("keyword_div").elements.namedItem("keywordcase").value;
             var typenamecase = document.getElementById("typename_div").elements.namedItem("typenamecase").value;            
             var endOfLine = document.getElementById("cust_eol").value;
+            var caseWhenIndent = document.getElementById("caseWhenIndent").checked;
             endOfLine = endOfLine.replace(/\\r/g, "\r");
             endOfLine = endOfLine.replace(/\\n/g, "\n");
             if (compress) {
@@ -500,7 +507,8 @@
                 indentation,
                 newLineSettings,
                 endOfLine,
-                addNewLine);
+                addNewLine,
+                caseWhenIndent);
 
             return [beautifierSettings, compress];
         }

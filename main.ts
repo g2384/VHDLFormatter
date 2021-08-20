@@ -15,6 +15,7 @@ function noFormat() {
         "customise_indentation",
         "compress",
         "mix_letter",
+        "caseWhenIndent",
         "cust_eol",
         "sign_align_mode",
         "keyword",

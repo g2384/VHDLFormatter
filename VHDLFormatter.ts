@@ -306,9 +306,10 @@ export class BeautifierSettings {
     NewLineSettings: NewLineSettings;
     EndOfLine: string;
     AddNewLine: boolean;
+    CaseWhenIndent: boolean;
     constructor(removeComments: boolean, removeReport: boolean, checkAlias: boolean,
         signAlignSettings: signAlignSettings, keywordCase: string, typeNameCase: string, indentation: string,
-        newLineSettings: NewLineSettings, endOfLine: string, addNewLine: boolean) {
+        newLineSettings: NewLineSettings, endOfLine: string, addNewLine: boolean, caseWhenIndent: boolean) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
@@ -319,6 +320,7 @@ export class BeautifierSettings {
         this.NewLineSettings = newLineSettings;
         this.EndOfLine = endOfLine;
         this.AddNewLine = addNewLine;
+        this.CaseWhenIndent = caseWhenIndent;
     }
 }
 
@@ -690,7 +692,11 @@ export function beautifyCaseBlock(block: CodeBlock, result: (FormattedLine | For
     }
     result.push(new FormattedLine(block.lines[block.cursor], indent));
     block.cursor++;
-    beautify3(block, result, settings, indent + 2);
+    let caseindent = 2;
+    if (settings.CaseWhenIndent == false){
+        caseindent = 1;
+    }
+    beautify3(block, result, settings, indent + caseindent);
     (<FormattedLine>result[block.cursor]).Indent = indent;
 }
 
