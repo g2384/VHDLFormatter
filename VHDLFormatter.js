@@ -258,7 +258,7 @@ class signAlignSettings {
 }
 exports.signAlignSettings = signAlignSettings;
 class BeautifierSettings {
-    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine, addNewLine) {
+    constructor(removeComments, removeReport, checkAlias, signAlignSettings, keywordCase, typeNameCase, indentation, newLineSettings, endOfLine, addNewLine, caseWhenIndent) {
         this.RemoveComments = removeComments;
         this.RemoveAsserts = removeReport;
         this.CheckAlias = checkAlias;
@@ -269,6 +269,7 @@ class BeautifierSettings {
         this.NewLineSettings = newLineSettings;
         this.EndOfLine = endOfLine;
         this.AddNewLine = addNewLine;
+        this.CaseWhenIndent = caseWhenIndent;
     }
 }
 exports.BeautifierSettings = BeautifierSettings;
@@ -610,7 +611,11 @@ function beautifyCaseBlock(block, result, settings, indent) {
     }
     result.push(new FormattedLine(block.lines[block.cursor], indent));
     block.cursor++;
-    beautify3(block, result, settings, indent + 2);
+    let caseindent = 2;
+    if (settings.CaseWhenIndent == false) {
+        caseindent = 1;
+    }
+    beautify3(block, result, settings, indent + caseindent);
     result[block.cursor].Indent = indent;
 }
 exports.beautifyCaseBlock = beautifyCaseBlock;
