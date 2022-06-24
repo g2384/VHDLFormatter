@@ -858,7 +858,7 @@ export function beautify3(block: CodeBlock, result: (FormattedLine | FormattedLi
             let startIndex = block.cursor;
             beautifySemicolonBlock(block, result, settings, indent);
             if (endsWithBracket && startIndex != block.cursor) {
-                let fl = result[block.end] as FormattedLine;
+                let fl = result[block.cursor] as FormattedLine;
                 if (fl.Line.regexStartsWith(/\);$/)) {
                     fl.Indent--;
                 }
